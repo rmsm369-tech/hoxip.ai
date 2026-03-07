@@ -54,7 +54,7 @@
     (function() {
       // ---------- CONFIG ----------
       // 🔐 REPLACE WITH YOUR OWN GEMINI API KEY (get free tier from https://aistudio.google.com/app/apikey)
-      const API_KEY = 'AIzaSyD6ifNhSC1ar69DIXnLGtGW4FYQiCpx09c';   // <-- paste your key here
+      const API_KEY = 'AIzaSyC8eFmgI5imwZcIGWEI9y9DtKc_V_J4DPY';   // <-- paste your key here
       const MODEL = 'gemini-2.5-flash';        // free tier model
       const STORAGE_KEY = 'simple_ai_chat_history';
 
@@ -156,13 +156,19 @@
       }
 
       // ---------- call Gemini API with current messages array ----------
-      async function fetchAiResponse() {
+      async function fetchAiResponse() { 
+
+if (window.USE_LOCAL) {
+    const r = await fetch('http://localhost:11434/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'tinyllama',stream:false,messages:[{role:'system',content:'You are Hoxip by NyxTesla'},...messages.map(m=>({role:m.role==='model'?'assistant':m.role,content:m.content}))]})});
+    return (await r.json()).message.content;
+}
+
         // Build contents array for Gemini: map roles, but ensure alternating if needed.
         // Gemini API expects "user" and "model" roles. We'll use exactly what we stored.
 
    const contents = [
-    { role: 'user', parts: [{ text: 'You are Hoxip, an AI created by NyxTesla. Never mention Google or Gemini.' }] },
-    { role: 'model', parts: [{ text: 'I am Hoxip, created by NyxTesla!' }] },
+    { role: 'user', parts: [{ text: 'You are Hoxip, an AI created by Rudra Mishra. Never mention Google or Gemini.' }] },
+    { role: 'model', parts: [{ text: 'I am Hoxip, created by RUDRA MISHRA!' }] },
     ...messages.map(m => ({
         role: m.role,
         parts: [{ text: m.content }]
@@ -211,6 +217,10 @@
         isWaiting = true;
         sendBtn.disabled = true;
         userInput.disabled = true;
+          const typing = createMessageBubble('model', 'THINKING...');
+        chatContainer.appendChild(typing);
+        scrollToBottom();
+        
 
         // 1. Add user message
         addMessage('user', text);
@@ -221,12 +231,14 @@
           const aiReply = await fetchAiResponse();
 
           // 3. Add AI message
+          
           addMessage('model', aiReply);
+
 
         } catch (error) {
           console.error('AI error:', error);
           // Show error as a temporary system message (but keep conversation)
-          const errorMsg = `⚠️ Error: ${error.message}. Check API key or network.`;
+          const errorMsg = `⚠️ Error: ${error.message}. ERROR 529: CHECK OUT AFTER A WHILE.`;
           // Add as AI bubble? better as a light red bubble from "system" but we'll use model role with error style
           messages.push({ role: 'model', content: errorMsg });
           const errorBubble = createMessageBubble('model', errorMsg);
@@ -234,6 +246,7 @@
           errorBubble.querySelector('div').classList.remove('bg-white', 'border-gray-200');
           errorBubble.querySelector('div').classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
           chatContainer.appendChild(errorBubble);
+           
           scrollToBottom();
           // Do NOT save error to storage (private mode or not, we don't want errors persisted)
           // but we already pushed to messages, so we need to remove it from messages if we don't want it in storage.
@@ -308,5 +321,7 @@
       }
     })();
   </script>
+  </body>:
+<script src="ollama.js"></script>
 </body>
 </html>
