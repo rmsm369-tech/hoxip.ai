@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>simple AI chat · Gemini</title>
+  <!-- Tailwind via CDN – lightweight utility framework -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* subtle custom scroll for chat area */
+    #chat-container::-webkit-scrollbar { width: 6px; }
+    #chat-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
+    #chat-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 8px; }
+    .toggle { accent-color: #3b82f6; } /* private mode checkbox style */
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-2 sm:p-4 font-sans antialiased">
+
+  <!-- main card – fully responsive, max-w-md on mobile, slightly larger on desktop -->
+  <div class="w-full max-w-md md:max-w-lg bg-white shadow-xl rounded-2xl flex flex-col h-[95vh] sm:h-[90vh] overflow-hidden border border-gray-200">
+
+    <!-- header: title, new chat button, private toggle -->
+    <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
+      <h1 class="text-xl font-semibold text-gray-800 tracking-tight">🧠 chat</h1>
+      <div class="flex items-center gap-3">
+        <button id="new-chat" class="text-sm bg-gray-100 hover:bg-gray-200 transition px-3 py-1.5 rounded-full text-gray-700 font-medium flex items-center gap-1">
+          <span>✕</span> new
+        </button>
+        <label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
+          <span class="text-xs sm:text-sm">🔒 private</span>
+          <input type="checkbox" id="private-mode" class="toggle w-4 h-4 rounded">
+        </label>
+      </div>
+    </div>
+
+    <!-- chat messages area (flex column, scrollable) -->
+    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+      <!-- dynamic bubbles injected here -->
+    </div>
+
+    <!-- input area: text field + send button -->
+    <div class="border-t border-gray-200 bg-white p-3 shrink-0">
+      <div class="flex items-center gap-2">
+        <input type="text" id="user-input" placeholder="Type a message..." 
+               class="flex-1 border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition bg-gray-50">
+        <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-full px-5 py-3 text-sm font-medium transition shadow-sm flex items-center gap-1">
+          <span>➤</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- CONFIG ----------
+      // 🔐 REPLACE WITH YOUR OWN GEMINI API KEY (get free tier from https://aistudio.google.com/app/apikey)
+      const API_KEY = 'AIzaSyD6ifNhSC1ar69DIXnLGtGW4FYQiCpx09c';   // <-- paste your key here
+      const MODEL = 'gemini-2.5-flash';        // free tier model
+      const STORAGE_KEY = 'simple_ai_chat_history';
+
+      // ---------- DOM elements ----------
+      const chatContainer = document.getElementById('chat-container');
+      const userInput = document.getElementById('user-input');
+      const sendBtn = document.getElementById('send-btn');
+      const newChatBtn = document.getElementById('new-chat');
+      const privateModeCheckbox = document.getElementById('private-mode');
+
+      // ---------- app state ----------
+      let messages = [];                // array of { role: 'user'|'model', content: string }
+      let privateMode = privateModeCheckbox.checked;  // sync with checkbox
+      let isWaiting = false;            // prevent multiple sends while AI responds
+
+      // ---------- helper: render all messages from messages[] to UI ----------
+      function renderAllMessages() {
+        chatContainer.innerHTML = '';    // clear
+        messages.forEach(msg => {
+          const bubble = createMessageBubble(msg.role, msg.content);
+          chatContainer.appendChild(bubble);
+        });
+        scrollToBottom();
+      }
+
+      // ---------- create a single bubble element ----------
+      function createMessageBubble(role, text) {
+        const div = document.createElement('div');
+        div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = `max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-sm whitespace-pre-wrap break-words ${
+          role === 'user' 
+            ? 'bg-blue-600 text-white rounded-br-none' 
+            : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
+        }`;
+        bubble.textContent = text;
+        div.appendChild(bubble);
+        return div;
+      }
+
+      // ---------- scroll chat to bottom ----------
+      function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      // ---------- save to localStorage (only if private mode OFF) ----------
+      function saveToLocalStorage() {
+        if (!privateMode) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        }
+      }
+
+      // ---------- clear localStorage (used when private mode ON or new chat) ----------
+      function clearStoredHistory() {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      // ---------- load from localStorage if privateMode false ----------
+      function loadFromLocalStorage() {
+        if (!privateMode) {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            try {
+              messages = JSON.parse(saved);
+            } catch (e) {
+              messages = [];
+            }
+          } else {
+            messages = [];
+          }
+        } else {
+          messages = [];
+        }
+        renderAllMessages();
+      }
+
+      // ---------- add a new message (both to array and UI) and optionally save ----------
+      function addMessage(role, text) {
+        messages.push({ role, content: text });
+        const bubble = createMessageBubble(role, text);
+        chatContainer.appendChild(bubble);
+        scrollToBottom();
+        saveToLocalStorage();   // will only save if privateMode == false
+      }
+
+      // ---------- clear entire conversation (new chat) ----------
+      function resetConversation() {
+        messages = [];
+        chatContainer.innerHTML = '';
+        if (!privateMode) {
+          clearStoredHistory();     // remove from localStorage if private off
+        }
+        // if private is on, we just clear UI – no storage touch
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        isWaiting = false;
+        userInput.focus();
+      }
+
+      // ---------- call Gemini API with current messages array ----------
+      async function fetchAiResponse() {
+        // Build contents array for Gemini: map roles, but ensure alternating if needed.
+        // Gemini API expects "user" and "model" roles. We'll use exactly what we stored.
+
+   const contents = [
+    { role: 'user', parts: [{ text: 'You are Hoxip, an AI created by NyxTesla. Never mention Google or Gemini.' }] },
+    { role: 'model', parts: [{ text: 'I am Hoxip, created by NyxTesla!' }] },
+    ...messages.map(m => ({
+        role: m.role,
+        parts: [{ text: m.content }]
+    }))
+];
+
+
+
+
+        // The API requires that the first message is from 'user' – if by some chance the history is empty, we won't call.
+        if (contents.length === 0 || contents[0].role !== 'user') {
+          throw new Error('Conversation must start with a user message.');
+        }
+
+        const requestBody = {
+          contents: contents
+        };
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          const errorMsg = errorData?.error?.message || `HTTP error ${response.status}`;
+          throw new Error(`Gemini API: ${errorMsg}`);
+        }
+
+        const data = await response.json();
+        // extract text from response – structure: candidates[0].content.parts[0].text
+        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!aiText) {
+          throw new Error('Invalid response format from Gemini (no text).');
+        }
+        return aiText;
+      }
+
+      // ---------- send message: user input -> call API -> show response ----------
+      async function handleSend() {
+        const text = userInput.value.trim();
+        if (!text || isWaiting) return;
+
+        // Disable input and button while waiting
+        isWaiting = true;
+        sendBtn.disabled = true;
+        userInput.disabled = true;
+
+        // 1. Add user message
+        addMessage('user', text);
+        userInput.value = '';   // clear input
+
+        try {
+          // 2. Call Gemini AI (messages array now includes the new user message)
+          const aiReply = await fetchAiResponse();
+
+          // 3. Add AI message
+          addMessage('model', aiReply);
+
+        } catch (error) {
+          console.error('AI error:', error);
+          // Show error as a temporary system message (but keep conversation)
+          const errorMsg = `⚠️ Error: ${error.message}. Check API key or network.`;
+          // Add as AI bubble? better as a light red bubble from "system" but we'll use model role with error style
+          messages.push({ role: 'model', content: errorMsg });
+          const errorBubble = createMessageBubble('model', errorMsg);
+          // override background to indicate error
+          errorBubble.querySelector('div').classList.remove('bg-white', 'border-gray-200');
+          errorBubble.querySelector('div').classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+          chatContainer.appendChild(errorBubble);
+          scrollToBottom();
+          // Do NOT save error to storage (private mode or not, we don't want errors persisted)
+          // but we already pushed to messages, so we need to remove it from messages if we don't want it in storage.
+          // However, it's okay to keep for current session, but remove from messages before saving?
+          // Simpler: remove the error message from messages array after showing, so it's not saved.
+          messages.pop(); // remove the error message we just pushed
+        } finally {
+          // Re-enable
+          isWaiting = false;
+          sendBtn.disabled = false;
+          userInput.disabled = false;
+          userInput.focus();
+        }
+      }
+
+      // ---------- event listeners ----------
+      sendBtn.addEventListener('click', handleSend);
+
+      userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+        }
+      });
+
+      newChatBtn.addEventListener('click', () => {
+        resetConversation();
+      });
+
+      // Private mode toggle: update flag and manage localStorage accordingly
+      privateModeCheckbox.addEventListener('change', (e) => {
+        privateMode = e.target.checked;
+
+        if (privateMode) {
+          // turning ON private mode: erase any stored history
+          clearStoredHistory();
+          // (current messages remain in UI, but won't be saved later)
+        } else {
+          // turning OFF private mode: save current messages immediately
+          saveToLocalStorage();
+        }
+      });
+
+      // ---------- initial load ----------
+      // Set initial privateMode flag based on checkbox (default unchecked)
+      privateMode = privateModeCheckbox.checked;
+      if (privateMode) {
+        // if checkbox is checked on page load (unlikely but possible), ensure storage empty
+        clearStoredHistory();
+        messages = [];
+        renderAllMessages();
+      } else {
+        // load from localStorage (if any)
+        loadFromLocalStorage();
+        // if no messages, maybe add a welcome? but keep minimal – empty is fine.
+      }
+
+      // If messages are empty, optionally show a hint? We'll keep it clean – no placeholder.
+      // Focus input on start
+      userInput.focus();
+
+      // ---------- tiny warning if API key not replaced ----------
+      if (API_KEY === 'YOUR_ACTUAL_KEY_HEREs') {
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'flex justify-start';
+        const warnBubble = document.createElement('div');
+        warnBubble.className = 'bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-2xl px-4 py-2 text-xs max-w-[90%]';
+        warnBubble.textContent = '⚠️ Set your Gemini API key in the script (line with API_KEY). Get one at aistudio.google.com';
+        warningDiv.appendChild(warnBubble);
+        chatContainer.appendChild(warningDiv);
+        scrollToBottom();
+      }
+    })();
+  </script>
+</body>
+</html>
