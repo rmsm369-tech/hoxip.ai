@@ -271,21 +271,23 @@ async function fetchAiResponse() {
         isWaiting = true;
         sendBtn.disabled = true;
         userInput.disabled = true;
-          const typing = createMessageBubble('model', 'THINKING...');
-        chatContainer.appendChild(typing);
-        scrollToBottom();
-        
 
         // 1. Add user message
         addMessage('user', text);
         userInput.value = '';   // clear input
+       const typing = createMessageBubble('model', 'THINKING...');
+        chatContainer.appendChild(typing);
+        scrollToBottom();
+        
+
+
 
         try {
-          // 2. Call Gemini AI (messages array now includes the new user message)
+          // 2. Call Groq AI (messages array now includes the new user message)
           const aiReply = await fetchAiResponse();
 
           // 3. Add AI message
-          
+          typing.remove(); // remove "THINKING..." bubble
           addMessage('model', aiReply);
 
 
