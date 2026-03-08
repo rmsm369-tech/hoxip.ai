@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HOXIP</title>
@@ -275,10 +276,32 @@ async function fetchAiResponse() {
         // 1. Add user message
         addMessage('user', text);
         userInput.value = '';   // clear input
-       const typing = createMessageBubble('model', 'THINKING...');
-        chatContainer.appendChild(typing);
-       
-        
+    
+        // Create typing indicator inside an AI‑style bubble via DEEpseEK
+const typingBubble = document.createElement('div');
+typingBubble.className = 'flex justify-start';
+
+const bubble = document.createElement('div');
+bubble.className = 'max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-sm bg-white border border-gray-200 text-gray-800 rounded-bl-none';
+
+// Add the animated dots
+const thinkingText = document.createElement('span');
+thinkingText.className = 'text-xs text-gray-400 mr-2';
+thinkingText.textContent = 'thinking';
+bubble.appendChild(thinkingText);
+const indicator = document.createElement('div');
+indicator.className = 'typing-bubble';
+for (let i = 0; i < 3; i++) {
+  const dot = document.createElement('span');
+  dot.className = 'typing-dot';
+  indicator.appendChild(dot);
+}
+
+bubble.appendChild(indicator);
+typingBubble.appendChild(bubble);
+chatContainer.appendChild(typingBubble);
+const typing = typingBubble; // keep variable name for later removal
+scrollToBottom();
 
 
 

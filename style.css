@@ -1,0 +1,174 @@
+/* ---------- HOXIP Dark Theme ---------- */
+
+/* Global dark background */
+body {
+  background-color: #343541 !important;
+}
+
+/* Main chat card */
+.bg-white {
+  background-color: #444654 !important;
+  border-color: #565869 !important;
+}
+
+/* Header */
+.bg-white.border-b {
+  background-color: #343541 !important;
+  border-bottom-color: #565869 !important;
+}
+.text-gray-800 {
+  color: #ececf1 !important;
+}
+.text-gray-600 {
+  color: #9a9bb0 !important;
+}
+
+/* New chat button */
+.bg-gray-100 {
+  background-color: #40414f !important;
+  color: #ececf1 !important;
+}
+.bg-gray-100:hover {
+  background-color: #4d4e5f !important;
+}
+
+/* Private toggle */
+.toggle {
+  accent-color: #10a37f; /* ChatGPT green accent */
+}
+
+/* Force Tiny button (Groq/Tiny toggle) */
+.bg-yellow-100 {
+  background-color: #2c2d36 !important;
+  color: #d1d5db !important;
+}
+.bg-yellow-100:hover {
+  background-color: #3e3f4b !important;
+}
+#source-indicator {
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* Chat container background */
+.bg-gray-50 {
+  background-color: #343541 !important;
+}
+
+/* Message bubbles */
+.max-w-\[80\%\] {
+  border-radius: 18px !important;
+  padding: 8px 16px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+  transition: transform 0.2s ease, opacity 0.2s ease !important;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* User bubble (dark) */
+.bg-blue-600 {
+  background-color: #2b2b2b !important;
+  color: #ececf1 !important;
+}
+/* Override Tailwind's blue */
+.bg-blue-600, .bg-blue-600:hover {
+  background-color: #2b2b2b !important;
+}
+/* Assistant bubble (gray) */
+.bg-white.border {
+  background-color: #444654 !important;
+  border-color: #565869 !important;
+  color: #ececf1 !important;
+}
+
+/* Input area background */
+.border-t.border-gray-200 {
+  border-top-color: #565869 !important;
+  background-color: #444654 !important;
+}
+.bg-white.p-3 {
+  background-color: #444654 !important;
+}
+
+/* Text input */
+.bg-gray-50[type="text"] {
+  background-color: #40414f !important;
+  border-color: #565869 !important;
+  color: #ececf1 !important;
+}
+.bg-gray-50[type="text"]::placeholder {
+  color: #9a9bb0 !important;
+}
+.bg-gray-50[type="text"]:focus {
+  border-color: #10a37f !important;
+  box-shadow: 0 0 0 2px rgba(16,163,127,0.3) !important;
+  outline: none !important;
+}
+
+/* Send button */
+.bg-blue-600 {
+  background-color: #10a37f !important;
+}
+.bg-blue-600:hover {
+  background-color: #0e8f6e !important;
+}
+.bg-blue-600:disabled {
+  background-color: #1f5f4a !important;
+  opacity: 0.6;
+}
+
+/* Custom scrollbar for dark theme */
+#chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+#chat-container::-webkit-scrollbar-track {
+  background: #2c2d36;
+  border-radius: 8px;
+}
+#chat-container::-webkit-scrollbar-thumb {
+  background: #565869;
+  border-radius: 8px;
+}
+#chat-container::-webkit-scrollbar-thumb:hover {
+  background: #6b6d7c;
+}
+
+/* Typing indicator (iMessage style) – kept from previous */
+.typing-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  min-width: 70px;
+}
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 2px;
+  background-color: #9a9bb0;
+  border-radius: 50%;
+  display: inline-block;
+  animation: bounce 1.4s infinite ease-in-out both;
+  box-shadow: 0 0 6px rgba(16, 163, 127, 0.3);
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { 
+    transform: scale(0.6);
+    opacity: 0.6;
+    box-shadow: 0 0 4px rgba(16, 163, 127, 0.2);
+  }
+  40% { 
+    transform: scale(1.0);
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(16, 163, 127, 0.6);
+  }
+}
+
+/* Keep toggle accent */
+.toggle {
+  accent-color: #10a37f;
+}
