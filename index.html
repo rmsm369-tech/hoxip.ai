@@ -142,7 +142,7 @@
         messages.push({ role, content: text });
         const bubble = createMessageBubble(role, text);
         chatContainer.appendChild(bubble);
-        scrollToBottom();
+       
         saveToLocalStorage();   // will only save if privateMode == false
       }
 
