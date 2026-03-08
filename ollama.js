@@ -1,4 +1,4 @@
-window.USE_LOCAL = true;
+window.USE_LOCAL = false;
 
 if (USE_LOCAL) {
     fetchAiResponse = async function() {
@@ -9,7 +9,7 @@ if (USE_LOCAL) {
                 model: 'tinyllama',
                 stream: false,
                 messages: [
-                    { role: 'system', content: 'You are Hoxip, created by Nyx Tesla.' },
+                    { role: 'system', content: 'You are Hoxip, created by RUDRA MISHRA.' },
                     ...messages.map(m => ({
                         role: m.role === 'model' ? 'assistant' : m.role,
                         content: m.content
