@@ -26,6 +26,7 @@
     <!-- header: title, new chat button, private toggle -->
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
       <h1 class="text-xl font-semibold text-gray-800 tracking-tight">HOX chat</h1>
+      <span id="username-display" class="text-xs text-gray-400"></span>
       <div class="flex items-center gap-3"> 
         <!-- inside the header div, after the private toggle -->
           <button id="force-tiny" class="text-xs bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded-full flex items-center gap-1">
@@ -63,12 +64,18 @@
     (function() {
 const supabase = window.supabase.createClient(
   'https://zlncxweliwhtrumpxvkz.supabase.co',
-  'your_anon_key_here'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg'
 );
 
 supabase.auth.getSession().then(({ data: { session } }) => {
   if (!session) {
     window.location.href = 'login.html';
+  }
+});
+supabase.auth.getUser().then(({ data: { user } }) => {
+  if (user) {
+    const username = user.user_metadata?.full_name || user.email;
+    document.getElementById('username-display').textContent = username;
   }
 });
   })();
