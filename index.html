@@ -27,6 +27,7 @@
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
       <h1 class="text-xl font-semibold text-gray-800 tracking-tight">HOX chat</h1>
       <span id="username-display" class="text-xs text-gray-400"></span>
+      <button id="logout-btn" class="text-xs bg-red-900 hover:bg-red-800 px-2 py-1 rounded-full text-red-200">logout</button>
       <div class="flex items-center gap-3"> 
         <!-- inside the header div, after the private toggle -->
           <button id="force-tiny" class="text-xs bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded-full flex items-center gap-1">
@@ -77,6 +78,10 @@ supabase.auth.getUser().then(({ data: { user } }) => {
     const username = user.user_metadata?.full_name || user.email;
     document.getElementById('username-display').textContent = username;
   }
+});
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
 });
   })();
     (function() {
