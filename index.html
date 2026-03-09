@@ -9,6 +9,7 @@
   <title>HOXIP</title>
   <!-- Tailwind via CDN – lightweight utility framework -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* subtle custom scroll for chat area */
     #chat-container::-webkit-scrollbar { width: 6px; }
@@ -59,6 +60,18 @@
   </div>
 
   <script>
+    (function() {
+const supabase = window.supabase.createClient(
+  'https://zlncxweliwhtrumpxvkz.supabase.co',
+  'your_anon_key_here'
+);
+
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (!session) {
+    window.location.href = 'login.html';
+  }
+});
+  })();
     (function() {
       // ---------- CONFIG ----------
       // 🔐 REPLACE WITH YOUR OWN GEMINI API KEY (get free tier from https://aistudio.google.com/app/apikey)
