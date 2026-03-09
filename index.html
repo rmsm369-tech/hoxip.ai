@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
+
   <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -62,17 +62,20 @@
   </div>
 
   <script>
-    (function() {
-const supabase = window.supabase.createClient(
+  
+ (function() {
+        const supabase = window.supabase.createClient(
   'https://zlncxweliwhtrumpxvkz.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg'
-);
+    );
+
 
 supabase.auth.getSession().then(({ data: { session } }) => {
   if (!session) {
     window.location.href = 'login.html';
   }
 });
+
 supabase.auth.getUser().then(({ data: { user } }) => {
   if (user) {
     const username = user.user_metadata?.full_name || user.email;
@@ -83,12 +86,16 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   await supabase.auth.signOut();
   window.location.href = 'login.html';
 });
-  })();
+     })();
+
+
     (function() {
       // ---------- CONFIG ----------
-      // 🔐 REPLACE WITH YOUR OWN GEMINI API KEY (get free tier from https://aistudio.google.com/app/apikey)
-      const API_KEY = 'AIzaSyC8eFmgI5imwZcIGWEI9y9DtKc_V_J4DPY';   // <-- paste your key here
-      const MODEL = 'gemini-2.5-flash';        // free tier model
+   const supabase = window.supabase.createClient(
+     'https://zlncxweliwhtrumpxvkz.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg'
+    );
+
       const STORAGE_KEY = 'simple_ai_chat_history';
 
       // ---------- DOM elements ----------
@@ -102,6 +109,51 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
       let messages = [];                // array of { role: 'user'|'model', content: string }
       let privateMode = privateModeCheckbox.checked;  // sync with checkbox
       let isWaiting = false;            // prevent multiple sends while AI responds
+      let currentChatId = null;
+      async function saveChat(title) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+    const { data, error } = await supabase
+      .from('chats')
+      .insert([{ user_id: user.id, title }])
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data.id;
+  } catch (err) {
+    console.log('saveChat error:', err);
+    return null;
+  }
+}
+
+async function saveMessage(chatId, role, content) {
+  try {
+    const { error } = await supabase
+      .from('messages')
+      .insert([{ chat_id: chatId, role, content }]);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+async function loadChats() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('chats')
+      .select('id, title, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    return [];
+  }
+}
 
       // ---------- helper: render all messages from messages[] to UI ----------
       function renderAllMessages() {
@@ -303,7 +355,7 @@ async function fetchAiResponse() {
         // 1. Add user message
         addMessage('user', text);
         userInput.value = '';   // clear input
-    
+  
         // Create typing indicator inside an AI‑style bubble via DEEpseEK
 const typingBubble = document.createElement('div');
 typingBubble.className = 'flex justify-start';
@@ -339,6 +391,13 @@ scrollToBottom();
           // 3. Add AI message
           typing.remove(); // remove "THINKING..." bubble
           addMessage('model', aiReply);
+       
+          if (!currentChatId) {
+  currentChatId = await saveChat(messages[0].content.slice(0, 30));
+       }
+       console.log('saving chat:', currentChatId);
+       await saveMessage(currentChatId, 'user', text);
+        await saveMessage(currentChatId, 'model', aiReply);
 
 
         } catch (error) {
@@ -380,6 +439,7 @@ scrollToBottom();
 
       newChatBtn.addEventListener('click', () => {
         resetConversation();
+        currentChatId = null;
       });
 
       // Private mode toggle: update flag and manage localStorage accordingly
@@ -414,20 +474,9 @@ scrollToBottom();
       // Focus input on start
       userInput.focus();
 
-      // ---------- tiny warning if API key not replaced ----------
-      if (API_KEY === 'YOUR_ACTUAL_KEY_HEREs') {
-        const warningDiv = document.createElement('div');
-        warningDiv.className = 'flex justify-start';
-        const warnBubble = document.createElement('div');
-        warnBubble.className = 'bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-2xl px-4 py-2 text-xs max-w-[90%]';
-        warnBubble.textContent = '⚠️ Set your Gemini API key in the script (line with API_KEY). Get one at aistudio.google.com';
-        warningDiv.appendChild(warnBubble);
-        chatContainer.appendChild(warningDiv);
-        scrollToBottom();
-      }
-
       updateSourceUI();
-    })();
+          })();
+   
   </script>
   <script src="ollama.js"></script>
 </body>
