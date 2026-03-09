@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hoxchat · Login</title>
+  <!-- Tailwind CDN for dark theme matching index.html -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Custom dark theme overrides to match ChatGPT style */
+    body {
+      background-color: #343541;
+    }
+    .card-bg {
+      background-color: #444654;
+    }
+    .input-bg {
+      background-color: #40414f;
+      border-color: #565869;
+      color: #ececf1;
+    }
+    .input-bg:focus {
+      border-color: #10a37f;
+      box-shadow: 0 0 0 2px rgba(16,163,127,0.3);
+      outline: none;
+    }
+    .btn-primary {
+      background-color: #10a37f;
+      transition: background-color 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: #0e8f6e;
+    }
+    .btn-primary:disabled {
+      background-color: #1f5f4a;
+      opacity: 0.6;
+    }
+    .btn-google {
+      background-color: #2c2d36;
+      border: 1px solid #565869;
+      color: #ececf1;
+    }
+    .btn-google:hover {
+      background-color: #3e3f4b;
+    }
+    .text-muted {
+      color: #9a9bb0;
+    }
+    .border-muted {
+      border-color: #565869;
+    }
+    .username-available {
+      color: #10a37f;
+      font-size: 0.875rem;
+    }
+    .username-unavailable {
+      color: #ef4444;
+      font-size: 0.875rem;
+    }
+    /* toggle animation */
+    .panel {
+      transition: opacity 0.2s ease;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 font-sans antialiased">
+
+  <div class="w-full max-w-md card-bg rounded-2xl shadow-xl border border-[#565869] p-6">
+    <!-- Logo / title -->
+    <div class="text-center mb-6">
+      <h1 class="text-3xl font-semibold text-[#ececf1]">Hoxchat</h1>
+      <p class="text-muted text-sm">sign in to continue</p>
+    </div>
+
+    <!-- Tab toggle -->
+    <div class="flex gap-2 mb-6">
+      <button id="login-tab" class="flex-1 py-2 rounded-full text-sm font-medium transition bg-[#10a37f] text-white">Login</button>
+      <button id="signup-tab" class="flex-1 py-2 rounded-full text-sm font-medium transition bg-[#2c2d36] text-[#ececf1] hover:bg-[#3e3f4b]">Sign Up</button>
+    </div>
+
+    <!-- Login Panel (visible by default) -->
+    <div id="login-panel" class="panel">
+      <form id="login-form">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Email</label>
+          <input type="email" id="login-email" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Password</label>
+          <input type="password" id="login-password" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+        </div>
+        <button type="submit" id="login-btn"
+                class="w-full btn-primary text-white rounded-lg py-2 text-sm font-medium">
+          Log In
+        </button>
+      </form>
+
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-muted"></div>
+        </div>
+        <div class="relative flex justify-center text-xs">
+          <span class="px-2 card-bg text-muted">or</span>
+        </div>
+      </div>
+
+      <button id="google-login" class="w-full btn-google rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-[#ececf1]">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <!-- Signup Panel (hidden initially) -->
+    <div id="signup-panel" class="panel hidden">
+      <form id="signup-form">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Email</label>
+          <input type="email" id="signup-email" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Username</label>
+          <input type="text" id="signup-username" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+          <div id="username-feedback" class="mt-1 text-xs"></div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Password</label>
+          <input type="password" id="signup-password" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-muted mb-1">Confirm Password</label>
+          <input type="password" id="signup-confirm" required
+                 class="w-full input-bg border rounded-lg px-4 py-2 text-sm">
+        </div>
+        <button type="submit" id="signup-btn" disabled
+                class="w-full btn-primary text-white rounded-lg py-2 text-sm font-medium opacity-50 cursor-not-allowed">
+          Sign Up
+        </button>
+      </form>
+      <p class="text-xs text-muted text-center mt-4">
+        By signing up, you agree to our terms.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- SUPABASE CONFIG ----------
+      const SUPABASE_URL = 'https://zlncxweliwhtrumpxvkz.supabase.co';
+      // 🔐 REPLACE WITH YOUR ACTUAL ANON KEY (from Supabase dashboard)
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg';
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // DOM elements
+      const loginTab = document.getElementById('login-tab');
+      const signupTab = document.getElementById('signup-tab');
+      const loginPanel = document.getElementById('login-panel');
+      const signupPanel = document.getElementById('signup-panel');
+      const loginForm = document.getElementById('login-form');
+      const signupForm = document.getElementById('signup-form');
+      const googleBtn = document.getElementById('google-login');
+      const signupBtn = document.getElementById('signup-btn');
+      const usernameInput = document.getElementById('signup-username');
+      const usernameFeedback = document.getElementById('username-feedback');
+      const signupEmail = document.getElementById('signup-email');
+      const signupPassword = document.getElementById('signup-password');
+      const signupConfirm = document.getElementById('signup-confirm');
+
+      let usernameAvailable = false;
+      let checkTimeout;
+
+      // Toggle panels
+      loginTab.addEventListener('click', () => {
+        loginPanel.classList.remove('hidden');
+        signupPanel.classList.add('hidden');
+        loginTab.classList.add('bg-[#10a37f]', 'text-white');
+        loginTab.classList.remove('bg-[#2c2d36]', 'text-[#ececf1]');
+        signupTab.classList.remove('bg-[#10a37f]', 'text-white');
+        signupTab.classList.add('bg-[#2c2d36]', 'text-[#ececf1]');
+      });
+
+      signupTab.addEventListener('click', () => {
+        signupPanel.classList.remove('hidden');
+        loginPanel.classList.add('hidden');
+        signupTab.classList.add('bg-[#10a37f]', 'text-white');
+        signupTab.classList.remove('bg-[#2c2d36]', 'text-[#ececf1]');
+        loginTab.classList.remove('bg-[#10a37f]', 'text-white');
+        loginTab.classList.add('bg-[#2c2d36]', 'text-[#ececf1]');
+      });
+
+      // ---------- USERNAME AVAILABILITY CHECK ----------
+      async function checkUsername(username) {
+        if (username.length < 3) {
+          usernameFeedback.innerHTML = '<span class="text-red-500">❌ At least 3 characters</span>';
+          return false;
+        }
+        // Query profiles table (adjust table name if different)
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Username check error:', error);
+          usernameFeedback.innerHTML = '<span class="text-red-500">⚠️ Error checking username</span>';
+          return false;
+        }
+        if (data) {
+          usernameFeedback.innerHTML = '<span class="text-red-500">❌ Username taken</span>';
+          return false;
+        } else {
+          usernameFeedback.innerHTML = '<span class="text-green-500">✅ Username available</span>';
+          return true;
+        }
+      }
+
+      usernameInput.addEventListener('input', (e) => {
+        const username = e.target.value.trim();
+        clearTimeout(checkTimeout);
+        if (username === '') {
+          usernameFeedback.innerHTML = '';
+          usernameAvailable = false;
+          updateSignupButton();
+          return;
+        }
+        checkTimeout = setTimeout(async () => {
+          usernameAvailable = await checkUsername(username);
+          updateSignupButton();
+        }, 500);
+      });
+
+      function updateSignupButton() {
+        const email = signupEmail.value.trim();
+        const pwd = signupPassword.value;
+        const confirm = signupConfirm.value;
+        const valid = email && pwd && confirm && pwd === confirm && usernameAvailable;
+        signupBtn.disabled = !valid;
+        if (valid) {
+          signupBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          signupBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+
+      [signupEmail, signupPassword, signupConfirm].forEach(input => {
+        input.addEventListener('input', updateSignupButton);
+      });
+
+      // ---------- LOGIN (email/password) ----------
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          alert('Login error: ' + error.message);
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+
+      // ---------- SIGNUP (email + username) ----------
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = signupEmail.value.trim();
+        const password = signupPassword.value;
+        const username = usernameInput.value.trim();
+
+        // Sign up with Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (error) {
+          alert('Signup error: ' + error.message);
+          return;
+        }
+
+        // If signup successful, create profile record with username
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{ id: data.user.id, username, email }]);
+
+          if (profileError) {
+            alert('Profile creation error: ' + profileError.message);
+            // Optionally delete auth user? Too complex; just show error.
+          } else {
+            // Success – redirect to index (or show confirmation)
+            window.location.href = 'index.html';
+          }
+        }
+      });
+
+      // ---------- GOOGLE OAUTH ----------
+      googleBtn.addEventListener('click', async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin + '/index.html'
+          }
+        });
+        if (error) {
+          alert('Google login error: ' + error.message);
+        }
+        // OAuth redirects away, no need to handle further
+      });
+
+      // ---------- Check existing session on load ----------
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          window.location.href = 'index.html';
+        }
+      });
+
+    })();
+  </script>
+  <!-- Reminder: Replace with your actual Supabase anon key -->
+  <!-- Also ensure you have a 'profiles' table with at least id (uuid references auth.users), username, email -->
+</body>
+</html>
