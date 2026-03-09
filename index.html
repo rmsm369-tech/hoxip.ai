@@ -188,7 +188,7 @@ document.getElementById('force-tiny').addEventListener('click', () => {
 });
 
 async function fetchAiResponse() {
-   console.log('forceTinyLlama:', forceTinyLlama);
+
   // Prepare messages for API (convert 'model' to 'assistant')
  const apiMessages = messages.map(m => ({
     role: m.role === 'model' ? 'assistant' : m.role,
