@@ -39,6 +39,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.innerWidth < 768) toggleSidebar(); // auto-close on mobile
       };
       chatHistoryList.appendChild(btn);
+      // --- ADD THIS TO INJECT THE TRASH ICON ---
+      btn.classList.add('flex', 'justify-between', 'items-center', 'group');
+      
+      const delBtn = document.createElement('div');
+      delBtn.innerHTML = '🗑️';
+      delBtn.className = 'opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity ml-2 text-xs';
+      
+      delBtn.onclick = async (e) => {
+        e.stopPropagation(); // Prevents the chat from loading when you click delete
+        if (confirm('Delete this chat forever?')) {
+          await window.sharedSupabase.from('chats').delete().eq('id', chat.id);
+          renderChatHistory(); // Instantly refreshes the sidebar
+        }
+      };
+      
+      btn.appendChild(delBtn);
+      // ----------------------------------------
     });
   }
 
