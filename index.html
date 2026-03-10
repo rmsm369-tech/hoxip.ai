@@ -418,13 +418,14 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
           typing.remove(); // remove "THINKING..." bubble
           addMessage('model', aiReply);
        
+          if (!privateMode) {
           if (!currentChatId) {
   currentChatId = await saveChat(messages[0].content.slice(0, 30));
        }
        console.log('saving chat:', currentChatId);
        await saveMessage(currentChatId, 'user', text);
         await saveMessage(currentChatId, 'model', aiReply);
-
+      }
 
         } catch (error) {
           console.error('AI error:', error);
