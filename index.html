@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* subtle custom scroll for chat area */
+    #chat-container { scroll-behavior: smooth; }
     #chat-container::-webkit-scrollbar { width: 6px; }
     #chat-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
     #chat-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 8px; }
@@ -21,7 +22,7 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-2 sm:p-4 font-sans antialiased">
 
   <!-- main card – fully responsive, max-w-md on mobile, slightly larger on desktop -->
-  <div class="w-full max-w-md md:max-w-lg bg-white shadow-xl rounded-2xl flex flex-col h-[95vh] sm:h-[90vh] overflow-hidden border border-gray-200">
+  <div class="w-full max-w-md md:max-w-lg bg-white shadow-xl rounded-2xl flex flex-col h-[95vh] sm:h-[90vh] overflow-hidden border border-gray-200 relative">
 
     <!-- header: title, new chat button, private toggle -->
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
@@ -48,7 +49,7 @@
     <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
       <!-- dynamic bubbles injected here -->
     </div>
-
+    <button id="scroll-btn" style="display:none; position:fixed; bottom:80px; right:16px; width:32px; height:32px; background:#444654; border:1px solid #565869; color:#ececf1; border-radius:50%; z-index:50; cursor:pointer; align-items:center; justify-content:center;">↓</button>
     <!-- input area: text field + send button -->
     <div class="border-t border-gray-200 bg-white p-3 shrink-0">
       <div class="flex items-center gap-2">
@@ -285,6 +286,12 @@ function updateSourceUI() {
 document.getElementById('force-tiny').addEventListener('click', () => {
   forceTinyLlama = !forceTinyLlama;
   currentSource = forceTinyLlama ? 'tinyllama' : 'groq';
+const scrollBtn = document.getElementById('scroll-btn');
+
+scrollBtn.addEventListener('click', () => {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+});
+
   updateSourceUI();
   // Optional: show a message that next messages will use the selected source
 });
