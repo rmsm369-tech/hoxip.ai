@@ -162,7 +162,7 @@ async function loadChats() {
           const bubble = createMessageBubble(msg.role, msg.content);
           chatContainer.appendChild(bubble);
         });
-        scrollToBottom();
+        chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
       }
 
       // ---------- create a single bubble element ----------
@@ -177,9 +177,31 @@ async function loadChats() {
             : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
         }`;
         bubble.textContent = text;
+        if (role === 'model') {
+  const copyBtn = document.createElement('button');
+  copyBtn.innerText = 'Copy';
+  // Styling: tiny, uppercase, muted gray that brightens on hover
+  copyBtn.className = 'text-[10px] text-gray-500 hover:text-gray-300 mt-1 ml-2 transition-colors duration-200 uppercase tracking-widest block focus:outline-none';
+  
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.innerText = 'Copied!';
+      copyBtn.classList.add('text-green-400'); // Brief color flash for feedback
+      setTimeout(() => { 
+        copyBtn.innerText = 'Copy'; 
+        copyBtn.classList.remove('text-green-400');
+      }, 2000);
+    });
+  };
+  
+  bubble.appendChild(copyBtn);
+}
+       
         div.appendChild(bubble);
         return div;
       }
+
+
 
       // ---------- scroll chat to bottom ----------
       function scrollToBottom() {
@@ -222,6 +244,7 @@ async function loadChats() {
         messages.push({ role, content: text });
         const bubble = createMessageBubble(role, text);
         chatContainer.appendChild(bubble);
+        if(navigator.vibrate) navigator.vibrate(1);
        
         saveToLocalStorage();   // will only save if privateMode == false
       }
@@ -352,6 +375,8 @@ async function fetchAiResponse() {
         sendBtn.disabled = true;
         userInput.disabled = true;
 
+        document.title = '⏳ Hoxchat is thinking...';
+
         // 1. Add user message
         addMessage('user', text);
         userInput.value = '';   // clear input
@@ -380,7 +405,8 @@ bubble.appendChild(indicator);
 typingBubble.appendChild(bubble);
 chatContainer.appendChild(typingBubble);
 const typing = typingBubble; // keep variable name for later removal
-scrollToBottom();
+
+chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
 
 
 
@@ -412,7 +438,7 @@ scrollToBottom();
           errorBubble.querySelector('div').classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
           chatContainer.appendChild(errorBubble);
            
-          scrollToBottom();
+          chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
           // Do NOT save error to storage (private mode or not, we don't want errors persisted)
           // but we already pushed to messages, so we need to remove it from messages if we don't want it in storage.
           // However, it's okay to keep for current session, but remove from messages before saving?
@@ -424,6 +450,7 @@ scrollToBottom();
           sendBtn.disabled = false;
           userInput.disabled = false;
           userInput.focus();
+          document.title = 'Hoxchat';
         }
       }
 
@@ -475,6 +502,7 @@ scrollToBottom();
       userInput.focus();
 
       updateSourceUI();
+      document.onvisibilitychange = () => document.title = document.hidden ? "H-TAB" : "Hoxchat";
           })();
    
   </script>
