@@ -4,6 +4,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="sidebar.css"> 
+
+  <div id="sidebar-container"></div>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HOXIP</title>
@@ -25,6 +29,9 @@
   <div class="w-full max-w-md md:max-w-lg bg-white shadow-xl rounded-2xl flex flex-col h-[95vh] sm:h-[90vh] overflow-hidden border border-gray-200 relative">
 
     <!-- header: title, new chat button, private toggle -->
+     <button id="hamburger-btn" class="text-[#ececf1] hover:text-[#9a9bb0] focus:outline-none mr-3 transition-colors">
+    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </button>
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
       <h1 class="text-xl font-semibold text-gray-800 tracking-tight">HOX chat</h1>
       <span id="username-display" class="text-xs text-gray-400"></span>
@@ -96,6 +103,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
      'https://zlncxweliwhtrumpxvkz.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg'
     );
+    window.sharedSupabase = supabase;
 
       const STORAGE_KEY = 'simple_ai_chat_history';
 
@@ -511,10 +519,24 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
 
       updateSourceUI();
       document.onvisibilitychange = () => document.title = document.hidden ? "H-TAB" : "Hoxchat";
+
+      // --- THE BRIDGE FOR SIDEBAR.JS ---
+  window.hoxLoadChats = loadChats;
+  window.hoxReset = () => { resetConversation(); currentChatId = null; };
+  window.hoxLogout = async () => { await supabase.auth.signOut(); window.location.href = 'login.html'; }; // ADD THIS LINEwindow.hoxLogout = async () => { await supabase.auth.signOut(); window.location.href = 'login.html'; }; // ADD THIS LINE
+  window.hoxLoadSpecificChat = async function(chatId) {
+    currentChatId = chatId;
+    const { data, error } = await supabase.from('messages').select('role, content').eq('chat_id', chatId).order('created_at', { ascending: true });
+    if (!error && data) {
+      messages = data;
+      renderAllMessages();
+    }
+  };
           })();
    
   </script>
   <script src="ollama.js"></script>
+  <script src="sidebar.js"></script> </body>
 </body>
 </html>
 
