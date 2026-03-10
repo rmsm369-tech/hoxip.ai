@@ -48,6 +48,7 @@
         <label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
           <span class="text-xs sm:text-sm">🔒 private</span>
           <input type="checkbox" id="private-mode" class="toggle w-4 h-4 rounded">
+          
         </label>
       </div>
     </div>
@@ -60,8 +61,8 @@
     <!-- input area: text field + send button -->
     <div class="border-t border-gray-200 bg-white p-3 shrink-0">
       <div class="flex items-center gap-2">
-        <input type="text" id="user-input" placeholder="Type a message..." 
-               class="flex-1 border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition bg-gray-50">
+<textarea rows="1" id="user-input" placeholder="Type a message..." 
+               class="flex-1 border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition bg-gray-50 resize-none overflow-hidden"></textarea>
         <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-full px-5 py-3 text-sm font-medium transition shadow-sm flex items-center gap-1">
           <span>➤</span>
         </button>
@@ -205,12 +206,15 @@ async function loadChats() {
   
   bubble.appendChild(copyBtn);
 }
+        // --- ADD THIS: Double click bubble to hear AI voice ---
+      if (role === 'model') bubble.ondblclick = () => speechSynthesis.speak(new SpeechSynthesisUtterance(text));
        
         div.appendChild(bubble);
+        
+
         return div;
+
       }
-
-
 
       // ---------- scroll chat to bottom ----------
       function scrollToBottom() {
@@ -532,7 +536,9 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
       renderAllMessages();
     }
   };
-          })();
+  
+     })();
+     
    
   </script>
   <script src="ollama.js"></script>
