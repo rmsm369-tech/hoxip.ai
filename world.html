@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>World | Hoxip</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background-color: #343541; color: #ececf1; }
+    .post-card { background-color: #444654; transition: all 0.3s ease; }
+    /* Hide scrollbar */
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
+    /* Pulse Animation for New Posts */
+    @keyframes pulse-border {
+      0% { border-color: rgba(236, 236, 241, 0.1); }
+      50% { border-color: rgba(236, 236, 241, 0.5); }
+      100% { border-color: rgba(236, 236, 241, 0.1); }
+    }
+    .new-post { animation: pulse-border 2s infinite; }
+  </style>
+</head>
+<body class="h-screen flex flex-col font-sans antialiased overflow-hidden">
+
+  <header class="flex items-center justify-between p-4 border-b border-gray-600/50 bg-[#343541] z-10 shadow-md">
+    <button onclick="window.location.href='index.html'" class="text-gray-400 hover:text-white transition px-2 py-1 rounded">
+      ← Back
+    </button>
+    <h1 class="text-lg font-bold tracking-widest uppercase text-gray-200">The World</h1>
+    <div class="w-10"></div>
+  </header>
+
+  <main id="feed-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-32 scroll-smooth">
+    </main>
+
+  <footer class="absolute bottom-0 w-full p-4 bg-[#343541] border-t border-gray-600/50">
+    <div class="max-w-3xl mx-auto flex items-end gap-2">
+      <textarea id="post-input" rows="1" placeholder="Broadcast your thoughts to the void..." 
+        class="flex-1 bg-[#444654] border border-gray-600 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 resize-none overflow-hidden transition-all"></textarea>
+      <button id="post-btn" class="bg-gray-200 text-[#343541] p-3 rounded-full hover:bg-white transition font-bold shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+      </button>
+    </div>
+  </footer>
+
+<script>
+    const supa = window.supabase.createClient(
+      'https://zlncxweliwhtrumpxvkz.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg'
+    );
+
+    let currentUser = null;
+    let currentUsername = 'Nyx Tesla';
+
+    const feedContainer = document.getElementById('feed-container');
+    const postInput = document.getElementById('post-input');
+    const postBtn = document.getElementById('post-btn');
+
+    async function init() {
+      const { data: { user } } = await supa.auth.getUser();
+      if (!user) return window.location.href = 'login.html';
+      currentUser = user;
+
+      // UPDATED: Now targeting world_profiles
+      let { data: profile } = await supa.from('world_profiles').select('username').eq('id', user.id).single();
+      if (!profile) {
+        const generatedName = 'Seeker_' + Math.floor(Math.random() * 1000);
+        await supa.from('world_profiles').insert([{ id: user.id, username: generatedName }]);
+        currentUsername = generatedName;
+      } else {
+        currentUsername = profile.username;
+      }
+
+      loadPosts();
+      subscribeToRealtime();
+    }
+
+    async function loadPosts() {
+      // UPDATED: Now joining with world_profiles
+      const { data: posts, error } = await supa
+        .from('world_posts')
+        .select(`id, content, likes, created_at, user_id, world_profiles(username)`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (!error) {
+        feedContainer.innerHTML = '';
+        posts.forEach(post => renderPost(post));
+      } else {
+        console.error("Load Error:", error);
+      }
+    }
+
+    function renderPost(post, prepend = false) {
+      if (document.getElementById(`post-${post.id}`)) return;
+
+      const div = document.createElement('div');
+      div.id = `post-${post.id}`;
+      
+      const hour = new Date(post.created_at).getHours();
+      const auraColor = hour < 6 || hour > 20 ? 'border-indigo-500/30' : 'border-orange-400/20';
+      
+      div.className = `post-card p-4 rounded-xl shadow-md border ${auraColor}`;
+      
+      const timeString = new Date(post.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      // UPDATED: Now reading from world_profiles
+      const username = post.world_profiles?.username || currentUsername;
+
+      div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-bold text-sm text-gray-300">@${username}</span>
+          <span class="text-[10px] text-gray-500">${timeString}</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-4 whitespace-pre-wrap">${post.content}</p>
+        <div class="flex items-center justify-between border-t border-gray-600/50 pt-2">
+          <button onclick="addEcho('${post.id}', ${post.likes})" class="text-xs text-gray-400 hover:text-white transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v8l9-11h-7z" /></svg>
+            <span id="echo-count-${post.id}">${post.likes} Echoes</span>
+          </button>
+        </div>
+      `;
+
+      div.onclick = (e) => {
+        if(e.target.closest('button')) return;
+        document.querySelectorAll('.post-card').forEach(n => n.style.opacity = n === div ? '1' : (n.style.opacity == '0.2' ? '1' : '0.2'));
+      };
+
+      if (prepend) feedContainer.prepend(div);
+      else feedContainer.appendChild(div);
+    }
+
+    postBtn.onclick = async () => {
+      const content = postInput.value.trim();
+      if (!content) return;
+
+      postInput.value = '';
+      postInput.style.height = 'auto';
+      
+      // UPDATED: Join with world_profiles on insert
+      const { data: newPost, error } = await supa
+        .from('world_posts')
+        .insert([{ user_id: currentUser.id, content: content, likes: 0 }])
+        .select('*, world_profiles(username)')
+        .single();
+
+      if (!error && newPost) {
+        renderPost(newPost, true);
+        window.scrollTo(0, 0);
+
+        setTimeout(async () => {
+          const ghostEchoes = Math.floor(Math.random() * 3) + 1;
+          await supa.from('world_posts').update({ likes: ghostEchoes }).eq('id', newPost.id);
+          const el = document.getElementById(`echo-count-${newPost.id}`);
+          if(el) el.innerText = `${ghostEchoes} Echoes`;
+        }, 2000);
+      } else {
+        console.error("Post Error:", error);
+      }
+    };
+
+    window.addEcho = async (postId, currentLikes) => {
+      const newLikes = currentLikes + 1;
+      const el = document.getElementById(`echo-count-${postId}`);
+      if(el) el.innerText = `${newLikes} Echoes`;
+      await supa.from('world_posts').update({ likes: newLikes }).eq('id', postId);
+    };
+
+    postInput.addEventListener('input', function() { 
+      this.style.height = 'auto'; 
+      this.style.height = (this.scrollHeight < 150 ? this.scrollHeight : 150) + 'px'; 
+    });
+
+    function subscribeToRealtime() {
+      supa.channel('public:world_posts')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'world_posts' }, payload => {
+          if (payload.new.user_id !== currentUser.id) loadPosts();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'world_posts' }, payload => {
+          const countEl = document.getElementById(`echo-count-${payload.new.id}`);
+          if (countEl) countEl.innerText = `${payload.new.likes} Echoes`;
+        })
+        .subscribe();
+    }
+
+    init();
+  </script>
+</body>
+</html>

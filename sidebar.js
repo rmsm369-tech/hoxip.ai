@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof window.hoxReset === 'function') window.hoxReset();
     if (window.innerWidth < 768) toggleSidebar();
   });
+  
 
   document.getElementById('sidebar-logout')?.addEventListener('click', async () => {
     await window.sharedSupabase.auth.signOut();
