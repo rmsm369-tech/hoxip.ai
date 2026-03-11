@@ -79,7 +79,7 @@
       // UPDATED: Now joining with world_profiles
       const { data: posts, error } = await supa
         .from('world_posts')
-        .select(`id, content, likes, created_at, user_id, world_profiles(username)`)
+        .select(`id, content, likes, created_at, user_id, world_profiles(username),user_id`)
         .order('created_at', { ascending: false })
         .limit(50);
       
@@ -126,6 +126,20 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v8l9-11h-7z" /></svg>
             <span id="echo-count-${post.id}">${post.likes} Echoes</span>
           </button>
+
+          <button onclick="toggleComments('${post.id}', event)" class="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 ml-4">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+  Discuss
+</button>
+
+<div id="comments-section-${post.id}" class="hidden mt-3 pt-3 border-t border-gray-600/30 flex-col gap-2 cursor-default" onclick="event.stopPropagation()">
+  <div id="comment-list-${post.id}" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+  <div class="flex gap-2 mt-1">
+    <input type="text" id="comment-input-${post.id}" placeholder="Add to the signal..." class="flex-1 bg-[#343541] border border-gray-600 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-gray-400">
+    <button onclick="postComment('${post.id}', event)" class="text-xs bg-gray-200 text-[#343541] px-3 rounded font-bold hover:bg-white transition">Send</button>
+  </div>
+</div>
+
         </div>
       `;
 
@@ -206,6 +220,90 @@ window.editPost = (id, e) => {
     let newText = textNode.innerText.trim();
     if (!newText.includes('(edited)')) newText += '\n*(edited)*';
     await supa.from('world_posts').update({ content: newText }).eq('id', id);
+    textNode.innerText = newText;
+  };
+};
+
+window.toggleComments = async (postId, e) => {
+  e.stopPropagation();
+  const section = document.getElementById(`comments-section-${postId}`);
+  section.classList.toggle('hidden');
+  section.classList.toggle('flex');
+  
+  // If opening and empty, fetch comments
+  const list = document.getElementById(`comment-list-${postId}`);
+  if (!section.classList.contains('hidden') && list.innerHTML === '') {
+    const { data: comments } = await supa.from('world_comments')
+      .select('id, content, likes, world_profiles(username),user_id')
+      .eq('post_id', postId).order('created_at', { ascending: true });
+    
+    if (comments) comments.forEach(c => renderSingleComment(postId, c));
+  }
+};
+
+window.renderSingleComment = (postId, c) => {
+  const list = document.getElementById(`comment-list-${postId}`);
+  const username = c.world_profiles?.username || 'Unknown';
+  list.insertAdjacentHTML('beforeend', `
+    <div id="comment-${c.id}" class="text-xs bg-[#343541] p-2 rounded relative group">
+      <span class="font-bold text-gray-300">@${username}</span>
+       <span id="comment-text-${c.id}" class="text-gray-200 outline-none rounded focus:bg-[#444654] px-1">${c.content}</span>
+      <div class="flex gap-3 text-[9px] text-gray-500 mt-1 uppercase font-bold tracking-wider">
+        <button onclick="echoComment('${c.id}', ${c.likes}, event)" class="hover:text-white transition">${c.likes} Echoes</button>
+        <button onclick="replyComment('${postId}', '${username}', event)" class="hover:text-white transition">Reply</button>
+        ${c.user_id === currentUser.id ? `<button onclick="editComment('${c.id}', event)" class="hover:text-blue-400 transition ml-auto">Edit</button><button onclick="deleteComment('${c.id}', event)" class="hover:text-red-400 transition ml-2 text-red-500/70">Delete</button>` : ''}
+      </div>
+    </div>
+  `);
+};
+
+window.postComment = async (postId, e) => {
+  e.stopPropagation();
+  const input = document.getElementById(`comment-input-${postId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const { data: newComment } = await supa.from('world_comments')
+    .insert([{ post_id: postId, user_id: currentUser.id, content: text, likes: 0 }])
+    .select('id, content, likes, world_profiles(username)').single();
+  
+  if (newComment) {
+    renderSingleComment(postId, newComment);
+    const list = document.getElementById(`comment-list-${postId}`);
+    list.scrollTop = list.scrollHeight; // Auto-scroll to new comment
+  }
+};
+
+window.echoComment = async (commentId, currentLikes, e) => {
+  e.stopPropagation();
+  const newLikes = currentLikes + 1;
+  e.target.innerText = `${newLikes} Echoes`;
+  await supa.from('world_comments').update({ likes: newLikes }).eq('id', commentId);
+};
+
+window.replyComment = (postId, username, e) => {
+  e.stopPropagation();
+  const input = document.getElementById(`comment-input-${postId}`);
+  input.value = `@${username} `;
+  input.focus();
+};
+window.deleteComment = async (commentId, e) => {
+  e.stopPropagation();
+  if (confirm('Erase this echo?')) {
+    await supa.from('world_comments').delete().eq('id', commentId);
+    document.getElementById(`comment-${commentId}`).remove();
+  }
+};
+window.editComment = (id, e) => {
+  e.stopPropagation();
+  const textNode = document.getElementById(`comment-text-${id}`);
+  textNode.contentEditable = true; textNode.focus();
+  textNode.onblur = async () => {
+    textNode.contentEditable = false;
+    let newText = textNode.innerText.trim();
+    if (!newText.includes('(edited)')) newText += ' *(edited)*';
+    await supa.from('world_comments').update({ content: newText }).eq('id', id);
     textNode.innerText = newText;
   };
 };
