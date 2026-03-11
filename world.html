@@ -144,6 +144,7 @@
         .single();
 
       if (!error && newPost) {
+        console.log('Post saved!', newPost.id);
         renderPost(newPost, true);
         window.scrollTo(0, 0);
 
