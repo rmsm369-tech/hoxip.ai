@@ -471,6 +471,8 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
           userInput.disabled = false;
           userInput.focus();
           document.title = 'Hoxchat';
+          navigator.wakeLock.request("screen");
+          navigator.getBattery().then(b=>b.level<0.1&&alert("Battery low!"));
         }
       }
 
