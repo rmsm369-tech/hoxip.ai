@@ -109,7 +109,16 @@
       div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
           <span class="font-bold text-sm text-gray-300">@${username}</span>
-          <span class="text-[10px] text-gray-500">${timeString}</span>
+          <div class="relative flex items-center gap-2">
+  <span class="text-[10px] text-gray-500">${timeString}</span>
+  <button onclick="toggleMenu('${post.id}', event)" class="text-gray-400 hover:text-white px-2">⋮</button>
+  <div id="menu-${post.id}" class="hidden absolute right-0 top-6 bg-[#343541] border border-gray-600 rounded flex-col w-24 z-20 overflow-hidden">
+    ${post.user_id === currentUser.id ? 
+      `<button onclick="editPost('${post.id}', event)" class="text-left px-3 py-2 text-sm hover:bg-[#444654]">Edit</button>
+       <button onclick="deletePost('${post.id}', event)" class="text-left px-3 py-2 text-sm hover:bg-[#444654] text-red-400">Delete</button>` 
+      : `<button onclick="reportPost(event)" class="text-left px-3 py-2 text-sm hover:bg-[#444654] text-yellow-500">Report</button>`}
+  </div>
+</div>
         </div>
         <p class="text-sm leading-relaxed mb-4 whitespace-pre-wrap">${post.content}</p>
         <div class="flex items-center justify-between border-t border-gray-600/50 pt-2">
@@ -182,6 +191,24 @@
         })
         .subscribe();
     }
+    window.toggleMenu = (id, e) => { e.stopPropagation(); document.getElementById(`menu-${id}`).classList.toggle('hidden'); };
+window.reportPost = (e) => { e.stopPropagation(); alert('Reported'); document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add('hidden')); };
+window.deletePost = async (id, e) => { 
+  e.stopPropagation(); 
+  if(confirm('Delete?')) { await supa.from('world_posts').delete().eq('id', id); document.getElementById(`post-${id}`).remove(); } 
+};
+window.editPost = (id, e) => { 
+  e.stopPropagation(); document.getElementById(`menu-${id}`).classList.add('hidden');
+  const textNode = document.querySelector(`#post-${id} p`);
+  textNode.contentEditable = true; textNode.focus();
+  textNode.onblur = async () => {
+    textNode.contentEditable = false;
+    let newText = textNode.innerText.trim();
+    if (!newText.includes('(edited)')) newText += '\n*(edited)*';
+    await supa.from('world_posts').update({ content: newText }).eq('id', id);
+    textNode.innerText = newText;
+  };
+};
 
     init();
   </script>
