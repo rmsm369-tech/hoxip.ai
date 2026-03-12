@@ -31,8 +31,17 @@
   </header>
 
   <main id="feed-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-32 scroll-smooth">
+   
     </main>
-
+ <div id="infinite-loader" class="hidden w-full flex justify-center py-6 pb-32" class="hidden w-full flex justify-center py-6 transition-opacity duration-300">
+  <svg class="animate-spin h-6 w-6 text-[#10a37f]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+</div>
+<div id="end-of-world" class="hidden w-full text-center py-8 text-xs text-[#9a9bb0] font-medium tracking-widest uppercase">
+  The Void Ends Here
+</div>
   <footer class="absolute bottom-0 w-full p-4 bg-[#343541] border-t border-gray-600/50">
     <div class="max-w-3xl mx-auto flex items-end gap-2">
       <textarea id="post-input" rows="1" placeholder="Broadcast your thoughts to the void..." 
@@ -82,7 +91,7 @@ if (!profile) {
         .from('world_posts')
         .select(`id, content, likes, created_at, user_id, world_profiles(username),user_id`)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(20);
       
       if (!error) {
         feedContainer.innerHTML = '';
@@ -347,6 +356,54 @@ window.claimUsername = async () => {
   loadPosts();
   subscribeToRealtime();
 };
+
+let scrollOffset = 20;
+let isFetchingFeed = false;
+let hasMoreFeed = true;
+
+async function fetchNextBatch() {
+  if (isFetchingFeed || !hasMoreFeed) return;
+  
+  isFetchingFeed = true;
+  const loader = document.getElementById('infinite-loader');
+  loader.classList.remove('hidden');
+
+  const { data: nextPosts, error } = await supa
+    .from('world_posts')
+    .select(`id, content, likes, created_at, user_id, world_profiles(username)`)
+    .order('created_at', { ascending: false })
+    .range(scrollOffset, scrollOffset + 19);
+
+  if (error || !nextPosts || nextPosts.length === 0) {
+    hasMoreFeed = false;
+    loader.classList.add('hidden');
+    document.getElementById('end-of-world').classList.remove('hidden');
+    isFetchingFeed = false;
+    return;
+  }
+
+  nextPosts.forEach(post => renderPost(post));
+  scrollOffset += 20;
+  
+  if (nextPosts.length < 20) {
+    hasMoreFeed = false;
+    loader.classList.add('hidden');
+    document.getElementById('end-of-world').classList.remove('hidden');
+  } else {
+    loader.classList.add('hidden');
+  }
+  
+  isFetchingFeed = false;
+}
+
+const feedObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting && hasMoreFeed) fetchNextBatch();
+}, { rootMargin: '200px' });
+
+setTimeout(() => {
+  const loaderEl = document.getElementById('infinite-loader');
+  if (loaderEl) feedObserver.observe(loaderEl);
+}, 1500);
 
     init();
   </script>
