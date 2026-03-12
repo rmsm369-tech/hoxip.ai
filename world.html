@@ -112,7 +112,7 @@ if (!profile) {
       
       div.className = `post-card p-4 rounded-xl shadow-md border ${auraColor}`;
       
-      const timeString = new Date(post.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const timeString = (() => { const d = new Date(post.created_at); const diff = Math.floor((Date.now() - d) / 60000); return diff < 1 ? 'just now' : diff < 60 ? `${diff}m ago` : diff < 1440 ? `${Math.floor(diff/60)}h ago` : `${Math.floor(diff/1440)}d ago`; })();
       // UPDATED: Now reading from world_profiles
       const username = post.world_profiles?.username || currentUsername;
 
