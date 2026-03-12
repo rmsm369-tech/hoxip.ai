@@ -63,16 +63,17 @@
 
       // UPDATED: Now targeting world_profiles
       let { data: profile } = await supa.from('world_profiles').select('username').eq('id', user.id).single();
-      if (!profile) {
-        const generatedName = 'Seeker_' + Math.floor(Math.random() * 1000);
-        await supa.from('world_profiles').insert([{ id: user.id, username: generatedName }]);
-        currentUsername = generatedName;
-      } else {
-        currentUsername = profile.username;
-      }
-
-      loadPosts();
-      subscribeToRealtime();
+     // INSERT THIS BLOCK inside your init() function when profile check fails:
+if (!profile) {
+      document.getElementById('username-modal').classList.remove('hidden');
+      return; // CRITICAL: This 'return' stops the function entirely.
+    } 
+    
+    // No 'else' needed! If the code reaches here, it means they DO have a profile.
+    currentUsername = profile.username;
+    
+    loadPosts();
+    subscribeToRealtime();
     }
 
     async function loadPosts() {
@@ -307,8 +308,56 @@ window.editComment = (id, e) => {
     textNode.innerText = newText;
   };
 };
+// ADDITION: USERNAME VALIDATION AND CLAIM LOGIC
+window.claimUsername = async () => {
+  const input = document.getElementById('new-username');
+  const errorMsg = document.getElementById('username-error');
+  
+  // 1. Strict Sanitization (Kills XSS and spaces)
+  let rawName = input.value;
+  let safeName = rawName.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
+  input.value = safeName; // Updates UI so user sees invalid chars vanish
+  
+  // 2. Length & Profanity/Reserved check
+  const bannedNames = ['admin', 'hoxip', 'root', 'system', 'mod'];
+  if (safeName.length < 3) {
+    errorMsg.innerText = "Must be 3-20 characters.";
+    errorMsg.classList.remove('hidden');
+    return;
+  }
+  if (bannedNames.some(banned => safeName.toLowerCase().includes(banned))) {
+    errorMsg.innerText = "That name is reserved or invalid.";
+    errorMsg.classList.remove('hidden');
+    return;
+  }
+  
+  // 3. The Database Insert (Let the SQL UNIQUE constraint do the heavy lifting)
+  const { error } = await supa.from('world_profiles').insert([{ id: currentUser.id, username: safeName }]);
+  
+  if (error) {
+    // If SQL catches a duplicate, it throws an error here
+    errorMsg.innerText = "Name is already taken. Try another.";
+    errorMsg.classList.remove('hidden');
+    return;
+  }
+  
+  // 4. Success: Hide modal, save locally, and manually trigger the feed
+  currentUsername = safeName;
+  document.getElementById('username-modal').classList.add('hidden');
+  loadPosts();
+  subscribeToRealtime();
+};
 
     init();
   </script>
+  <div id="username-modal" class="hidden fixed inset-0 bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm">
+  <div class="bg-[#343541] border border-gray-600 p-6 rounded-xl shadow-2xl w-80 text-center">
+    <h2 class="text-white text-lg font-bold mb-2">Identify Yourself</h2>
+    <p class="text-gray-400 text-xs mb-4">Choose a unique name to enter the World. Alphanumeric and underscores only.</p>
+    <input type="text" id="new-username" maxlength="20" placeholder="Username..." class="w-full bg-[#444654] border border-gray-500 rounded px-3 py-2 text-white focus:outline-none focus:border-gray-300 mb-2 text-sm">
+    <p id="username-error" class="text-red-400 text-xs hidden mb-3"></p>
+    <button onclick="claimUsername()" class="w-full bg-gray-200 text-[#343541] font-bold py-2 rounded hover:bg-white transition text-sm">Enter the Void</button>
+  </div>
+</div>
 </body>
 </html>
