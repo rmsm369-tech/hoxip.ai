@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>World | Hoxip</title>
@@ -164,7 +165,7 @@ if (!profile) {
 
     postBtn.onclick = async () => {
       const content = postInput.value.trim();
-      if (!content) return;
+     if (!content) { postInput.classList.add('shake'); setTimeout(() => postInput.classList.remove('shake'), 500); return; }
 
       postInput.value = '';
       postInput.style.height = 'auto';

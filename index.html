@@ -387,7 +387,7 @@ async function fetchAiResponse() {
       // ---------- send message: user input -> call API -> show response ----------
       async function handleSend() {
         const text = userInput.value.trim();
-        if (!text || isWaiting) return;
+        if (!text || isWaiting) { if (!text) { userInput.classList.add('shake'); setTimeout(() => userInput.classList.remove('shake'), 500); } return; }
 
         // Disable input and button while waiting
         isWaiting = true;
