@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hoxchat · Offline</title>
+<style>
+  :root {
+    --bg-dark: #343541;
+    --bg-card: #444654;
+    --text-main: #ececf1;
+    --accent: #10a37f;
+    --accent-hover: #0e8f6e;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+  
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Retro CRT Scanline Overlay */
+  body::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+  }
+
+  header {
+    text-align: center;
+    padding: 2rem 1rem;
+    z-index: 10;
+  }
+
+  h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+  
+  /* Shifting Gradient Text */
+  .offline-text {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: linear-gradient(270deg, #ff4b4b, #ff9000, #ff4b4b);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shiftGradient 3s ease infinite;
+    margin-top: 5px;
+  }
+
+  @keyframes shiftGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  /* Main Menu Grid */
+  #menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    width: 90%;
+    max-width: 600px;
+    z-index: 10;
+  }
+
+  .game-card {
+    background: var(--bg-card);
+    border: 1px solid #565869;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    border-color: var(--accent);
+  }
+
+  .game-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .game-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+  .high-score { font-size: 0.8rem; color: #9a9bb0; }
+
+  /* Game Container */
+  #game-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    flex: 1;
+    z-index: 10;
+  }
+
+  #game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 20px;
+  }
+
+  .btn {
+    background: var(--bg-card);
+    border: 1px solid #565869;
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  #score-display { font-size: 1.2rem; font-weight: bold; font-family: monospace; }
+
+  canvas {
+    background: #000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    border: 2px solid #565869;
+    max-width: 100%;
+    touch-action: none; /* Prevents scrolling while playing */
+  }
+
+  #controls-hint {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #9a9bb0;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header id="header">
+  <h1>Hoxchat</h1>
+  <div class="offline-text">Connection Lost • Enter the Arcade</div>
+</header>
+
+<div id="menu">
+  </div>
+
+<div id="game-container">
+  <div id="game-header">
+    <button class="btn" onclick="exitGame()">← Back</button>
+    <div id="score-display">Score: 0</div>
+  </div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <div id="controls-hint"></div>
+</div>
+
+<script>
+// --- CORE ENGINE ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let animFrame;
+let currentGame = null;
+let score = 0;
+let isGameOver = false;
+
+// Input State
+const keys = {};
+let touchStartX = 0, touchStartY = 0;
+let swipeDir = null; 
+let tapTriggered = false;
+let touchX = 0, touchY = 0;
+
+window.addEventListener('keydown', e => { keys[e.code] = true; });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+// --- PURE ADDITION 1: Stop page scrolling & Add Spacebar Restart ---
+window.addEventListener('keydown', e => { 
+  // Stops the browser from scrolling when playing
+  if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    e.preventDefault(); 
+  }
+  // Let Spacebar or Enter restart the game if you die
+  if (isGameOver && (e.code === 'Space' || e.code === 'Enter')) {
+    // --- PURE ADDITION 1: Stop page scrolling & Add Spacebar Restart ---
+window.addEventListener('keydown', e => { 
+  // Stops the browser from scrolling when playing
+  if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    e.preventDefault(); 
+  }
+  // Let Spacebar or Enter restart the game if you die
+  if (isGameOver && (e.code === 'Space' || e.code === 'Enter')) {
+     tapTriggered = true; 
+  }
+}, {passive: false});
+     tapTriggered = true; 
+  }
+}, {passive: false});
+
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchX = touchStartX;
+  touchY = touchStartY;
+  tapTriggered = true;
+  e.preventDefault();
+}, {passive: false});
+
+canvas.addEventListener('touchmove', e => {
+  touchX = e.touches[0].clientX;
+  touchY = e.touches[0].clientY;
+  e.preventDefault();
+}, {passive: false});
+
+canvas.addEventListener('touchend', e => {
+  let dx = touchX - touchStartX;
+  let dy = touchY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
+    swipeDir = dx > 0 ? 'RIGHT' : 'LEFT';
+  } else if (Math.abs(dy) > 30) {
+    swipeDir = dy > 0 ? 'DOWN' : 'UP';
+  }
+  e.preventDefault();
+});
+
+// --- GAME DEFINITIONS ---
+const games = {
+  snake: { name: 'Snake', icon: '🐍', hint: 'Swipe or WASD to move' },
+  flappy: { name: 'Flappy Bird', icon: '🦅', hint: 'Tap or Space to flap' },
+  pong: { name: 'Pong', icon: '🏓', hint: 'Drag or Up/Down to move paddle' },
+  shooter: { name: 'Space Shooter', icon: '🚀', hint: 'Drag to move, Auto-fires' },
+  g2048: { name: '2048', icon: '🔢', hint: 'Swipe or WASD to slide tiles' }
+};
+
+// --- HIGH SCORE MANAGER ---
+function getScore(gameId) { return localStorage.getItem('hox_score_' + gameId) || 0; }
+function saveScore(gameId, s) { 
+  let high = getScore(gameId);
+  if(s > high) localStorage.setItem('hox_score_' + gameId, s);
+}
+
+// --- MENU SYSTEM ---
+function renderMenu() {
+  const menu = document.getElementById('menu');
+  menu.innerHTML = '';
+  for (let id in games) {
+    let g = games[id];
+    let hs = getScore(id);
+    menu.innerHTML += `
+      <div class="game-card" onclick="launchGame('${id}')">
+        <div class="game-icon">${g.icon}</div>
+        <div class="game-title">${g.name}</div>
+        <div class="high-score">Best: ${hs}</div>
+      </div>
+    `;
+  }
+}
+
+function launchGame(id) {
+  document.getElementById('header').style.display = 'none';
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game-container').style.display = 'flex';
+  document.getElementById('controls-hint').innerText = games[id].hint;
+  
+  // Responsive Canvas
+  const size = Math.min(window.innerWidth * 0.95, 400);
+  canvas.width = size;
+  canvas.height = id === 'flappy' || id === 'shooter' ? size * 1.5 : size;
+  
+  score = 0;
+  isGameOver = false;
+  currentGame = id;
+  updateScoreUI();
+  
+  cancelAnimationFrame(animFrame);
+  
+  if(id === 'snake') initSnake();
+  if(id === 'flappy') initFlappy();
+  if(id === 'pong') initPong();
+  if(id === 'shooter') initShooter();
+  if(id === 'g2048') init2048();
+}
+
+function exitGame() {
+  cancelAnimationFrame(animFrame);
+  saveScore(currentGame, score);
+  document.getElementById('header').style.display = 'block';
+  document.getElementById('menu').style.display = 'grid';
+  document.getElementById('game-container').style.display = 'none';
+  renderMenu();
+}
+
+function updateScoreUI() { document.getElementById('score-display').innerText = `Score: ${score}`; }
+function drawGameOver() {
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.font = '30px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+  ctx.font = '15px sans-serif';
+  ctx.fillText('Tap to restart', canvas.width/2, canvas.height/2 + 30);
+  
+  if (tapTriggered) {
+    tapTriggered = false;
+    launchGame(currentGame);
+  } else {
+    animFrame = requestAnimationFrame(drawGameOver);
+  }
+}
+
+// ==========================================
+// 1. SNAKE GAME
+// ==========================================
+let snake, food, dx, dy, snakeGrid;
+function initSnake() {
+  snakeGrid = canvas.width / 20;
+  snake = [{x: 10, y: 10}];
+  dx = 1; dy = 0;
+  spawnFood();
+  let lastTime = 0;
+  
+  function loop(time) {
+    if(isGameOver) return drawGameOver();
+    animFrame = requestAnimationFrame(loop);
+    if(time - lastTime < 100) return; // Control speed
+    lastTime = time;
+
+    // Input
+    if ((keys['ArrowUp'] || keys['KeyW'] || swipeDir === 'UP') && dy === 0) { dx = 0; dy = -1; }
+    if ((keys['ArrowDown'] || keys['KeyS'] || swipeDir === 'DOWN') && dy === 0) { dx = 0; dy = 1; }
+    if ((keys['ArrowLeft'] || keys['KeyA'] || swipeDir === 'LEFT') && dx === 0) { dx = -1; dy = 0; }
+    if ((keys['ArrowRight'] || keys['KeyD'] || swipeDir === 'RIGHT') && dx === 0) { dx = 1; dy = 0; }
+    swipeDir = null;
+
+    let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+    // Walls
+    if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) isGameOver = true;
+    // Self collision
+    for(let i=0; i<snake.length; i++) if(snake[i].x === head.x && snake[i].y === head.y) isGameOver = true;
+
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score += 10; updateScoreUI(); spawnFood();
+    } else {
+      snake.pop();
+    }
+
+    // Draw
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(food.x * snakeGrid, food.y * snakeGrid, snakeGrid-2, snakeGrid-2);
+    ctx.fillStyle = '#10a37f';
+    snake.forEach(seg => ctx.fillRect(seg.x * snakeGrid, seg.y * snakeGrid, snakeGrid-2, snakeGrid-2));
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+function spawnFood() { food = {x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20)}; }
+
+// ==========================================
+// 2. FLAPPY BIRD
+// ==========================================
+let bird, pipes, frameCnt;
+function initFlappy() {
+  bird = { y: canvas.height/2, v: 0, r: 12 };
+  pipes = []; frameCnt = 0;
+  
+  function loop() {
+    if(isGameOver) return drawGameOver();
+    animFrame = requestAnimationFrame(loop);
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Physics
+    bird.v += 0.4; // Gravity
+    if (keys['Space'] || tapTriggered) { bird.v = -7; keys['Space']=false; tapTriggered=false; }
+    bird.y += bird.v;
+
+    // Pipes
+    if(frameCnt++ % 90 === 0) {
+      let gap = 120;
+      let topH = Math.random() * (canvas.height - gap - 50) + 20;
+      pipes.push({x: canvas.width, top: topH, gap: gap});
+    }
+
+    ctx.fillStyle = '#22c55e';
+    for(let i=pipes.length-1; i>=0; i--) {
+      let p = pipes[i];
+      p.x -= 3;
+      ctx.fillRect(p.x, 0, 40, p.top);
+      ctx.fillRect(p.x, p.top + p.gap, 40, canvas.height);
+      
+      // Collision
+      if(bird.y - bird.r < p.top || bird.y + bird.r > p.top + p.gap) {
+        if(canvas.width/4 + bird.r > p.x && canvas.width/4 - bird.r < p.x + 40) isGameOver = true;
+      }
+      // Score
+      if(p.x === Math.floor(canvas.width/4)) { score++; updateScoreUI(); }
+      if(p.x < -40) pipes.splice(i,1);
+    }
+
+    // Floor/Ceiling
+    if(bird.y > canvas.height || bird.y < 0) isGameOver = true;
+
+    // Draw Bird
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath(); ctx.arc(canvas.width/4, bird.y, bird.r, 0, Math.PI*2); ctx.fill();
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+// ==========================================
+// 3. PONG
+// ==========================================
+let p1, p2, ball;
+function initPong() {
+  p1 = {y: canvas.height/2 - 30, score: 0};
+  p2 = {y: canvas.height/2 - 30, score: 0};
+  ball = {x: canvas.width/2, y: canvas.height/2, vx: 4, vy: 4};
+
+  function loop() {
+    if(isGameOver) return drawGameOver();
+    animFrame = requestAnimationFrame(loop);
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Input (Player)
+    if(keys['ArrowUp'] || keys['KeyW']) p1.y -= 6;
+    if(keys['ArrowDown'] || keys['KeyS']) p1.y += 6;
+    if(touchY > 0) p1.y = touchY - canvas.offsetTop - 30; // Touch drag
+    
+    // Bounds
+    p1.y = Math.max(0, Math.min(canvas.height-60, p1.y));
+
+    // AI (Opponent)
+    if(p2.y + 30 < ball.y - 10) p2.y += 4;
+    else if(p2.y + 30 > ball.y + 10) p2.y -= 4;
+
+    // Ball Physics
+    ball.x += ball.vx; ball.y += ball.vy;
+    if(ball.y <= 0 || ball.y >= canvas.height) ball.vy *= -1;
+
+    // Paddles Collision
+    if(ball.x <= 30 && ball.y > p1.y && ball.y < p1.y+60) { ball.vx *= -1.1; score++; updateScoreUI(); }
+    if(ball.x >= canvas.width-30 && ball.y > p2.y && ball.y < p2.y+60) { ball.vx *= -1.1; }
+
+    // Miss
+    if(ball.x < 0) { isGameOver = true; } // You missed
+    if(ball.x > canvas.width) { ball.x = canvas.width/2; ball.vx = 4; } // AI missed
+
+    // Draw
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(20, p1.y, 10, 60);
+    ctx.fillRect(canvas.width-30, p2.y, 10, 60);
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, 6, 0, Math.PI*2); ctx.fill();
+    
+    // Net
+    for(let i=0; i<canvas.height; i+=20) ctx.fillRect(canvas.width/2-1, i, 2, 10);
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+// ==========================================
+// 4. SPACE SHOOTER
+// ==========================================
+let ship, bullets, enemies, eFrame;
+function initShooter() {
+  ship = {x: canvas.width/2, y: canvas.height - 40};
+  bullets = []; enemies = []; eFrame = 0;
+
+  function loop() {
+    if(isGameOver) return drawGameOver();
+    animFrame = requestAnimationFrame(loop);
+    ctx.fillStyle = '#0a0a1a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Input
+    if(keys['ArrowLeft'] || keys['KeyA']) ship.x -= 5;
+    if(keys['ArrowRight'] || keys['KeyD']) ship.x += 5;
+    if(touchX > 0) ship.x = touchX - canvas.offsetLeft;
+    ship.x = Math.max(15, Math.min(canvas.width-15, ship.x));
+
+    // Auto-fire
+    if(eFrame % 15 === 0) bullets.push({x: ship.x, y: ship.y - 20});
+
+    // Spawn enemies
+    if(eFrame % 40 === 0) {
+      enemies.push({x: Math.random() * (canvas.width-30) + 15, y: -20, hp: 1});
+    }
+    eFrame++;
+
+    // Bullets
+    ctx.fillStyle = '#10a37f';
+    for(let i=bullets.length-1; i>=0; i--) {
+      bullets[i].y -= 8;
+      ctx.fillRect(bullets[i].x-2, bullets[i].y, 4, 10);
+      if(bullets[i].y < 0) bullets.splice(i,1);
+    }
+
+    // Enemies & Collision
+    ctx.fillStyle = '#ef4444';
+    for(let i=enemies.length-1; i>=0; i--) {
+      let e = enemies[i];
+      e.y += 3;
+      ctx.fillRect(e.x-15, e.y-15, 30, 30);
+      
+      // Hit player
+      if(Math.hypot(ship.x - e.x, ship.y - e.y) < 25) isGameOver = true;
+
+      // Hit bullet
+      for(let j=bullets.length-1; j>=0; j--) {
+        let b = bullets[j];
+        if(b.x > e.x-15 && b.x < e.x+15 && b.y < e.y+15 && b.y > e.y-15) {
+          enemies.splice(i, 1);
+          bullets.splice(j, 1);
+          score += 5; updateScoreUI();
+          break;
+        }
+      }
+      if(e && e.y > canvas.height) enemies.splice(i,1);
+    }
+
+    // Draw Ship
+    ctx.fillStyle = '#ececf1';
+    ctx.beginPath();
+    ctx.moveTo(ship.x, ship.y - 20);
+    ctx.lineTo(ship.x + 15, ship.y + 10);
+    ctx.lineTo(ship.x - 15, ship.y + 10);
+    ctx.fill();
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+// ==========================================
+// 5. 2048
+// ==========================================
+let board;
+function init2048() {
+  board = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  addTile(); addTile();
+  swipeDir = null; keys['ArrowUp']=keys['ArrowDown']=keys['ArrowLeft']=keys['ArrowRight']=keys['KeyW']=keys['KeyS']=keys['KeyA']=keys['KeyD']=false;
+  
+  function draw2048() {
+    ctx.fillStyle = '#bbada0'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    let cell = canvas.width / 4;
+    const colors = {0:'#ccc0b3',2:'#eee4da',4:'#ede0c8',8:'#f2b179',16:'#f59563',32:'#f67c5f',64:'#f65e3b',128:'#edcf72',256:'#edcc61',512:'#edc850',1024:'#edc53f',2048:'#edc22e'};
+    
+    for(let r=0; r<4; r++) {
+      for(let c=0; c<4; c++) {
+        let val = board[r][c];
+        ctx.fillStyle = colors[val] || '#3c3a32';
+        ctx.fillRect(c*cell + 5, r*cell + 5, cell-10, cell-10);
+        if(val > 0) {
+          ctx.fillStyle = val > 4 ? '#f9f6f2' : '#776e65';
+          ctx.font = 'bold ' + (val > 100 ? 24 : 36) + 'px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(val, c*cell + cell/2, r*cell + cell/2);
+        }
+      }
+    }
+  }
+
+  function addTile() {
+    let empty = [];
+    for(let r=0; r<4; r++) for(let c=0; c<4; c++) if(board[r][c]===0) empty.push({r,c});
+    if(empty.length > 0) {
+      let rnd = empty[Math.floor(Math.random() * empty.length)];
+      board[rnd.r][rnd.c] = Math.random() < 0.9 ? 2 : 4;
+    }
+  }
+
+  function slide(row) {
+    let arr = row.filter(val => val);
+    let missing = 4 - arr.length;
+    let zeros = Array(missing).fill(0);
+    return arr.concat(zeros);
+  }
+
+  function combine(row) {
+    for(let i=0; i<3; i++) {
+      if(row[i] !== 0 && row[i] === row[i+1]) {
+        row[i] *= 2; score += row[i]; row[i+1] = 0;
+      }
+    }
+    return row;
+  }
+
+  function operate(row) { return slide(combine(slide(row))); }
+
+  function move(dir) {
+    let flipped = false, rotated = false, moved = false;
+    let oldBoard = JSON.stringify(board);
+
+    if(dir === 'RIGHT') { board = board.map(r => r.reverse()); flipped = true; }
+    else if(dir === 'UP' || dir === 'DOWN') {
+      let newB = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      for(let r=0; r<4; r++) for(let c=0; c<4; c++) newB[r][c] = board[c][r];
+      board = newB; rotated = true;
+      if(dir === 'DOWN') { board = board.map(r => r.reverse()); flipped = true; }
+    }
+
+    for(let i=0; i<4; i++) board[i] = operate(board[i]);
+
+    if(flipped) board = board.map(r => r.reverse());
+    if(rotated) {
+      let newB = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      for(let r=0; r<4; r++) for(let c=0; c<4; c++) newB[r][c] = board[c][r];
+      board = newB;
+    }
+
+    if(oldBoard !== JSON.stringify(board)) {
+      addTile(); updateScoreUI();
+    }
+  }
+
+  function loop() {
+    if(isGameOver) return drawGameOver();
+    animFrame = requestAnimationFrame(loop);
+    draw2048();
+
+    let dir = null;
+    if(swipeDir) { dir = swipeDir; swipeDir = null; }
+    else if(keys['ArrowUp'] || keys['KeyW']) { dir = 'UP'; keys['ArrowUp']=keys['KeyW']=false; }
+    else if(keys['ArrowDown'] || keys['KeyS']) { dir = 'DOWN'; keys['ArrowDown']=keys['KeyS']=false; }
+    else if(keys['ArrowLeft'] || keys['KeyA']) { dir = 'LEFT'; keys['ArrowLeft']=keys['KeyA']=false; }
+    else if(keys['ArrowRight'] || keys['KeyD']) { dir = 'RIGHT'; keys['ArrowRight']=keys['KeyD']=false; }
+
+    if(dir) move(dir);
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+// Init
+renderMenu();
+</script>
+</body>
+</html>
