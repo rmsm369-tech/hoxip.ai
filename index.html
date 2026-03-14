@@ -6,7 +6,31 @@
   <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
-  }
+  } 
+  // Request notification permission + schedule daily
+if ('Notification' in window) {
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      scheduleDailyNotification();
+    }
+  });
+}
+
+function scheduleDailyNotification() {
+  const now = new Date();
+  const next5PM = new Date();
+  next5PM.setHours(17, 0, 0, 0);
+  if (now > next5PM) next5PM.setDate(next5PM.getDate() + 1);
+  const msUntil5PM = next5PM - now;
+  
+  setTimeout(() => {
+    new Notification("Hox is waiting 🤖", {
+      body: "Come back and chat!",
+      icon: "./android-chrome-192x192.png"
+    });
+    scheduleDailyNotification(); // reschedule for next day
+  }, msUntil5PM);
+}
 </script>
 
   <link rel="stylesheet" href="style.css">

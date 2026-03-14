@@ -18,13 +18,17 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       // Fetch the newest version from the network
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Silently save the new data to the cache for next time
-        if (networkResponse && networkResponse.ok) {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
-          });
-        }
+     const fetchPromise = fetch(event.request).then((networkResponse) => {
+  if (networkResponse && networkResponse.ok) {
+    const responseClone = networkResponse.clone();
+    caches.open(CACHE_NAME).then((cache) => {
+      cache.put(event.request, responseClone);
+    });
+  }
+  return networkResponse;
+}).catch(() => {
+  console.log("App is currently offline.");
+    // Optionally, you could return a fallback page here if you have one cached                                                                                                                                                                 
         return networkResponse;
       }).catch((error) => {
         console.log("App is currently offline.");
@@ -34,4 +38,11 @@ self.addEventListener("fetch", (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+
+// Daily 5 PM notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  clients.openWindow('/hoxip.ai/index.html');
 });
