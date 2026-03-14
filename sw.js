@@ -3,8 +3,10 @@ const CACHE_NAME = "hoxchat-v1"; // Fixed: 'const' must be lowercase
 // 1. Install: Skip the strict 'addAll' pre-caching entirely to prevent 404 crashes
 self.addEventListener("install", (event) => {
   event.waitUntil(
+         
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(['/hoxip.ai/offline.html']);
+    
     })
   );
   self.skipWaiting();
