@@ -324,6 +324,9 @@ function updateSourceUI() {
   if (currentSource === 'groq') {
     indicator.className = 'w-2 h-2 rounded-full bg-green-500';
     label.textContent = 'Super-ADV';
+ } else if (currentSource === 'sarvam') {
+    indicator.className = 'w-2 h-2 rounded-full bg-blue-500';
+    label.textContent = 'Veda-NT';
   } else {
     indicator.className = 'w-2 h-2 rounded-full bg-yellow-500';
     label.textContent = 'onLSD';
@@ -332,8 +335,16 @@ function updateSourceUI() {
 
 // Manual toggle button
 document.getElementById('force-tiny').addEventListener('click', () => {
-  forceTinyLlama = !forceTinyLlama;
-  currentSource = forceTinyLlama ? 'tinyllama' : 'groq';
+  if (currentSource === 'groq') {
+    currentSource = 'sarvam';
+    forceTinyLlama = false;
+  } else if (currentSource === 'sarvam') {
+    currentSource = 'tinyllama';
+    forceTinyLlama = true;
+  } else {
+    currentSource = 'groq';
+    forceTinyLlama = false;
+  }
 const scrollBtn = document.getElementById('scroll-btn');
 
 scrollBtn.addEventListener('click', () => {
@@ -356,27 +367,40 @@ async function fetchAiResponse() {
   let usedSource = null;
 
   // Try Groq first (unless manually forced to TinyLlama)
-  if (!forceTinyLlama) {
+  if (currentSource === 'sarvam') {
     try {
-      const workerUrl = 'https://hoxipai.rmsm369.workers.dev'; // your Cloudflare Worker
+      const workerUrl = 'https://hoxipai.rmsm369.workers.dev';
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages })
+        body: JSON.stringify({ messages: apiMessages, model: 'sarvam' })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (!data.reply) throw new Error('No reply from worker');
+      if (!data.reply) throw new Error('No reply');
+      replyText = data.reply;
+      usedSource = 'sarvam';
+    } catch (error) {
+      console.warn('Sarvam failed, falling back to Groq');
+      currentSource = 'groq';
+    }
+  }
+
+  if (!replyText && !forceTinyLlama) {
+    try {
+      const workerUrl = 'https://hoxipai.rmsm369.workers.dev';
+      const response = await fetch(workerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages, model: 'groq' })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (!data.reply) throw new Error('No reply');
       replyText = data.reply;
       usedSource = 'groq';
     } catch (error) {
-      console.warn('Groq failed, falling back to TinyLlama:', error);
-      // fall through to TinyLlama
+      console.warn('Groq failed:', error);
     }
   }
 
