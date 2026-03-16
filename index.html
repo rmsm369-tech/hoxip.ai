@@ -72,7 +72,7 @@ function scheduleDailyNotification() {
   </button>
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
       <h1 class="text-xl font-semibold text-gray-800 tracking-tight">HOX chat</h1>
-      <span id="username-display" class="text-xs text-gray-400"></span>
+    
      
       <div class="flex items-center gap-3"> 
         <!-- inside the header div, after the private toggle -->
@@ -126,7 +126,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
 supabase.auth.getUser().then(({ data: { user } }) => {
   if (user) {
     const username = user.user_metadata?.full_name || user.email;
-    document.getElementById('username-display').textContent = username;
+  
   }
 });
 
