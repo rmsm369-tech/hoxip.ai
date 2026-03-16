@@ -88,6 +88,7 @@ const hoxModal = (() => {
   sheet.addEventListener('touchstart', handleTouchStart, {passive: true});
   sheet.addEventListener('touchend', (e) => handleTouchEnd(e, true));
 
-  // Expose necessary functions
-  return { slideNext, slideBack, addPill, removePill, showToast };
+ // Expose necessary functions
+  const isActive = (id) => activePills.has(id);
+  return { slideNext, slideBack, addPill, removePill, showToast, isActive };
 })();

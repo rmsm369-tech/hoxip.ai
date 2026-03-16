@@ -375,7 +375,7 @@ const specPrompts = {
 const specId = activeSpec?.dataset?.id;
 const extraPrompt = specId ? specPrompts[specId] : '';
   // Prepare messages for API (convert 'model' to 'assistant')
-  console.log('Active spec:', specId, 'Extra prompt:', extraPrompt);
+  console.log('Active spec:', specId, 'Extra prompt:', extraPrompt, 'Search active:', hoxModal.isActive('search'));
  const apiMessages = messages.map(m => ({
     role: m.role === 'model' ? 'assistant' : m.role,
     content: m.content
@@ -391,7 +391,7 @@ const extraPrompt = specId ? specPrompts[specId] : '';
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, model: 'sarvam', extraPrompt })
+        body: JSON.stringify({ messages: apiMessages, model: 'sarvam', extraPrompt, searchWeb: hoxModal.isActive('search') })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
@@ -410,7 +410,7 @@ const extraPrompt = specId ? specPrompts[specId] : '';
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, model: 'groq', extraPrompt })
+        body: JSON.stringify({ messages: apiMessages, model: 'groq', extraPrompt, searchWeb: hoxModal.isActive('search') })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
