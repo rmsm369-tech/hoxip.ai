@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="stylesheet" href="modal.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   // Trigger 1: If they open the app while already offline
@@ -99,6 +100,9 @@ function scheduleDailyNotification() {
     <!-- input area: text field + send button -->
     <div class="border-t border-gray-200 bg-white p-3 shrink-0">
       <div class="flex items-center gap-2">
+
+        <div id="hox-pill-container" class="hox-pill-container"></div>
+<button id="hox-modal-trigger" class="hox-btn-icon" aria-label="Open Actions">🔗</button>
 <textarea rows="1" id="user-input" placeholder="Type a message..." 
                class="flex-1 border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition bg-gray-50 resize-none overflow-hidden"></textarea>
         <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-full px-5 py-3 text-sm font-medium transition shadow-sm flex items-center gap-1">
@@ -357,7 +361,20 @@ scrollBtn.addEventListener('click', () => {
 
 async function fetchAiResponse() {
 
+  // Get active specialization
+const activeSpec = document.querySelector('.hox-pill[data-type="spec"]');
+const specPrompts = {
+  'spec-code': 'Focus on programming. Give precise code with explanations.',
+  'spec-math': 'Focus on mathematics. Show step-by-step solutions with formulas.',
+  'spec-creative': 'Be creative, imaginative and expressive in responses.',
+  'spec-debate': 'Present multiple perspectives. Be analytical and thought-provoking.',
+  'spec-multi': 'Respond in the same language the user writes in.',
+  'spec-concise': 'Give very short, direct answers. No unnecessary explanation.'
+};
+const specId = activeSpec?.dataset?.id;
+const extraPrompt = specId ? specPrompts[specId] : '';
   // Prepare messages for API (convert 'model' to 'assistant')
+  console.log('Active spec:', specId, 'Extra prompt:', extraPrompt);
  const apiMessages = messages.map(m => ({
     role: m.role === 'model' ? 'assistant' : m.role,
     content: m.content
@@ -373,7 +390,7 @@ async function fetchAiResponse() {
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, model: 'sarvam' })
+        body: JSON.stringify({ messages: apiMessages, model: 'sarvam', extraPrompt })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
@@ -392,7 +409,7 @@ async function fetchAiResponse() {
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages, model: 'groq' })
+        body: JSON.stringify({ messages: apiMessages, model: 'groq', extraPrompt })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
@@ -605,6 +622,60 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
   </script>
   <script src="ollama.js"></script>
   <script src="sidebar.js"></script> </body>
+  <div id="hox-modal-overlay" class="hox-overlay"></div>
+<div id="hox-modal-sheet" class="hox-sheet">
+  <div class="hox-drag-handle-container" id="hox-drag-area">
+    <div class="hox-drag-handle"></div>
+  </div>
+  
+  <div id="hox-modal-slider" class="hox-slider">
+    <div class="hox-panel" id="hox-panel-main">
+      <div class="hox-menu-item" onclick="hoxModal.slideNext()">
+        <span class="hox-icon">✨</span>
+        <div class="hox-item-text">
+          <span class="hox-title">Specializations</span>
+          <span class="hox-subtitle">Change AI personality & focus</span>
+        </div>
+        <span class="hox-arrow">›</span>
+      </div>
+      <div class="hox-menu-item" onclick="hoxModal.addPill('search', 'Search Web', '🔍')">
+        <span class="hox-icon">🔍</span>
+        <div class="hox-item-text"><span class="hox-title">Search Web</span></div>
+      </div>
+      <div class="hox-menu-item locked" onclick="hoxModal.showToast('Coming Soon')">
+        <span class="hox-icon">📎</span>
+        <div class="hox-item-text"><span class="hox-title">Attach File</span></div>
+        <span class="hox-lock">🔒</span>
+      </div>
+      <div class="hox-menu-item locked" onclick="hoxModal.showToast('Coming Soon')">
+        <span class="hox-icon">🖼️</span>
+        <div class="hox-item-text"><span class="hox-title">Upload Image</span></div>
+        <span class="hox-lock">🔒</span>
+      </div>
+      <div class="hox-menu-item locked" onclick="hoxModal.showToast('Coming Soon')">
+        <span class="hox-icon">🎙️</span>
+        <div class="hox-item-text"><span class="hox-title">Voice Input</span></div>
+        <span class="hox-lock">🔒</span>
+      </div>
+    </div>
+
+    <div class="hox-panel hox-panel-right" id="hox-panel-sub">
+      <div class="hox-menu-header" onclick="hoxModal.slideBack()">
+        <span class="hox-back">‹</span> Specializations
+      </div>
+      <div class="hox-scroll-area" id="hox-sub-scroll">
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-code', 'Code Mode', '💻')">Code</div>
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-math', 'Math Mode', '📐')">Math</div>
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-creative', 'Creative', '🎨')">Creative</div>
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-debate', 'Debate', '⚖️')">Debate</div>
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-multi', 'Multilingual', '🌍')">Multilingual</div>
+        <div class="hox-menu-item" onclick="hoxModal.addPill('spec-concise', 'Concise', '⚡')">Concise</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="modal.js"></script>
 </body>
 </html>
 

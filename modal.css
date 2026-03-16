@@ -1,0 +1,69 @@
+/* modal.css */
+.hox-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px);
+  z-index: 9998; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.hox-overlay.active { opacity: 1; pointer-events: auto; }
+
+.hox-sheet {
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  background: #343541; border-radius: 20px 20px 0 0;
+  z-index: 9999; transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; max-height: 85vh; overflow: hidden;
+}
+.hox-sheet.active { transform: translateY(0); }
+
+.hox-drag-handle-container { width: 100%; padding: 12px 0; display: flex; justify-content: center; cursor: grab; }
+.hox-drag-handle { width: 40px; height: 5px; background: #565869; border-radius: 10px; }
+
+.hox-slider { display: flex; width: 200%; transition: transform 0.3s ease; }
+.hox-slider.slide-left { transform: translateX(-50%); }
+
+.hox-panel { width: 50%; display: flex; flex-direction: column; padding-bottom: 20px; }
+.hox-scroll-area { overflow-y: auto; max-height: 60vh; overscroll-behavior: contain; }
+
+.hox-menu-item {
+  display: flex; align-items: center; padding: 16px 24px; color: #ececf1; cursor: pointer;
+  border-bottom: 1px solid rgba(86, 88, 105, 0.3); transition: background 0.2s;
+}
+.hox-menu-item:hover { background: #444654; }
+.hox-menu-item.locked { color: #9a9bb0; cursor: not-allowed; }
+
+.hox-icon { font-size: 1.2rem; margin-right: 16px; }
+.hox-item-text { flex: 1; display: flex; flex-direction: column; }
+.hox-title { font-size: 1rem; font-weight: 500; }
+.hox-subtitle { font-size: 0.8rem; color: #9a9bb0; }
+.hox-arrow { color: #9a9bb0; font-size: 1.5rem; }
+.hox-lock { font-size: 0.9rem; }
+
+.hox-menu-header {
+  padding: 16px 24px; color: #ececf1; font-weight: 600; font-size: 1.1rem;
+  border-bottom: 1px solid rgba(86, 88, 105, 0.5); cursor: pointer; display: flex; align-items: center;
+}
+.hox-back { font-size: 1.5rem; margin-right: 12px; }
+
+/* Trigger Button & Pills */
+.hox-btn-icon { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; }
+.hox-pill-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 8px; margin-bottom: 8px; }
+.hox-pill {
+  background: #10a37f; color: white; padding: 4px 12px; border-radius: 16px;
+  font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
+  animation: pillPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hox-pill-close { cursor: pointer; opacity: 0.8; }
+.hox-pill-close:hover { opacity: 1; }
+
+@keyframes pillPop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* Toast */
+.hox-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #ececf1; color: #343541; padding: 10px 20px; border-radius: 8px;
+  font-weight: 600; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: toastFade 2s forwards;
+}
+@keyframes toastFade { 0% { opacity: 0; transform: translate(-50%, 10px); } 10% { opacity: 1; transform: translate(-50%, 0); } 90% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
