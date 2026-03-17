@@ -426,7 +426,7 @@ const extraPrompt = specId ? specPrompts[specId] : '';
   if (!replyText) {
     try {
       // Assuming Ollama is running locally on default port
-      const ollamaUrl = 'http://localhost:11434/api/chat';
+      const ollamaUrl = 'https://nyxtesla-tinyllama-hoxchat.hf.space/api/chat';
       const ollamaPayload = {
         model: 'tinyllama', // or whatever you named it
         messages: apiMessages,
