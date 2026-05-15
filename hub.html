@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub — HOXIP</title>
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --surface: #1a1d2e;
+      --card:    #1e2235;
+      --border:  rgba(255,255,255,0.06);
+      --text:    #e8eaf0;
+      --muted:   #6b7280;
+      --accent:  #22c55e;
+      --glow:    rgba(34,197,94,0.15);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      background: none; border: none; color: var(--muted);
+      font-size: 18px; cursor: pointer; padding: 6px 10px;
+      border-radius: 8px; text-decoration: none;
+      transition: color .2s, background .2s;
+    }
+    .back-btn:hover { color: var(--text); background: var(--surface); }
+
+    .topbar-left { flex: 1; }
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .topbar-title span { color: var(--accent); }
+    .topbar-sub {
+      font-size: 11px; color: var(--muted);
+      margin-top: 1px; letter-spacing: 0.5px;
+    }
+
+    /* HERO */
+    .hero {
+      position: relative; z-index: 1;
+      padding: 48px 20px 32px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      color: var(--accent);
+      font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 50px;
+      margin-bottom: 20px;
+      letter-spacing: 0.8px; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 8vw, 52px);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #22c55e, #86efac);
+      -webkit-background-clip: text;
+       background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 15px; color: var(--muted);
+      max-width: 320px; margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* GRID */
+    .grid-wrap {
+      position: relative; z-index: 1;
+      padding: 0 16px 100px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 18px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      animation: cardIn .5s ease both;
+    }
+    .card:nth-child(1) { animation-delay: .05s; }
+    .card:nth-child(2) { animation-delay: .1s; }
+    .card:nth-child(3) { animation-delay: .15s; }
+    .card:nth-child(4) { animation-delay: .2s; }
+
+    @keyframes cardIn {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, var(--card-glow, rgba(34,197,94,0.08)), transparent 70%);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .card:hover::before { opacity: 1; }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+    .card:active { transform: translateY(-2px); }
+
+    /* coming soon card */
+    .card.soon {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+      display: block;
+      filter: drop-shadow(0 0 12px var(--card-glow, rgba(34,197,94,0.4)));
+    }
+    .card-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+    .card-desc {
+      font-size: 12px; color: var(--muted);
+      line-height: 1.5;
+    }
+    .card-tag {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 10px; font-weight: 600;
+      padding: 3px 8px; border-radius: 50px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .tag-live {
+      background: rgba(34,197,94,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .tag-soon {
+      background: rgba(107,114,128,0.12);
+      color: var(--muted);
+      border: 1px solid rgba(107,114,128,0.2);
+    }
+
+    /* individual card glow colors */
+    .card-glimpse  { --card-glow: rgba(34,197,94,0.12); }
+    .card-aura     { --card-glow: rgba(59,130,246,0.12); }
+    .card-signal   { --card-glow: rgba(249,115,22,0.12); }
+    .card-pulse    { --card-glow: rgba(168,85,247,0.12); }
+    .card-chaos    { --card-glow: rgba(234,179,8,0.12); }
+    .card-oracle   { --card-glow: rgba(236,72,153,0.12); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="index.html" class="back-btn">←</a>
+    <div class="topbar-left">
+      <div class="topbar-title">HOX <span>Hub</span></div>
+      <div class="topbar-sub">YOUR UNIVERSE</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-badge">⚡ Explore</div>
+    <h1>Everything<br><em>in one place</em></h1>
+    <p>All your tools, feeds and experiences — right here.</p>
+  </div>
+
+  <div class="grid-wrap">
+
+    <!-- GLIMPSE — live -->
+    <a href="glimpse.html" class="card card-glimpse">
+      <span class="card-icon">✨</span>
+      <div class="card-name">Glimpse</div>
+      <div class="card-desc">Infinite images from Unsplash & NASA</div>
+      <span class="card-tag tag-live">● Live</span>
+    </a>
+
+    <!-- AURA — coming soon -->
+    <div class="card card-aura soon">
+      <span class="card-icon">🌤️</span>
+      <div class="card-name">Aura</div>
+      <div class="card-desc">Weather & vibes, beautifully presented</div>
+      <span class="card-tag tag-soon">Coming soon</span>
+    </div>
+
+    <!-- SIGNAL — coming soon -->
+    <div class="card card-signal soon">
+      <span class="card-icon">📰</span>
+      <div class="card-name">Signal</div>
+      <div class="card-desc">Live news feed from around the world</div>
+      <span class="card-tag tag-soon">Coming soon</span>
+    </div>
+
+    <!-- PULSE — coming soon -->
+    <div class="card card-pulse soon">
+      <span class="card-icon">🎵</span>
+      <div class="card-name">Pulse</div>
+      <div class="card-desc">Ambient sounds for your headspace</div>
+      <span class="card-tag tag-soon">Coming soon</span>
+    </div>
+
+    <!-- CHAOS — coming soon -->
+    <div class="card card-chaos soon">
+      <span class="card-icon">🌪️</span>
+      <div class="card-name">Chaos</div>
+      <div class="card-desc">Random discoveries to blow your mind</div>
+      <span class="card-tag tag-soon">Coming soon</span>
+    </div>
+
+    <!-- ORACLE — coming soon -->
+    <div class="card card-oracle soon">
+      <span class="card-icon">🔮</span>
+      <div class="card-name">Oracle</div>
+      <div class="card-desc">Something mysterious is coming...</div>
+      <span class="card-tag tag-soon">Coming soon</span>
+    </div>
+
+  </div>
+
+</body>
+</html>
