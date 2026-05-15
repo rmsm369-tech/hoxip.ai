@@ -3,6 +3,7 @@
 <head>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
   <link rel="stylesheet" href="modal.css">
+  <link rel="stylesheet" href="settings.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   // Trigger 1: If they open the app while already offline
@@ -675,9 +676,89 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
       </div>
     </div>
   </div>
+  
 </div>
+<div id="hox-settings-overlay" class="hox-hidden">
+  <div class="hox-settings-backdrop" onclick="HoxSettings.close()"></div>
+  
+  <div class="hox-settings-container">
+    
+    <div id="panel-main" class="hox-panel hox-panel-active">
+      <div class="hox-panel-header">
+        <h2>Settings</h2>
+        <button class="hox-close-btn" onclick="HoxSettings.close()">×</button>
+      </div>
 
+      <div class="hox-settings-content">
+        <div class="hox-settings-group">
+          <div class="hox-profile-card">
+            <div class="hox-avatar">👤</div>
+            <div class="hox-profile-info">
+              <span class="hox-username">Nyx Tesla</span>
+              <span class="hox-email">nyx@hoxchat.com</span>
+            </div>
+            <span class="hox-plan-badge">Free</span>
+          </div>
+        </div>
+
+        <div class="hox-settings-group">
+          <div class="hox-row" data-target="panel-data" onclick="HoxSettings.openSub(this)">
+            <span class="hox-row-icon">🗂️</span>
+            <span class="hox-row-label">Data & Storage</span>
+            <span class="hox-chevron">›</span>
+          </div>
+          <div class="hox-row" data-target="panel-legal" onclick="HoxSettings.openSub(this)">
+            <span class="hox-row-icon">📋</span>
+            <span class="hox-row-label">Legal & Privacy</span>
+            <span class="hox-chevron">›</span>
+          </div>
+        </div>
+
+        <div class="hox-settings-footer">
+          <p class="hox-disclaimer">Hoxchat AI can make mistakes. Verify important info.</p>
+          <button class="hox-btn-danger" onclick="logout()">
+            🚪 Logout of Hoxchat
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-data" class="hox-panel hox-sub-panel">
+      <div class="hox-panel-header">
+        <button class="hox-back-btn" onclick="HoxSettings.back()">←</button>
+        <h2>Data & Storage</h2>
+        <div class="hox-spacer"></div>
+      </div>
+      <div class="hox-settings-content">
+        <div class="hox-storage-visual">
+          <div class="hox-storage-bar"><div class="hox-storage-fill" style="width: 12%"></div></div>
+          <span class="hox-storage-text">Using 12% of local cache</span>
+        </div>
+        <button class="hox-btn-secondary">Clear Chat History</button>
+        <button class="hox-btn-secondary">Clear World Posts</button>
+      </div>
+    </div>
+
+    <div id="panel-legal" class="hox-panel hox-sub-panel">
+      <div class="hox-panel-header">
+        <button class="hox-back-btn" onclick="HoxSettings.back()">←</button>
+        <h2>Legal</h2>
+        <div class="hox-spacer"></div>
+      </div>
+      <div class="hox-settings-content">
+        <div class="hox-legal-doc">
+          <h3>Terms & Conditions</h3>
+          <p>By using Hoxchat, you agree to our standard terms. You are solely responsible for the content you publish to Hoxchat World.</p>
+          <h3>Privacy Policy</h3>
+          <p>Your local data remains local. Syncing to the cloud is encrypted. We do not sell your data to ad networks. You maintain full rights to delete your account at any time.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 <script src="modal.js"></script>
+<script src="settings.js"></script>
 </body>
 </html>
 
