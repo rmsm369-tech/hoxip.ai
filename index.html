@@ -623,7 +623,8 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
    
   </script>
   <script src="ollama.js"></script>
-  <script src="sidebar.js"></script> </body>
+  <script src="sidebar.js"></script> 
+</body>
   <div id="hox-modal-overlay" class="hox-overlay"></div>
 <div id="hox-modal-sheet" class="hox-sheet">
   <div class="hox-drag-handle-container" id="hox-drag-area">
@@ -694,8 +695,9 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
           <div class="hox-profile-card">
             <div class="hox-avatar">👤</div>
             <div class="hox-profile-info">
-              <span class="hox-username">Nyx Tesla</span>
-              <span class="hox-email">nyx@hoxchat.com</span>
+              <span class="hox-username" id="settings-username">Loading...</span>
+              <span class="hox-email" id="settings-email">Loading...</span>
+              
             </div>
             <span class="hox-plan-badge">Free</span>
           </div>
@@ -717,8 +719,7 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
         <div class="hox-settings-footer">
           <p class="hox-disclaimer">Hoxchat AI can make mistakes. Verify important info.</p>
          
-            🚪 Logout of Hoxchat
-          </button>
+           <button class="hox-btn-danger" onclick="window.sharedSupabase.auth.signOut().then(()=>window.location.href='login.html')">🚪 Logout of Hoxchat</button>
         </div>
       </div>
     </div>
@@ -731,11 +732,11 @@ chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
       </div>
       <div class="hox-settings-content">
         <div class="hox-storage-visual">
-          <div class="hox-storage-bar"><div class="hox-storage-fill" style="width: 12%"></div></div>
+          <div class="hox-storage-bar"><div class="hox-storage-fill" id="hox-storage-fill" style="width: 0%"></div></div>
           <span class="hox-storage-text">Using 12% of local cache</span>
         </div>
-        <button class="hox-btn-secondary">Clear Chat History</button>
-        <button class="hox-btn-secondary">Clear World Posts</button>
+        <button class="hox-btn-secondary" onclick="localStorage.removeItem('simple_ai_chat_history');this.textContent='Cleared!'">Clear Chat History</button>
+        <button class="hox-btn-secondary" onclick="alert('World posts are stored in the cloud and cannot be cleared locally.')">Clear World Posts</button>
       </div>
     </div>
 
