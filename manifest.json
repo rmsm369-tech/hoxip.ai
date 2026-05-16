@@ -5,7 +5,7 @@
   "description": "Your personal AI assistant",
   "start_url": "/hoxip.ai/index.html",
   "scope": "/hoxip.ai/",
-  "display": "standalone",
+  "display": "fullscreen",
   "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#343541",
   "theme_color": "#343541",
