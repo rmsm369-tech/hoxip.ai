@@ -1,0 +1,524 @@
+</div>
+          <div class="stat-value" id="visBig">—</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="visBar" style="width:0%;background:#f0d080"></div></div>
+          <div class="stat-sub" id="visSub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-icon">🌡️</span>
+            <span class="stat-label">Pressure</span>
+          </div>
+          <div class="stat-value" id="presBig">—</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="presBar" style="width:0%;background:#f080f0"></div></div>
+          <div class="stat-sub" id="presSub">—</div>
+        </div>
+      </div>
+
+      <!-- SUN CARD -->
+      <div class="sun-card">
+        <div class="sun-title">☀️ Sun Journey</div>
+        <div class="sun-arc">
+          <svg viewBox="0 0 300 80" preserveAspectRatio="none">
+            <!-- Arc path -->
+            <path d="M 10,70 Q 150,-10 290,70"
+              fill="none" stroke="rgba(255,200,50,0.2)" stroke-width="2" stroke-dasharray="4 4"/>
+            <!-- Progress arc -->
+            <path id="sunProgress" d="M 10,70 Q 150,-10 290,70"
+              fill="none" stroke="rgba(255,200,50,0.8)" stroke-width="2.5"
+              stroke-dasharray="0 1000"/>
+            <!-- Sun dot -->
+            <circle id="sunDot" cx="10" cy="70" r="8"
+              fill="#ffd700" filter="url(#glow)"/>
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+        </div>
+        <div class="sun-times">
+          <div class="sun-time">
+            <span class="sun-time-icon">🌅</span>
+            <span class="sun-time-label">Sunrise</span>
+            <span class="sun-time-val" id="sunrise">—</span>
+          </div>
+          <div class="sun-time">
+            <span class="sun-time-icon">⛅</span>
+            <span class="sun-time-label">Solar Noon</span>
+            <span class="sun-time-val" id="solarNoon">—</span>
+          </div>
+          <div class="sun-time">
+            <span class="sun-time-icon">🌇</span>
+            <span class="sun-time-label">Sunset</span>
+            <span class="sun-time-val" id="sunset">—</span>
+          </div>
+        </div>
+        <div class="daylight-text" id="daylightText">—</div>
+      </div>
+
+      <!-- HOURLY -->
+      <div class="hourly-card">
+        <div class="card-title">⏱ Hourly Forecast</div>
+        <div class="hourly-scroll" id="hourlyScroll">—</div>
+      </div>
+
+      <!-- WEEKLY -->
+      <div class="weekly-card">
+        <div class="card-title">📅 7-Day Forecast</div>
+        <div id="weeklyList">—</div>
+      </div>
+
+      <!-- AQI -->
+      <div class="aqi-card">
+        <div class="card-title">🌿 Air Quality</div>
+        <div class="aqi-display">
+          <div class="aqi-number" id="aqiNumber">—</div>
+          <div class="aqi-info">
+            <div class="aqi-label" id="aqiLabel">—</div>
+            <div class="aqi-desc" id="aqiDesc">—</div>
+          </div>
+        </div>
+        <div class="aqi-bar">
+          <div class="aqi-pointer" id="aqiPointer" style="left:10%"></div>
+        </div>
+      </div>
+
+      <!-- UV INDEX -->
+      <div class="uv-card">
+        <div class="card-title">☀️ UV Index</div>
+        <div class="uv-display">
+          <div class="uv-number" id="uvNumber">—</div>
+          <div class="uv-scale" id="uvScale"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  // ── CONFIG ──
+  const API_KEY = 'YOUR_OPENWEATHER_KEY'; // Replace with your key
+  let currentLat = null, currentLon = null;
+  let clockInterval = null;
+
+  // ── WEATHER CODE → EMOJI + THEME ──
+  const WEATHER_THEMES = {
+    // Clear
+    800: { icon:'☀️', sky1:'#1a0a00', sky2:'#3d1c00', orb:'rgba(255,160,50,0.2)', mood:'Perfect day ahead', moodIcon:'☀️', moodDesc:'Clear skies make everything feel possible.' },
+    // Clouds
+    801: { icon:'🌤️', sky1:'#0a1020', sky2:'#162030', orb:'rgba(126,184,247,0.15)', mood:'Partly cloudy vibes', moodIcon:'🌤️', moodDesc:'A mix of sun and clouds — the perfect balance.' },
+    802: { icon:'⛅', sky1:'#0a1018', sky2:'#14202e', orb:'rgba(100,140,200,0.12)', mood:'Cloudy but calm', moodIcon:'⛅', moodDesc:'Clouds rolling in — a good day to think deep.' },
+    803: { icon:'🌥️', sky1:'#080c14', sky2:'#10181e', orb:'rgba(80,110,160,0.1)', mood:'Overcast skies', moodIcon:'🌥️', moodDesc:'Heavy clouds — find your cozy corner.' },
+    804: { icon:'☁️', sky1:'#06080e', sky2:'#0c1016', orb:'rgba(60,80,120,0.08)', mood:'Fully overcast', moodIcon:'☁️', moodDesc:'The sky is a blank canvas today.' },
+    // Rain
+    500: { icon:'🌧️', sky1:'#020810', sky2:'#06101a', orb:'rgba(50,100,180,0.15)', mood:'Rain is falling', moodIcon:'🌧️', moodDesc:'Stay cozy. Rain has a way of washing things clean.', rain:true },
+    501: { icon:'🌧️', sky1:'#020610', sky2:'#040e18', orb:'rgba(40,80,160,0.18)', mood:'Moderate rain', moodIcon:'🌧️', moodDesc:'Grab an umbrella — the sky is generous today.', rain:true },
+    502: { icon:'⛈️', sky1:'#020408', sky2:'#040810', orb:'rgba(30,60,140,0.2)', mood:'Heavy downpour', moodIcon:'⛈️', moodDesc:'Heavy rain outside. Stay safe and dry.', rain:true },
+    511: { icon:'🌨️', sky1:'#060810', sky2:'#0a0e18', orb:'rgba(150,180,220,0.15)', mood:'Freezing rain', moodIcon:'🌨️', moodDesc:'Ice is forming. Stay warm.', rain:true },
+    // Drizzle
+    300: { icon:'🌦️', sky1:'#04080e', sky2:'#081018', orb:'rgba(80,130,190,0.12)', mood:'Light drizzle', moodIcon:'🌦️', moodDesc:'A soft drizzle — perfect for a quiet evening.', rain:true },
+    // Thunderstorm
+    200: { icon:'⛈️', sky1:'#020406', sky2:'#06080e', orb:'rgba(100,80,200,0.2)', mood:'Storm incoming', moodIcon:'⛈️', moodDesc:'Thunder rumbles. Nature is putting on a show.', rain:true },
+    // Snow
+    600: { icon:'❄️', sky1:'#08101e', sky2:'#101828', orb:'rgba(200,220,255,0.15)', mood:'Snow is falling', moodIcon:'❄️', moodDesc:'Snowflakes are nature\'s confetti.', snow:true },
+    601: { icon:'🌨️', sky1:'#060e1c', sky2:'#0e1626', orb:'rgba(180,210,255,0.18)', mood:'Snowing heavily', moodIcon:'🌨️', moodDesc:'A winter wonderland outside.', snow:true },
+    // Atmosphere
+    701: { icon:'🌫️', sky1:'#080a0e', sky2:'#0e1014', orb:'rgba(150,160,180,0.1)', mood:'Misty morning', moodIcon:'🌫️', moodDesc:'Mystery in the air. The world feels dreamlike.' },
+    741: { icon:'🌁', sky1:'#060808', sky2:'#0c0e10', orb:'rgba(120,130,140,0.08)', mood:'Dense fog', moodIcon:'🌁', moodDesc:'Fog wraps the world in silence.' },
+  };
+
+  function getTheme(id) {
+    if (WEATHER_THEMES[id]) return WEATHER_THEMES[id];
+    const base = Math.floor(id/100)*100;
+    return WEATHER_THEMES[base] || WEATHER_THEMES[801];
+  }
+
+  // ── WIND DIRECTION ──
+  function windDir(deg) {
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    return dirs[Math.round(deg/45)%8];
+  }
+
+  // ── FORMAT TIME ──
+  function fmtTime(unix, tz=0) {
+    const d = new Date((unix + tz) * 1000);
+    return d.toUTCString().slice(17,22);
+  }
+
+  // ── WEATHER ICON BY CODE ──
+  function weatherIcon(id, isNight=false) {
+    const t = getTheme(id);
+    if (id === 800 && isNight) return '🌙';
+    return t.icon;
+  }
+
+  // ── APPLY THEME ──
+  function applyTheme(theme) {
+    document.documentElement.style.setProperty('--sky1', theme.sky1);
+    document.documentElement.style.setProperty('--sky2', theme.sky2);
+    document.documentElement.style.setProperty('--orb', theme.orb);
+
+    // Effects
+    document.getElementById('rain').classList.toggle('active', !!theme.rain);
+    document.getElementById('snow').classList.toggle('active', !!theme.snow);
+
+    // Night stars
+    const isNight = theme.sky1 === WEATHER_THEMES[800]?.sky1 ? false :
+      theme.icon === '🌙';
+    document.getElementById('stars').classList.toggle('active', isNight);
+  }
+
+  // ── RENDER RAIN ──
+  function createRain() {
+    const c = document.getElementById('rain');
+    c.innerHTML = '';
+    for (let i = 0; i < 80; i++) {
+      const d = document.createElement('div');
+      d.className = 'raindrop';
+      d.style.cssText = `
+        left: ${Math.random()*100}%;
+        height: ${Math.random()*60+20}px;
+        animation-duration: ${Math.random()*0.8+0.5}s;
+        animation-delay: ${Math.random()*2}s;
+        opacity: ${Math.random()*0.4+0.2};
+      `;
+      c.appendChild(d);
+    }
+  }
+
+  // ── RENDER SNOW ──
+  function createSnow() {
+    const c = document.getElementById('snow');
+    c.innerHTML = '';
+    for (let i = 0; i < 40; i++) {
+      const d = document.createElement('div');
+      d.className = 'snowflake';
+      d.textContent = ['❄','❅','❆'][Math.floor(Math.random()*3)];
+      d.style.cssText = `
+        left: ${Math.random()*100}%;
+        font-size: ${Math.random()*14+8}px;
+        animation-duration: ${Math.random()*4+4}s;
+        animation-delay: ${Math.random()*4}s;
+      `;
+      c.appendChild(d);
+    }
+  }
+
+  // ── RENDER STARS ──
+  function createStars() {
+    const c = document.getElementById('stars');
+    c.innerHTML = '';
+    for (let i = 0; i < 80; i++) {
+      const d = document.createElement('div');
+      d.className = 'star';
+      const size = Math.random()*2+1;
+      d.style.cssText = `
+        left: ${Math.random()*100}%;
+        top: ${Math.random()*60}%;
+        width: ${size}px; height: ${size}px;
+        animation-duration: ${Math.random()*3+2}s;
+        animation-delay: ${Math.random()*3}s;
+      `;
+      c.appendChild(d);
+    }
+  }
+
+  createRain(); createSnow(); createStars();
+
+  // ── SUN ARC ANIMATION ──
+  function animateSun(sunrise, sunset, now) {
+    const total = sunset - sunrise;
+    const elapsed = now - sunrise;
+    const pct = Math.max(0, Math.min(1, elapsed / total));
+
+    // SVG arc length ≈ 320
+    const arcLen = 320;
+    const dashArr = `${pct * arcLen} ${arcLen}`;
+    document.getElementById('sunProgress').setAttribute('stroke-dasharray', dashArr);
+
+    // Sun dot position along quadratic bezier
+    const t = pct;
+    const x = (1-t)*(1-t)*10 + 2*(1-t)*t*150 + t*t*290;
+    const y = (1-t)*(1-t)*70 + 2*(1-t)*t*(-10) + t*t*70;
+    document.getElementById('sunDot').setAttribute('cx', x);
+    document.getElementById('sunDot').setAttribute('cy', y);
+  }
+
+  // ── CLOCK ──
+  function startClock(tzOffset) {
+    if (clockInterval) clearInterval(clockInterval);
+    function tick() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset()*60000;
+      const local = new Date(utc + tzOffset*1000);
+      document.getElementById('localTime').textContent =
+        local.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    }
+    tick();
+    clockInterval = setInterval(tick, 1000);
+  }
+
+  // ── AQI INFO ──
+  function aqiInfo(aqi) {
+    const levels = [
+      {label:'Good', desc:'Air quality is excellent. Enjoy outdoor activities!', color:'#00e400'},
+      {label:'Fair', desc:'Air quality is acceptable. Sensitive groups take care.', color:'#ffff00'},
+      {label:'Moderate', desc:'Sensitive individuals may experience symptoms.', color:'#ff7e00'},
+      {label:'Poor', desc:'Health effects possible for everyone. Limit outdoors.', color:'#ff0000'},
+      {label:'Very Poor', desc:'Serious health effects. Stay indoors if possible.', color:'#8f3f97'},
+    ];
+    return levels[aqi-1] || levels[0];
+  }
+
+  // ── UV INFO ──
+  function uvInfo(uv) {
+    const levels = [
+      {range:'0–2', label:'Low', color:'#00e400'},
+      {range:'3–5', label:'Moderate', color:'#ffff00'},
+      {range:'6–7', label:'High', color:'#ff7e00'},
+      {range:'8–10', label:'Very High', color:'#ff0000'},
+      {range:'11+', label:'Extreme', color:'#8f3f97'},
+    ];
+    let activeIdx = 0;
+    if (uv <= 2) activeIdx = 0;
+    else if (uv <= 5) activeIdx = 1;
+    else if (uv <= 7) activeIdx = 2;
+    else if (uv <= 10) activeIdx = 3;
+    else activeIdx = 4;
+
+    const scale = document.getElementById('uvScale');
+    scale.innerHTML = levels.map((l,i) => `
+      <div class="uv-level ${i===activeIdx?'active':''}">
+        <div class="uv-dot" style="background:${l.color}"></div>
+        ${l.range} — ${l.label}
+      </div>
+    `).join('');
+    return levels[activeIdx];
+  }
+
+  // ── MOOD MESSAGES ──
+  function getMood(weather, temp) {
+    const theme = getTheme(weather.id);
+    return {
+      emoji: theme.moodIcon,
+      title: theme.mood,
+      desc: theme.moodDesc + (temp > 35 ? ' Stay hydrated!' : temp < 5 ? ' Layer up!' : '')
+    };
+  }
+
+  // ── RENDER WEATHER ──
+  function renderWeather(current, forecast, aqi) {
+    const w = current;
+    const tz = w.timezone;
+    const nowUnix = Math.floor(Date.now()/1000);
+    const theme = getTheme(w.weather[0].id);
+    const isNight = nowUnix < w.sys.sunrise || nowUnix > w.sys.sunset;
+
+    applyTheme(theme);
+    startClock(tz);
+
+    // Hero
+    document.getElementById('locationName').textContent =
+      `${w.name}, ${w.sys.country}`;
+    document.getElementById('tempMain').textContent = Math.round(w.main.temp);
+    document.getElementById('weatherIcon').textContent =
+      isNight && w.weather[0].id === 800 ? '🌙' : theme.icon;
+    document.getElementById('weatherDesc').textContent = w.weather[0].description;
+    document.getElementById('feelsLike').textContent = Math.round(w.main.feels_like)+'°';
+    document.getElementById('humidity').textContent = w.main.humidity+'%';
+    document.getElementById('wind').textContent = Math.round(w.wind.speed*3.6)+' km/h';
+    document.getElementById('pressure').textContent = w.main.pressure+' hPa';
+    document.getElementById('visibility').textContent =
+      w.visibility ? (w.visibility/1000).toFixed(1)+' km' : 'N/A';
+
+    // Mood
+    const mood = getMood(w.weather[0], w.main.temp);
+    document.getElementById('moodEmoji').textContent = mood.emoji;
+    document.getElementById('moodTitle').textContent = mood.title;
+    document.getElementById('moodDesc').textContent = mood.desc;
+
+    // Stats grid
+    const hum = w.main.humidity;
+    document.getElementById('humidityBig').textContent = hum+'%';
+    document.getElementById('humidityBar').style.width = hum+'%';
+    document.getElementById('humiditySub').textContent =
+      hum < 30 ? 'Very dry' : hum < 60 ? 'Comfortable' : 'Humid';
+
+    const wspd = Math.round(w.wind.speed*3.6);
+    document.getElementById('windBig').textContent = wspd+' km/h';
+    document.getElementById('windBar').style.width = Math.min(wspd/120*100,100)+'%';
+    document.getElementById('windDir').textContent =
+      w.wind.deg ? windDir(w.wind.deg)+' direction' : '—';
+
+    const vis = w.visibility ? w.visibility/1000 : 10;
+    document.getElementById('visBig').textContent = vis.toFixed(1)+' km';
+    document.getElementById('visBar').style.width = Math.min(vis/10*100,100)+'%';
+    document.getElementById('visSub').textContent =
+      vis >= 10 ? 'Crystal clear' : vis >= 5 ? 'Good' : vis >= 2 ? 'Moderate' : 'Poor';
+
+    const pres = w.main.pressure;
+    document.getElementById('presBig').textContent = pres+' hPa';
+    document.getElementById('presBar').style.width = Math.min((pres-950)/100*100,100)+'%';
+    document.getElementById('presSub').textContent =
+      pres > 1020 ? 'High — stable' : pres > 1000 ? 'Normal' : 'Low — unsettled';
+
+    // Sun arc
+    const sr = w.sys.sunrise + tz - (new Date().getTimezoneOffset()*60);
+    const ss = w.sys.sunset + tz - (new Date().getTimezoneOffset()*60);
+    const nowAdj = nowUnix + tz - (new Date().getTimezoneOffset()*60);
+    document.getElementById('sunrise').textContent = fmtTime(w.sys.sunrise, tz);
+    document.getElementById('sunset').textContent = fmtTime(w.sys.sunset, tz);
+    const noonUnix = (w.sys.sunrise + w.sys.sunset) / 2;
+    document.getElementById('solarNoon').textContent = fmtTime(noonUnix, tz);
+    animateSun(sr, ss, nowAdj);
+    const dayMins = Math.round((w.sys.sunset - w.sys.sunrise)/60);
+    document.getElementById('daylightText').textContent =
+      `${Math.floor(dayMins/60)}h ${dayMins%60}m of daylight today`;
+
+    // Hourly (from forecast)
+    const hourly = document.getElementById('hourlyScroll');
+    hourly.innerHTML = '';
+    const hours = forecast.list.slice(0, 12);
+    hours.forEach((h, i) => {
+      const t = new Date(h.dt * 1000);
+      const hTheme = getTheme(h.weather[0].id);
+      const div = document.createElement('div');
+      div.className = 'hour-item' + (i===0?' current':'');
+      div.innerHTML = `
+        <div class="hour-time">${i===0?'Now':t.getHours()+':00'}</div>
+        <div class="hour-icon">${hTheme.icon}</div>
+        <div class="hour-temp">${Math.round(h.main.temp)}°</div>
+        <div class="hour-rain">${Math.round((h.pop||0)*100)}%💧</div>
+      `;
+      hourly.appendChild(div);
+    });
+
+    // Weekly (group by day)
+    const days = {};
+    forecast.list.forEach(item => {
+      const d = new Date(item.dt*1000).toLocaleDateString('en',{weekday:'short'});
+      if (!days[d]) days[d] = [];
+      days[d].push(item);
+    });
+    const weekly = document.getElementById('weeklyList');
+    weekly.innerHTML = Object.entries(days).slice(0,7).map(([day,items],i) => {
+      const temps = items.map(it=>it.main.temp);
+      const hi = Math.round(Math.max(...temps));
+      const lo = Math.round(Math.min(...temps));
+      const mid = items[Math.floor(items.length/2)];
+      const dt = getTheme(mid.weather[0].id);
+      return `
+        <div class="day-row">
+          <div class="day-name">${i===0?'Today':day}</div>
+          <div class="day-icon">${dt.icon}</div>
+          <div class="day-desc">${mid.weather[0].description}</div>
+          <div class="day-temps">
+            <span class="day-low">${lo}°</span>
+            <span class="day-high">${hi}°</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // AQI
+    if (aqi && aqi.list && aqi.list[0]) {
+      const aqiVal = aqi.list[0].main.aqi;
+      const aqiData = aqiInfo(aqiVal);
+      document.getElementById('aqiNumber').textContent = aqiVal;
+      document.getElementById('aqiLabel').textContent = aqiData.label;
+      document.getElementById('aqiLabel').style.color = aqiData.color;
+      document.getElementById('aqiDesc').textContent = aqiData.desc;
+      document.getElementById('aqiPointer').style.left =
+        ((aqiVal-1)/4*90+5)+'%';
+    }
+
+    // UV (from forecast — approximate from noon)
+    const noonItem = forecast.list.find(it => {
+      const h = new Date(it.dt*1000).getHours();
+      return h >= 11 && h <= 13;
+    }) || forecast.list[0];
+    const uvApprox = Math.round((noonItem.main.temp / 40) * 11);
+    document.getElementById('uvNumber').textContent = uvApprox;
+    uvInfo(uvApprox);
+
+    // Show content
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('weatherContent').classList.remove('hidden');
+  }
+
+  // ── FETCH ALL DATA ──
+  async function fetchWeather(lat, lon) {
+    showLoading();
+    try {
+      const [cur, fcast, aqiData] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`).then(r=>r.json()),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`).then(r=>r.json()),
+        fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`).then(r=>r.json()),
+      ]);
+      if (cur.cod && cur.cod !== 200) throw new Error(cur.message);
+      renderWeather(cur, fcast, aqiData);
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  async function fetchByCity(city) {
+    showLoading();
+    try {
+      const geo = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`
+      ).then(r=>r.json());
+      if (!geo.length) throw new Error('City not found');
+      currentLat = geo[0].lat; currentLon = geo[0].lon;
+      await fetchWeather(currentLat, currentLon);
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  function showLoading() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('errorState').classList.add('hidden');
+    document.getElementById('weatherContent').classList.add('hidden');
+  }
+
+  function showError(msg) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('errorState').classList.remove('hidden');
+    document.getElementById('errorMsg').textContent = msg || 'Something went wrong.';
+  }
+
+  function searchCity() {
+    const city = document.getElementById('cityInput').value.trim();
+    if (city) fetchByCity(city);
+  }
+
+  function refresh() {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    setTimeout(()=>btn.classList.remove('spinning'), 1000);
+    if (currentLat) fetchWeather(currentLat, currentLon);
+    else init();
+  }
+
+  function init() {
+    showLoading();
+    if (!navigator.geolocation) {
+      fetchByCity('Mumbai'); return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        currentLat = pos.coords.latitude;
+        currentLon = pos.coords.longitude;
+        fetchWeather(currentLat, currentLon);
+      },
+      () => fetchByCity('Mumbai'),
+      { timeout: 8000 }
+    );
+  }
+
+  init();
+</script>
+</body>
+</html>
