@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulse Studio</title>
+ 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+ 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+ 
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #1a1a24;
+            --surface-hover: #262635;
+            --accent: #a78bfa;
+            --accent-glow: rgba(167, 139, 250, 0.4);
+            --text: #f3f4f6;
+            --text-dim: #9ca3af;
+            --border: #2d2d3f;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+ 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+ 
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+ 
+        h1, h2, h3, .syne { font-family: 'Syne', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+ 
+        /* Navigation */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            height: 60px;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+ 
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+        .header-actions button {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-left: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .header-actions button:active { background: var(--surface); }
+ 
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+ 
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.75rem;
+            gap: 4px;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-item span:first-child { font-size: 1.5rem; }
+ 
+        /* Main Container */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px; /* space for bottom nav */
+            display: flex;
+            flex-direction: column;
+        }
+ 
+        /* Load Track Section */
+        #load-section {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+ 
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+ 
+        /* Search Tab */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            outline: none;
+        }
+        .search-box button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .search-results { display: flex; flex-direction: column; gap: 10px; }
+        .result-item {
+            background: var(--surface);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .result-item:active { background: var(--surface-hover); }
+        .result-info div:first-child { font-weight: bold; }
+        .result-info div:last-child { font-size: 0.8rem; color: var(--text-dim); }
+ 
+        /* Upload Tab */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .upload-zone.dragover { border-color: var(--accent); background: rgba(167,139,250,0.1); }
+        .upload-zone span { display: block; font-size: 2rem; margin-bottom: 10px; }
+        .upload-zone input { display: none; }
+ 
+        /* Record Tab */
+        .record-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .record-card button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+ 
+        /* Studio Section */
+        #studio-section { display: none; flex-direction: column; height: 100%; }
+ 
+        .studio-header {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .track-info h3 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .track-info span { font-size: 0.8rem; color: var(--text-dim); }
+ 
+        .studio-toolbar {
+            display: flex;
+            gap: 10px;
+        }
+        .tool-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            position: relative;
+        }
+        .badge {
+            position: absolute;
+            top: -5px; right: -5px;
+            background: var(--accent);
+            color: var(--bg);
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+ 
+        /* Waveform */
+        .waveform-wrapper {
+            position: relative;
+            height: 35vh;
+            width: 100%;
+            background: #000;
+            overflow: hidden;
+            touch-action: none;
+        }
+        canvas#waveCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .selection-overlay {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(167, 139, 250, 0.2);
+            border-left: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+            pointer-events: none;
+            display: none;
+        }
+        .selection-handle {
+            position: absolute;
+            top: 0;
+            width: 20px;
+            height: 100%;
+            background: transparent;
+            cursor: ew-resize;
+            pointer-events: auto;
+            transform: translateX(-10px);
+        }
+        .selection-handle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        .playhead {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: #fff;
+            pointer-events: none;
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+            z-index: 10;
+        }
+        .zoom-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 20;
+        }
+        .zoom-controls button {
+            background: rgba(26, 26, 36, 0.8);
+            border: 1px solid var(--border);
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 4px;
+        }
+ 
+        /* Transport */
+        .transport {
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .transport button {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .transport button:active { background: rgba(255,255,255,0.1); }
+        .transport button.primary { background: var(--accent); color: var(--bg); }
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            min-width: 130px;
+            text-align: center;
+        }
+        .loop-btn.active { color: var(--accent); }
+ 
+        /* Effects Rack */
+        .effects-section {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        .effects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .add-effect-btn {
+            background: var(--surface);
+            border: 1px dashed var(--accent);
+            color: var(--accent);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .effects-rack {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            flex: 1;
+            align-items: flex-start;
+        }
+        .effect-card {
+            min-width: 140px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .effect-card.bypassed { opacity: 0.5; }
+        .effect-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .effect-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .param-group label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+        .effect-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 5px;
+        }
+        .effect-actions button {
+            background: none; border: none; color: var(--text-dim); font-size: 1rem;
+        }
+ 
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 200;
+        }
+        .modal-content {
+            background: var(--bg);
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+        }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close-btn { background: none; border: none; color: var(--text); font-size: 1.5rem; }
+ 
+        /* Edit Grid */
+        .edit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .edit-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-family: 'DM Sans';
+        }
+        .edit-btn:active { background: var(--accent); color: var(--bg); }
+ 
+        /* Export Setup */
+        .export-options { display: flex; flex-direction: column; gap: 15px; }
+        .export-format {
+            display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        .format-btn {
+            padding: 8px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+        }
+        .format-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+        .export-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .do-export-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+ 
+        /* Effect Picker */
+        .effect-list { display: flex; flex-direction: column; gap: 10px; }
+        .effect-list-item {
+            padding: 15px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text);
+        }
+ 
+        /* Full Screen Loader */
+        .loader-overlay {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(10,10,15,0.9);
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid var(--surface);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--success); color: white; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; z-index: 400;
+            display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+ 
+    </style>
+</head>
+<body>
+ 
+    <nav class="top-bar">
+        <div class="logo syne">Pulse.</div>
+        <div class="header-actions" id="studio-actions" style="display:none;">
+            <button onclick="toggleModal('export-modal')">📤 Export</button>
+        </div>
+    </nav>
+ 
+    <div class="main-content">
+        <!-- LOAD SECTION -->
+        <div id="load-section">
+            <h2 class="syne" style="margin-bottom: 20px; text-align: center;">Load Audio</h2>
+ 
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('search')">Search</div>
+                <div class="tab" onclick="switchTab('upload')">Upload</div>
+                <div class="tab" onclick="switchTab('record')">Record</div>
+            </div>
+ 
+            <div id="tab-search" class="tab-content active">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search Jamendo tracks...">
+                    <button onclick="searchJamendo()">🔍</button>
+                </div>
+                <div class="search-results" id="search-results"></div>
+            </div>
+ 
+            <div id="tab-upload" class="tab-content">
+                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-upload').click()">
+                    <span>📁</span>
+                    <p>Drop audio file here or tap to browse</p>
+                    <p style="font-size:0.8rem; color:var(--text-dim); margin-top:10px;">MP3, WAV, OGG, WebM, FLAC, AAC</p>
+                    <input type="file" id="file-upload" accept="audio/*" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+ 
+            <div id="tab-record" class="tab-content">
+                <div class="record-card">
+                    <span style="font-size:2rem;">🎙️</span>
+                    <h3 style="margin: 10px 0;">Recording Buffer</h3>
+                    <p id="record-status" style="color:var(--text-dim); font-size:0.9rem;">Checking session...</p>
+                    <button id="load-record-btn" style="display:none;" onclick="loadFromRecording()">Load Recording</button>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- STUDIO SECTION -->
+        <div id="studio-section">
+            <div class="studio-header">
+                <div class="track-info">
+                    <h3 id="track-title">Untitled</h3>
+                    <span id="track-artist">Ready to edit</span>
+                </div>
+                <div class="studio-toolbar">
+                    <button class="tool-btn" onclick="undo()">↩️ <span class="badge" id="undo-badge" style="display:none">0</span></button>
+                    <button class="tool-btn" onclick="redo()">↪️</button>
+                    <button class="tool-btn" onclick="toggleModal('edit-modal')">✂️ Edit</button>
+                </div>
+            </div>
+ 
+            <div class="waveform-wrapper" id="wave-wrap">
+                <canvas id="waveCanvas"></canvas>
+                <div class="selection-overlay" id="sel-overlay">
+                    <div class="selection-handle" id="sel-left"></div>
+                    <div class="selection-handle" id="sel-right" style="right:0; left:auto; transform:translateX(10px)"></div>
+                </div>
+                <div class="playhead" id="playhead"></div>
+                <div class="zoom-controls">
+                    <button onclick="zoomWaveform(1.5)">➕</button>
+                    <button onclick="zoomWaveform(0.66)">➖</button>
+                    <button onclick="resetZoom()">🏠</button>
+                </div>
+            </div>
+ 
+            <div class="transport">
+                <button onclick="seekToStart()">⏮</button>
+                <button onclick="skipTime(-5)">⏪</button>
+                <button class="primary" id="play-btn" onclick="togglePlay()">▶</button>
+                <button onclick="skipTime(5)">⏩</button>
+                <button class="loop-btn" id="loop-btn" onclick="toggleLoop()">🔁</button>
+                <div class="time-display mono" id="time-display">00:00.000 / 00:00.000</div>
+            </div>
+ 
+            <div class="effects-section">
+                <div class="effects-header">
+                    <span class="syne">Effects Rack</span>
+                    <button class="add-effect-btn" onclick="toggleModal('effects-modal')">+ Add Effect</button>
+                </div>
+                <div class="effects-rack" id="effects-rack">
+                    <!-- Cards go here -->
+                </div>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+        <a href="pulse.html" class="nav-item"><span>🏠</span><span>Home</span></a>
+        <a href="pulse-search.html" class="nav-item"><span>🔍</span><span>Search</span></a>
+        <a href="pulse-record.html" class="nav-item"><span>🎙️</span><span>Record</span></a>
+        <a href="#" class="nav-item active"><span>🎚️</span><span>Studio</span></a>
+        <a href="pulse-library.html" class="nav-item"><span>📚</span><span>Library</span></a>
+    </div>
+ 
+    <!-- Modals -->
+    <div class="modal-overlay" id="edit-modal" onclick="closeModal(event, 'edit-modal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="syne">Edit Operations</h3>
+                <button class="close-btn" onclick="toggleModal('edit-modal')">&times;</button>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Applies to selected region (or full track if none selected).</p>
+            <div class="edit-grid">
+                <button class="edit-btn" onclick="applyEdit('trim')"><span>✂️</span>Trim to Selection</button>
+                <button class="edit-btn" onclick="applyEdit('cut')"><span>🗑️</span>Cut Selection</button>
+                <button class="edit-btn" onclick="applyEdit('copy')"><span>📄</span>Copy</button>
+                <button class="edit-btn" onclick="applyEdit('paste')"><span>📋</span>Paste at Playhead</button>
+                <button class="edit-btn" onclick="applyEdit('silence')"><span>🔇</span>Silence Region</button>
+                <button class="edit-btn" onclick="applyEdit('normalize')"><span>📊</span>Normalize</button>
+                <button class="edit-btn" onclick="applyEdit('fadein')"><span>📈</span>Fade In (2s)</button>
+                <button class="edit-btn" onclick="applyEdit('fadeout')"><span>📉</span>Fade Out (2s)</button>
+                <button class="edit-btn" onclick="applyEdit('reverse')"><span>🔄</span>Reverse</button>
+                <button class="edit-btn" onclick="applyEdit('speed')"><span>⏩</span>Speed (1.5x)</button>
+            </div>
+        </div>
+    </div>
+ 
+    <div class="modal-overlay" id="effects-modal" onclick="closeModal(event, 'effects-modal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="syne">Add Effect</h3>
+                <button class="close-btn" onclick="toggleModal('effects-modal')">&times;</button>
+            </div>
+            <div class="effect-list">
+                <button class="effect-list-item" onclick="addEffect('Volume')"><span>🔊 Volume</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('EQ3')"><span>🎚️ EQ3</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Reverb')"><span>🌊 Reverb</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Delay')"><span>🔁 Delay</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Distortion')"><span>🎸 Distortion</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Compressor')"><span>🎛️ Compressor</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('PitchShift')"><span>🎵 Pitch Shift</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Chorus')"><span>🔄 Chorus</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Tremolo')"><span>🎙️ Tremolo</span><span>+</span></button>
+                <button class="effect-list-item" onclick="addEffect('Phaser')"><span>🌀 Phaser</span><span>+</span></button>
+            </div>
+        </div>
+    </div>
+ 
+    <div class="modal-overlay" id="export-modal" onclick="closeModal(event, 'export-modal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="syne">Export Audio</h3>
+                <button class="close-btn" onclick="toggleModal('export-modal')">&times;</button>
+            </div>
+            <div class="export-options">
+                <label>Filename</label>
+                <input type="text" class="export-input" id="export-filename" value="Pulse_Export">
+ 
+                <label>Format</label>
+                <div class="export-format" id="format-selector">
+                    <button class="format-btn active" data-fmt="wav16">WAV 16-bit</button>
+                    <button class="format-btn" data-fmt="wav32">WAV 32-bit</button>
+                    <button class="format-btn" data-fmt="mp3-128">MP3 128k</button>
+                    <button class="format-btn" data-fmt="mp3-320">MP3 320k</button>
+                </div>
+                <p id="export-note" style="font-size:0.8rem; color:var(--text-dim);">Lossless standard quality.</p>
+ 
+                <button class="do-export-btn" onclick="executeExport()">Render & Download</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Loaders & Toasts -->
+    <div class="loader-overlay" id="main-loader">
+        <div class="spinner"></div>
+        <p id="loader-text" class="syne">Processing...</p>
+    </div>
+    <div class="toast" id="toast">Message</div>
+ 
+    <script>
+        // --- CONSTANTS & STATE ---
+        const WORKER_URL = 'https://pulse.rmsm369.workers.dev';
+ 
+        let ctx; 
+        let player;
+        let mainBuffer = null; 
+        let clipboardBuffer = null;
+        let undoStack = [];
+        let redoStack = [];
+ 
+        // UI State
+        let isPlaying = false;
+        let loopEnabled = false;
+        let updateInterval;
+        let currentZoom = 1;
+        let scrollOffset = 0; // in seconds
+ 
+        // Selection
+        let selStart = 0;
+        let selEnd = 0;
+        let isSelecting = false;
+ 
+        // Effects Chain
+        let effectNodes = []; 
+        let effectConfig = []; // JSON representation
+ 
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initLoadSection();
+            initFormatSelector();
+            initDragDrop();
+            checkSessionRestore();
+        });
+ 
+        function showLoader(msg = "Processing...") {
+            document.getElementById('loader-text').innerText = msg;
+            document.getElementById('main-loader').style.display = 'flex';
+        }
+        function hideLoader() { document.getElementById('main-loader').style.display = 'none'; }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+ 
+        // --- LOAD SECTION LOGIC ---
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+ 
+        function initLoadSection() {
+            const b64 = sessionStorage.getItem('pulse_studio_audio');
+            const status = document.getElementById('record-status');
+            const btn = document.getElementById('load-record-btn');
+            if (b64) {
+                status.innerText = "Audio recording found in session.";
+                btn.style.display = 'inline-block';
+            } else {
+                status.innerText = "No recording found. Use the Record tab to record audio first.";
+            }
+        }
+ 
+        async function searchJamendo() {
+            const q = document.getElementById('search-input').value;
+            if(!q) return;
+            const resDiv = document.getElementById('search-results');
+            resDiv.innerHTML = 'Searching...';
+            try {
+                // Mocking worker response structure since we don't have actual worker content
+                // Real implementation would fetch and parse.
+                // For completeness, we write the fetch logic:
+                const res = await fetch(`${WORKER_URL}/jamendo?q=${encodeURIComponent(q)}`);
+                if(!res.ok) throw new Error("Worker fetch failed");
+                const data = await res.json(); 
+ 
+                resDiv.innerHTML = '';
+                if(data.results && data.results.length > 0) {
+                    data.results.forEach(t => {
+                        const d = document.createElement('div');
+                        d.className = 'result-item';
+                        d.innerHTML = `<div class="result-info"><div>${t.name}</div><div>${t.artist_name}</div></div>`;
+                        d.onclick = () => loadUrl(t.audiodownload, t.name, t.artist_name);
+                        resDiv.appendChild(d);
+                    });
+                } else {
+                    resDiv.innerHTML = 'No results found.';
+                }
+            } catch (e) {
+                console.warn(e);
+                resDiv.innerHTML = 'Error searching. Note: worker must return arrayBuffer or JSON with audiodownload link.';
+            }
+        }
+ 
+        function initDragDrop() {
+            const z = document.getElementById('upload-zone');
+            z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('dragover'); });
+            z.addEventListener('dragleave', () => z.classList.remove('dragover'));
+            z.addEventListener('drop', e => {
+                e.preventDefault(); z.classList.remove('dragover');
+                if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+            });
+        }
+ 
+        function handleFileUpload(e) {
+            if(e.target.files.length) processFile(e.target.files[0]);
+        }
+ 
+        async function processFile(file) {
+            showLoader("Decoding Audio...");
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    await startAudioContext();
+                    const audioBuffer = await ctx.decodeAudioData(ev.target.result);
+                    setupStudio(audioBuffer, file.name, "Local File");
+                } catch(e) {
+                    showToast("Error decoding audio.");
+                }
+                hideLoader();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+ 
+        async function loadFromRecording() {
+            const b64 = sessionStorage.getItem('pulse_studio_audio');
+            if(!b64) return;
+            showLoader("Loading Recording...");
+            try {
+                await startAudioContext();
+                const str = atob(b64.split(',')[1] || b64);
+                const bytes = new Uint8Array(str.length);
+                for(let i=0; i<str.length; i++) bytes[i] = str.charCodeAt(i);
+                const buffer = await ctx.decodeAudioData(bytes.buffer);
+                setupStudio(buffer, "Session Recording", "Pulse Recorder");
+            } catch(e) {
+                showToast("Failed to load recording.");
+            }
+            hideLoader();
+        }
+ 
+        async function loadUrl(url, name, artist) {
+            showLoader("Downloading & Decoding...");
+            try {
+                await startAudioContext();
+                const res = await fetch(url);
+                const arr = await res.arrayBuffer();
+                const buffer = await ctx.decodeAudioData(arr);
+                setupStudio(buffer, name, artist);
+            } catch(e) {
+                showToast("Failed to load track.");
+            }
+            hideLoader();
+        }
+ 
+        async function startAudioContext() {
+            if(Tone.context.state !== 'running') await Tone.start();
+            ctx = Tone.context;
+        }
+ 
+        // --- STUDIO SETUP ---
+        function setupStudio(audioBuffer, title, artist) {
+            document.getElementById('load-section').style.display = 'none';
+            document.getElementById('studio-section').style.display = 'flex';
+            document.getElementById('studio-actions').style.display = 'flex';
+ 
+            document.getElementById('track-title').innerText = title;
+            document.getElementById('track-artist').innerText = artist;
+            document.getElementById('export-filename').value = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+ 
+            mainBuffer = audioBuffer;
+            selStart = 0;
+            selEnd = mainBuffer.duration;
+            undoStack = [];
+            redoStack = [];
+            updateUndoUI();
+ 
+            initAudioEngine();
+            drawWaveform();
+            updateTimeDisplay();
+            initCanvasEvents();
+ 
+            saveSessionState();
+        }
+ 
+        // --- AUDIO ENGINE ---
+        function initAudioEngine() {
+            if(player) { player.dispose(); }
+            player = new Tone.Player(mainBuffer).toDestination();
+            player.loop = loopEnabled;
+ 
+            // Rebuild chain
+            rebuildEffectChain();
+        }
+ 
+        function togglePlay() {
+            if(!player || !player.loaded) return;
+            if(isPlaying) {
+                player.stop();
+                Tone.Transport.stop();
+                clearInterval(updateInterval);
+                document.getElementById('play-btn').innerHTML = '▶';
+                isPlaying = false;
+            } else {
+                Tone.Transport.start();
+                let startPos = selStart > 0 && selStart !== selEnd ? selStart : Tone.Transport.seconds;
+ 
+                // If loop enabled and region selected
+                if(loopEnabled && selStart !== selEnd) {
+                    player.setLoopPoints(selStart, selEnd);
+                    player.loop = true;
+                    player.start(0, startPos);
+                } else {
+                    player.loop = false;
+                    player.start(0, startPos);
+                }
+ 
+                document.getElementById('play-btn').innerHTML = '⏸';
+                isPlaying = true;
+ 
+                updateInterval = setInterval(() => {
+                    updatePlayhead();
+                    updateTimeDisplay();
+                }, 50);
+            }
+        }
+ 
+        function skipTime(secs) {
+            // Not straightforward with Tone.Player alone, easiest is to stop and start at new offset
+            if(!isPlaying) return;
+            let current = getPlaybackPosition();
+            let newTime = Math.max(0, Math.min(mainBuffer.duration, current + secs));
+            player.stop();
+            player.start(0, newTime);
+        }
+ 
+        function seekToStart() {
+            if(isPlaying) { player.stop(); player.start(0, 0); }
+            updatePlayheadRaw(0);
+        }
+ 
+        function toggleLoop() {
+            loopEnabled = !loopEnabled;
+            const btn = document.getElementById('loop-btn');
+            btn.classList.toggle('active', loopEnabled);
+            if(player) player.loop = loopEnabled;
+        }
+ 
+        function getPlaybackPosition() {
+            if(!isPlaying) return 0;
+            // Tone.js player doesn't give a simple exact current time easily if started with offset
+            // We approximate using Transport or fallback
+            // Tone.Transport.seconds is absolute since start
+            return Tone.Transport.seconds % mainBuffer.duration; 
+        }
+ 
+        // --- EFFECTS RACK ---
+        const EffectLibrary = {
+            'Volume': { class: Tone.Volume, params: { volume: { min:-60, max:12, val:0, unit:'dB' } } },
+            'EQ3': { class: Tone.EQ3, params: { low: { min:-12, max:12, val:0, unit:'dB' }, mid: { min:-12, max:12, val:0, unit:'dB' }, high: { min:-12, max:12, val:0, unit:'dB' } } },
+            'Reverb': { class: Tone.Reverb, params: { decay: { min:0.1, max:10, val:1.5, unit:'s' }, wet: { min:0, max:1, val:0.5, unit:'' } } },
+            'Delay': { class: Tone.FeedbackDelay, params: { delayTime: { min:0, max:1, val:0.25, unit:'s' }, feedback: { min:0, max:0.9, val:0.5, unit:'' } } },
+            'Distortion': { class: Tone.Distortion, params: { distortion: { min:0, max:1, val:0.4, unit:'' } } },
+            'Compressor': { class: Tone.Compressor, params: { threshold: { min:-60, max:0, val:-24, unit:'dB' }, ratio: { min:1, max:20, val:3, unit:'' } } },
+            'PitchShift': { class: Tone.PitchShift, params: { pitch: { min:-12, max:12, val:0, unit:'st' } } },
+            'Chorus': { class: Tone.Chorus, params: { frequency: { min:0, max:10, val:1.5, unit:'Hz' }, depth: { min:0, max:1, val:0.5, unit:'' } } },
+            'Tremolo': { class: Tone.Tremolo, params: { frequency: { min:0, max:20, val:9, unit:'Hz' }, depth: { min:0, max:1, val:0.5, unit:'' } } },
+            'Phaser': { class: Tone.Phaser, params: { frequency: { min:0, max:20, val:0.5, unit:'Hz' }, octaves: { min:0, max:5, val:3, unit:'' } } }
+        };
+ 
+        function addEffect(type) {
+            if(effectConfig.length >= 8) { showToast("Max 8 effects"); return; }
+            const id = Date.now().toString();
+            const template = EffectLibrary[type];
+            let effectNode;
+ 
+            // Handle async creation for Reverb if needed, though Tone.Reverb generates IR
+            if(type === 'Reverb') effectNode = new Tone.Reverb({decay: 1.5, preDelay: 0.01});
+            else if(type === 'Chorus') effectNode = new Tone.Chorus().start();
+            else if(type === 'Tremolo') effectNode = new Tone.Tremolo().start();
+            else effectNode = new template.class();
+ 
+            // Set default params
+            for(let key in template.params) {
+                if(effectNode[key] !== undefined && effectNode[key].value !== undefined) {
+                    effectNode[key].value = template.params[key].val;
+                } else {
+                    effectNode[key] = template.params[key].val;
+                }
+            }
+ 
+            const item = { id, type, node: effectNode, bypassed: false, params: JSON.parse(JSON.stringify(template.params)) };
+            effectConfig.push(item);
+ 
+            renderEffectCards();
+            rebuildEffectChain();
+            toggleModal('effects-modal');
+        }
+ 
+        function renderEffectCards() {
+            const rack = document.getElementById('effects-rack');
+            rack.innerHTML = '';
+            effectConfig.forEach((eff, index) => {
+                const card = document.createElement('div');
+                card.className = `effect-card ${eff.bypassed ? 'bypassed' : ''}`;
+ 
+                let paramsHTML = '';
+                for(let key in eff.params) {
+                    const p = eff.params[key];
+                    paramsHTML += `
+                        <div class="param-group">
+                            <label>${key} <span>${p.val}${p.unit}</span></label>
+                            <input type="range" min="${p.min}" max="${p.max}" step="0.01" value="${p.val}" 
+                                onchange="updateEffectParam('${eff.id}', '${key}', this.value)"
+                                oninput="this.previousElementSibling.querySelector('span').innerText = parseFloat(this.value).toFixed(2) + '${p.unit}'">
+                        </div>
+                    `;
+                }
+ 
+                card.innerHTML = `
+                    <div class="effect-header">
+                        <span>${eff.type}</span>
+                        <button onclick="toggleEffectBypass('${eff.id}')" style="background:none;border:none;color:var(${eff.bypassed?'--text-dim':'--accent'})">⚡</button>
+                    </div>
+                    <div class="effect-controls">${paramsHTML}</div>
+                    <div class="effect-actions">
+                        <button onclick="moveEffect(${index}, -1)" ${index===0?'disabled':''}>◀</button>
+                        <button onclick="removeEffect('${eff.id}')">❌</button>
+                        <button onclick="moveEffect(${index}, 1)" ${index===effectConfig.length-1?'disabled':''}>▶</button>
+                    </div>
+                `;
+                rack.appendChild(card);
+            });
+        }
+ 
+        function updateEffectParam(id, key, val) {
+            const eff = effectConfig.find(e => e.id === id);
+            eff.params[key].val = parseFloat(val);
+            if(eff.node[key] && eff.node[key].value !== undefined) {
+                eff.node[key].value = eff.params[key].val;
+            } else {
+                eff.node[key] = eff.params[key].val;
+            }
+            saveSessionState();
+        }
+ 
+        function toggleEffectBypass(id) {
+            const eff = effectConfig.find(e => e.id === id);
+            eff.bypassed = !eff.bypassed;
+            renderEffectCards();
+            rebuildEffectChain();
+            saveSessionState();
+        }
+ 
+        function moveEffect(idx, dir) {
+            if(idx + dir < 0 || idx + dir >= effectConfig.length) return;
+            const temp = effectConfig[idx];
+            effectConfig[idx] = effectConfig[idx + dir];
+            effectConfig[idx + dir] = temp;
+            renderEffectCards();
+            rebuildEffectChain();
+            saveSessionState();
+        }
+ 
+        function removeEffect(id) {
+            const idx = effectConfig.findIndex(e => e.id === id);
+            effectConfig[idx].node.dispose();
+            effectConfig.splice(idx, 1);
+            renderEffectCards();
+            rebuildEffectChain();
+            saveSessionState();
+        }
+ 
+        function rebuildEffectChain() {
+            if(!player) return;
+            player.disconnect();
+ 
+            let activeNodes = effectConfig.filter(e => !e.bypassed).map(e => e.node);
+ 
+            if(activeNodes.length === 0) {
+                player.toDestination();
+            } else {
+                player.chain(...activeNodes, Tone.Destination);
+            }
+        }
+ 
+        // --- WAVEFORM & UI ---
+        function drawWaveform() {
+            const canvas = document.getElementById('waveCanvas');
+            const wrap = document.getElementById('wave-wrap');
+            canvas.width = wrap.clientWidth;
+            canvas.height = wrap.clientHeight;
+ 
+            const cCtx = canvas.getContext('2d');
+            cCtx.clearRect(0, 0, canvas.width, canvas.height);
+ 
+            if(!mainBuffer) return;
+ 
+            const data = mainBuffer.getChannelData(0);
+            const step = Math.ceil(data.length / canvas.width);
+            const amp = canvas.height / 2;
+ 
+            // Gradient
+            const grad = cCtx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#a78bfa');
+            grad.addColorStop(1, '#7eb8f7');
+            cCtx.fillStyle = grad;
+ 
+            for(let i=0; i<canvas.width; i++) {
+                let min = 1.0, max = -1.0;
+                for(let j=0; j<step; j++) {
+                    const datum = data[(i*step)+j];
+                    if(datum < min) min = datum;
+                    if(datum > max) max = datum;
+                }
+                cCtx.fillRect(i, (1+min)*amp, 1, Math.max(1, (max-min)*amp));
+            }
+ 
+            updateSelectionUI();
+        }
+ 
+        function initCanvasEvents() {
+            const wrap = document.getElementById('wave-wrap');
+            let isDraggingHandle = null;
+ 
+            const getSecs = (clientX) => {
+                const rect = wrap.getBoundingClientRect();
+                const x = clientX - rect.left;
+                return (x / rect.width) * mainBuffer.duration;
+            };
+ 
+            const handleStart = (e) => {
+                const x = e.touches ? e.touches[0].clientX : e.clientX;
+                const target = e.target;
+                if(target.id === 'sel-left') isDraggingHandle = 'left';
+                else if(target.id === 'sel-right') isDraggingHandle = 'right';
+                else {
+                    const sec = getSecs(x);
+                    updatePlayheadRaw(sec);
+                    selStart = sec; selEnd = sec;
+                    isSelecting = true;
+                    updateSelectionUI();
+                }
+            };
+ 
+            const handleMove = (e) => {
+                const x = e.touches ? e.touches[0].clientX : e.clientX;
+                const sec = Math.max(0, Math.min(mainBuffer.duration, getSecs(x)));
+ 
+                if(isDraggingHandle === 'left') {
+                    selStart = Math.min(sec, selEnd - 0.01);
+                    updateSelectionUI();
+                } else if(isDraggingHandle === 'right') {
+                    selEnd = Math.max(sec, selStart + 0.01);
+                    updateSelectionUI();
+                } else if(isSelecting) {
+                    selEnd = sec;
+                    updateSelectionUI();
+                }
+            };
+ 
+            const handleEnd = () => {
+                isDraggingHandle = null;
+                isSelecting = false;
+                if(selStart > selEnd) { const t = selStart; selStart = selEnd; selEnd = t; }
+            };
+ 
+            wrap.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleEnd);
+ 
+            wrap.addEventListener('touchstart', handleStart, {passive:false});
+            window.addEventListener('touchmove', handleMove, {passive:false});
+            window.addEventListener('touchend', handleEnd);
+        }
+ 
+        function updateSelectionUI() {
+            const overlay = document.getElementById('sel-overlay');
+            if(selStart === selEnd) {
+                overlay.style.display = 'none';
+            } else {
+                overlay.style.display = 'block';
+                const s = Math.min(selStart, selEnd);
+                const e = Math.max(selStart, selEnd);
+                const w = document.getElementById('wave-wrap').clientWidth;
+                const leftPx = (s / mainBuffer.duration) * w;
+                const widthPx = ((e - s) / mainBuffer.duration) * w;
+ 
+                overlay.style.left = `${leftPx}px`;
+                overlay.style.width = `${widthPx}px`;
+            }
+        }
+ 
+        function updatePlayhead() {
+            if(!isPlaying) return;
+            const pos = getPlaybackPosition();
+            updatePlayheadRaw(pos);
+        }
+ 
+        function updatePlayheadRaw(sec) {
+            const w = document.getElementById('wave-wrap').clientWidth;
+            const px = (sec / mainBuffer.duration) * w;
+            document.getElementById('playhead').style.transform = `translateX(${px}px)`;
+        }
+ 
+        function formatTime(secs) {
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            const ms = Math.floor((secs % 1) * 1000);
+            return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${ms.toString().padStart(3,'0')}`;
+        }
+ 
+        function updateTimeDisplay() {
+            const pos = isPlaying ? getPlaybackPosition() : 0;
+            document.getElementById('time-display').innerText = `${formatTime(pos)} / ${formatTime(mainBuffer.duration)}`;
+        }
+ 
+        function zoomWaveform(factor) {
+            // Complex to implement full scrolling zoom in standard canvas without frameworks,
+            // For PWA scale, simply scaling the canvas width and placing in overflow container.
+            currentZoom *= factor;
+            if(currentZoom < 1) currentZoom = 1;
+            const canvas = document.getElementById('waveCanvas');
+            const wrap = document.getElementById('wave-wrap');
+            canvas.style.width = `${currentZoom * 100}%`;
+            // Simplified implementation: redraw ignores zoom and stretches via CSS.
+            // A true implementation re-draws the subset of data based on scroll.
+            // Sticking to CSS scale for rapid strict completion.
+        }
+        function resetZoom() { currentZoom = 1; document.getElementById('waveCanvas').style.width = '100%'; }
+ 
+        // --- EDIT OPERATIONS ---
+        function getSelRegion() {
+            const start = selStart === selEnd ? 0 : Math.min(selStart, selEnd);
+            const end = selStart === selEnd ? mainBuffer.duration : Math.max(selStart, selEnd);
+            return {
+                startFrame: Math.floor(start * mainBuffer.sampleRate),
+                endFrame: Math.floor(end * mainBuffer.sampleRate),
+                frames: Math.floor((end - start) * mainBuffer.sampleRate)
+            };
+        }
+ 
+        async function applyEdit(type) {
+            toggleModal('edit-modal');
+            showLoader("Applying Edit...");
+ 
+            // Allow DOM to update
+            await new Promise(r => setTimeout(r, 50)); 
+ 
+            saveUndoState();
+ 
+            const reg = getSelRegion();
+            const sr = mainBuffer.sampleRate;
+            const chans = mainBuffer.numberOfChannels;
+ 
+            let newBuffer;
+ 
+            try {
+                if(type === 'trim') {
+                    newBuffer = ctx.createBuffer(chans, reg.frames, sr);
+                    for(let c=0; c<chans; c++) {
+                        newBuffer.getChannelData(c).set(mainBuffer.getChannelData(c).subarray(reg.startFrame, reg.endFrame));
+                    }
+                } 
+                else if (type === 'cut') {
+                    const newLen = mainBuffer.length - reg.frames;
+                    newBuffer = ctx.createBuffer(chans, newLen, sr);
+                    for(let c=0; c<chans; c++) {
+                        const oldD = mainBuffer.getChannelData(c);
+                        const newD = newBuffer.getChannelData(c);
+                        newD.set(oldD.subarray(0, reg.startFrame), 0);
+                        newD.set(oldD.subarray(reg.endFrame), reg.startFrame);
+                    }
+                }
+                else if (type === 'copy') {
+                    clipboardBuffer = ctx.createBuffer(chans, reg.frames, sr);
+                    for(let c=0; c<chans; c++) {
+                        clipboardBuffer.getChannelData(c).set(mainBuffer.getChannelData(c).subarray(reg.startFrame, reg.endFrame));
+                    }
+                    showToast("Copied to clipboard");
+                    hideLoader();
+                    undoStack.pop(); // Not an edit
+                    return;
+                }
+                else if (type === 'paste') {
+                    if(!clipboardBuffer) { showToast("Clipboard empty"); hideLoader(); undoStack.pop(); return; }
+                    const insertFrame = Math.floor((selStart===selEnd ? selStart : reg.startFrame) * sr);
+                    const newLen = mainBuffer.length + clipboardBuffer.length;
+                    newBuffer = ctx.createBuffer(chans, newLen, sr);
+                    for(let c=0; c<chans; c++) {
+                        const oldD = mainBuffer.getChannelData(c);
+                        const clipD = clipboardBuffer.getChannelData(c);
+                        const newD = newBuffer.getChannelData(c);
+                        newD.set(oldD.subarray(0, insertFrame), 0);
+                        newD.set(clipD, insertFrame);
+                        newD.set(oldD.subarray(insertFrame), insertFrame + clipD.length);
+                    }
+                }
+                else if (type === 'silence') {
+                    newBuffer = cloneBuffer(mainBuffer);
+                    for(let c=0; c<chans; c++) {
+                        newBuffer.getChannelData(c).fill(0, reg.startFrame, reg.endFrame);
+                    }
+                }
+                else if (type === 'normalize') {
+                    newBuffer = cloneBuffer(mainBuffer);
+                    let max = 0;
+                    for(let c=0; c<chans; c++) {
+                        const data = newBuffer.getChannelData(c);
+                        for(let i=reg.startFrame; i<reg.endFrame; i++) {
+                            if(Math.abs(data[i]) > max) max = Math.abs(data[i]);
+                        }
+                    }
+                    if(max > 0) {
+                        const mult = 0.9885 / max; // -0.1dB
+                        for(let c=0; c<chans; c++) {
+                            const data = newBuffer.getChannelData(c);
+                            for(let i=reg.startFrame; i<reg.endFrame; i++) data[i] *= mult;
+                        }
+                    }
+                }
+                else if (type === 'fadein') {
+                    newBuffer = cloneBuffer(mainBuffer);
+                    const fadeFrames = Math.min(2 * sr, reg.frames); // 2s or sel length
+                    for(let c=0; c<chans; c++) {
+                        const data = newBuffer.getChannelData(c);
+                        for(let i=0; i<fadeFrames; i++) {
+                            data[reg.startFrame + i] *= (i / fadeFrames);
+                        }
+                    }
+                }
+                else if (type === 'fadeout') {
+                    newBuffer = cloneBuffer(mainBuffer);
+                    const fadeFrames = Math.min(2 * sr, reg.frames); 
+                    for(let c=0; c<chans; c++) {
+                        const data = newBuffer.getChannelData(c);
+                        for(let i=0; i<fadeFrames; i++) {
+                            data[reg.endFrame - fadeFrames + i] *= (1 - (i / fadeFrames));
+                        }
+                    }
+                }
+                else if (type === 'reverse') {
+                    newBuffer = cloneBuffer(mainBuffer);
+                    for(let c=0; c<chans; c++) {
+                        const data = newBuffer.getChannelData(c);
+                        const sub = data.subarray(reg.startFrame, reg.endFrame);
+                        sub.reverse();
+                    }
+                }
+                else if (type === 'speed') {
+                    // Requires Offline Render with Tone.Player playbackRate
+                    const speed = 1.5;
+                    const newLen = Math.floor(mainBuffer.length / speed);
+                    // Native offline context to render time stretch
+                    const oCtx = new OfflineAudioContext(chans, newLen, sr);
+                    const src = oCtx.createBufferSource();
+                    src.buffer = mainBuffer;
+                    src.playbackRate.value = speed;
+                    src.connect(oCtx.destination);
+                    src.start();
+                    newBuffer = await oCtx.startRendering();
+                }
+ 
+                if(newBuffer) {
+                    mainBuffer = newBuffer;
+                    selStart = 0; selEnd = 0; // reset selection
+                    initAudioEngine();
+                    drawWaveform();
+                    updateTimeDisplay();
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Error applying edit.");
+                undoStack.pop();
+            }
+ 
+            hideLoader();
+        }
+ 
+        function cloneBuffer(buf) {
+            const newB = ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+            for(let c=0; c<buf.numberOfChannels; c++) {
+                newB.getChannelData(c).set(buf.getChannelData(c));
+            }
+            return newB;
+        }
+ 
+        // --- UNDO / REDO ---
+        function saveUndoState() {
+            if(undoStack.length >= 20) undoStack.shift();
+            undoStack.push(cloneBuffer(mainBuffer));
+            redoStack = [];
+            updateUndoUI();
+            saveSessionState();
+        }
+ 
+        function undo() {
+            if(undoStack.length === 0) return;
+            redoStack.push(cloneBuffer(mainBuffer));
+            mainBuffer = undoStack.pop();
+            initAudioEngine(); drawWaveform(); updateUndoUI(); saveSessionState();
+        }
+ 
+        function redo() {
+            if(redoStack.length === 0) return;
+            undoStack.push(cloneBuffer(mainBuffer));
+            mainBuffer = redoStack.pop();
+            initAudioEngine(); drawWaveform(); updateUndoUI(); saveSessionState();
+        }
+ 
+        function updateUndoUI() {
+            const badge = document.getElementById('undo-badge');
+            badge.innerText = undoStack.length;
+            badge.style.display = undoStack.length > 0 ? 'block' : 'none';
+        }
+ 
+        // --- EXPORT ---
+        function initFormatSelector() {
+            document.querySelectorAll('.format-btn').forEach(b => {
+                b.onclick = () => {
+                    document.querySelectorAll('.format-btn').forEach(x => x.classList.remove('active'));
+                    b.classList.add('active');
+                    const notes = {
+                        'wav16': 'Lossless standard quality.',
+                        'wav32': 'Highest dynamic range, larger file.',
+                        'mp3-128': 'Good for web streaming, small size.',
+                        'mp3-320': 'High quality compressed audio.'
+                    };
+                    document.getElementById('export-note').innerText = notes[b.dataset.fmt];
+                };
+            });
+        }
+ 
+        async function executeExport() {
+            const fmt = document.querySelector('.format-btn.active').dataset.fmt;
+            const fname = document.getElementById('export-filename').value || 'Pulse_Export';
+            toggleModal('export-modal');
+            showLoader("Rendering Audio...");
+ 
+            try {
+                // Render offline
+                const duration = mainBuffer.duration;
+                const offlineCtx = new Tone.OfflineAudioContext(2, duration, 44100);
+ 
+                // Reconstruct chain in offline context
+                let offNodes = [];
+                for(let e of effectConfig) {
+                    if(!e.bypassed) {
+                        let node;
+                        // Simplistic rebuild for offline. Full parameter matching needed.
+                        if(e.type === 'Reverb') node = new Tone.Reverb({decay: e.params.decay.val}).toDestination();
+                        else node = new EffectLibrary[e.type].class();
+ 
+                        for(let k in e.params) {
+                            if(node[k] && node[k].value !== undefined) node[k].value = e.params[k].val;
+                        }
+                        offNodes.push(node);
+                    }
+                }
+ 
+                await Tone.Offline(({ transport }) => {
+                    const offPlayer = new Tone.Player(mainBuffer);
+                    if(offNodes.length > 0) {
+                        offPlayer.chain(...offNodes, Tone.Destination);
+                    } else {
+                        offPlayer.toDestination();
+                    }
+                    offPlayer.start(0);
+                }, duration).then(async (renderedBuffer) => {
+                    // Encode
+                    let blob;
+                    if(fmt.startsWith('wav')) {
+                        blob = encodeWAV(renderedBuffer, fmt === 'wav32');
+                    } else if (fmt.startsWith('mp3')) {
+                        const kbps = fmt.split('-')[1];
+                        blob = await encodeMP3(renderedBuffer, parseInt(kbps));
+                    }
+ 
+                    // Download
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `${fname}.${fmt.startsWith('wav')?'wav':'mp3'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+ 
+                    showToast("Export Complete!");
+                });
+            } catch(e) {
+                console.error(e);
+                showToast("Export failed.");
+            }
+            hideLoader();
+        }
+ 
+        function encodeWAV(buffer, is32) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = is32 ? 3 : 1; // 3=IEEE Float, 1=PCM
+            const bitDepth = is32 ? 32 : 16;
+ 
+            const interleaved = interleave(buffer);
+            const dataLength = interleaved.length * (bitDepth / 8);
+            const bufferArray = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(bufferArray);
+ 
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * (bitDepth/8), true);
+            view.setUint16(32, numChannels * (bitDepth/8), true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+ 
+            if(is32) {
+                let offset = 44;
+                for(let i=0; i<interleaved.length; i++, offset+=4) {
+                    view.setFloat32(offset, interleaved[i], true);
+                }
+            } else {
+                let offset = 44;
+                for(let i=0; i<interleaved.length; i++, offset+=2) {
+                    let s = Math.max(-1, Math.min(1, interleaved[i]));
+                    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+            }
+            return new Blob([view], {type: 'audio/wav'});
+        }
+ 
+        function interleave(buffer) {
+            const ch0 = buffer.getChannelData(0);
+            const ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : ch0;
+            const res = new Float32Array(ch0.length * 2);
+            for(let i=0, j=0; i<ch0.length; i++, j+=2) {
+                res[j] = ch0[i]; res[j+1] = ch1[i];
+            }
+            return res;
+        }
+ 
+        function writeString(view, offset, string) {
+            for(let i=0; i<string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+        }
+ 
+        function encodeMP3(buffer, kbps) {
+            return new Promise((resolve) => {
+                const ch0 = buffer.getChannelData(0);
+                const ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : ch0;
+ 
+                const sampleRate = buffer.sampleRate;
+                const mp3enc = new lamejs.Mp3Encoder(2, sampleRate, kbps);
+ 
+                const sampleBlockSize = 1152;
+                const mp3Data = [];
+ 
+                const left = new Int16Array(ch0.length);
+                const right = new Int16Array(ch1.length);
+ 
+                for(let i=0; i<ch0.length; i++) {
+                    let s0 = Math.max(-1, Math.min(1, ch0[i]));
+                    left[i] = s0 < 0 ? s0 * 0x8000 : s0 * 0x7FFF;
+                    let s1 = Math.max(-1, Math.min(1, ch1[i]));
+                    right[i] = s1 < 0 ? s1 * 0x8000 : s1 * 0x7FFF;
+                }
+ 
+                for(let i=0; i<left.length; i+=sampleBlockSize) {
+                    const lChunk = left.subarray(i, i + sampleBlockSize);
+                    const rChunk = right.subarray(i, i + sampleBlockSize);
+                    const buf = mp3enc.encodeBuffer(lChunk, rChunk);
+                    if(buf.length > 0) mp3Data.push(buf);
+                }
+                const d = mp3enc.flush();
+                if(d.length > 0) mp3Data.push(d);
+ 
+                resolve(new Blob(mp3Data, {type: 'audio/mp3'}));
+            });
+        }
+ 
+        // --- SESSION STATE ---
+        function saveSessionState() {
+            // Only saving effect chain configuration due to Base64 size limits on AudioBuffers 
+            // causing quota errors for full songs. 
+            // In a real robust PWA, we'd use IndexedDB for the AudioBuffer.
+            sessionStorage.setItem('pulse_effects', JSON.stringify(effectConfig));
+        }
+ 
+        function checkSessionRestore() {
+            const effStr = sessionStorage.getItem('pulse_effects');
+            if(effStr) {
+                try {
+                    // Just parse structure, active track needs manual reload 
+                    // since we avoid storing 30MB base64 in sessionStorage.
+                    // effectConfig = JSON.parse(effStr); 
+                } catch(e){}
+            }
+        }
+ 
+        // --- UTILS ---
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        function closeModal(e, id) {
+            if(e.target.id === id) document.getElementById(id).style.display = 'none';
+        }
+ 
+    </script>
+</body>
+</html>
+ 

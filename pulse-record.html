@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulse | Record</title>
+ 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+ 
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+ 
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #1a1a24;
+            --surface-elevated: #262635;
+            --accent: #a78bfa;
+            --accent-hover: #9061f9;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --border: #3f3f46;
+            --nav-height: 64px;
+ 
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-main);
+            background: var(--bg);
+        }
+ 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+ 
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            overflow: hidden;
+        }
+ 
+        /* Typography */
+        h1, h2, h3 { font-family: 'Syne', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+ 
+        /* App Bar */
+        .app-bar {
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .app-bar h1 { font-size: 1.5rem; letter-spacing: -0.5px; }
+        .app-bar span { color: var(--accent); }
+ 
+        /* Main Content */
+        .main-recorder {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            padding-bottom: var(--nav-height);
+        }
+ 
+        /* Top: Timer */
+        .timer-section {
+            padding: 40px 20px 20px;
+            text-align: center;
+        }
+        .timer-display {
+            font-size: clamp(3rem, 10vw, 4rem);
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+        .timer-display.recording { color: var(--text-main); }
+        .quality-indicator {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+ 
+        /* Middle: Waveform */
+        .waveform-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0 20px;
+            min-height: 120px;
+            position: relative;
+        }
+        canvas#waveform {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+        }
+ 
+        /* Bottom: Controls */
+        .controls-section {
+            padding: 20px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 200px;
+        }
+ 
+        .state-panel {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .state-panel.active { display: flex; }
+ 
+        /* State 1: Idle */
+        .btn-record-main {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--danger);
+            border: 4px solid rgba(239, 68, 68, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-record-main:active { transform: scale(0.95); }
+        .hint-text { margin-top: 16px; color: var(--text-muted); font-size: 0.9rem; }
+ 
+        /* State 2: Recording */
+        .recording-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--danger);
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: pulse-red 1s infinite;
+        }
+        .record-actions {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        .btn-stop {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid var(--border);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .btn-stop .square { width: 24px; height: 24px; background: var(--danger); border-radius: 4px; }
+        .btn-pause {
+            width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--surface-elevated); color: white; font-size: 1.2rem; cursor: pointer;
+        }
+        .btn-cancel-text {
+            margin-top: 24px; color: var(--text-muted); font-size: 0.9rem; background: none; border: none; cursor: pointer; text-decoration: underline;
+        }
+ 
+        /* State 3: Recorded */
+        .playback-controls { width: 100%; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .btn-play-pause {
+            width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.5rem; cursor: pointer; flex-shrink: 0;
+        }
+        .seek-container { flex: 1; display: flex; align-items: center; gap: 10px; }
+        .seek-bar { width: 100%; accent-color: var(--accent); cursor: pointer; height: 6px; }
+        .seek-time { font-size: 0.8rem; color: var(--text-muted); min-width: 45px; }
+ 
+        .action-row {
+            display: flex; justify-content: center; gap: 12px; width: 100%; margin-bottom: 16px;
+        }
+        .btn-action {
+            flex: 1; max-width: 120px; padding: 12px 0; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 8px; color: white; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.8rem;
+        }
+        .btn-action span { font-size: 1.2rem; }
+        .btn-secondary { background: none; border: none; color: var(--text-muted); font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
+ 
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 10;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 500;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-item span { font-size: 1.4rem; }
+ 
+        /* Overlays / Modals */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+        }
+        .overlay.active { display: flex; opacity: 1; }
+        .card {
+            background: var(--surface); width: 90%; max-width: 400px; border-radius: 16px; padding: 24px; text-align: center; border: 1px solid var(--border);
+        }
+        .card-icon { font-size: 3rem; margin-bottom: 16px; }
+        .card h2 { margin-bottom: 8px; }
+        .card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+        .btn-primary {
+            width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer;
+        }
+ 
+        /* Bottom Sheets */
+        .bottom-sheet {
+            position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--surface); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border); z-index: 110; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; max-height: 85dvh;
+        }
+        .bottom-sheet.open { bottom: 0; }
+        .sheet-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .sheet-close { background: none; border: none; color: var(--text-main); font-size: 1.5rem; cursor: pointer; }
+        .sheet-content { padding: 20px; overflow-y: auto; flex: 1; }
+ 
+        /* Toast */
+        .toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--surface-elevated); color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 1000; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+ 
+        /* Sliders / Toggles */
+        .effect-row { margin-bottom: 24px; background: var(--surface-elevated); padding: 16px; border-radius: 12px; }
+        .effect-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; appearance: none; background: var(--border); border-radius: 12px; outline: none; cursor: pointer; transition: background 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.3s; }
+        .toggle-switch:checked { background: var(--accent); }
+        .toggle-switch:checked::after { transform: translateX(20px); }
+        .slider-group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .slider-group label { font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .range-input { width: 100%; accent-color: var(--accent); }
+ 
+        /* Trim UI */
+        .trim-waveform-container { position: relative; width: 100%; height: 100px; background: var(--surface-elevated); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        .trim-canvas { width: 100%; height: 100%; }
+        .trim-overlay { position: absolute; top: 0; height: 100%; background: rgba(0,0,0,0.6); pointer-events: none; }
+        .trim-overlay.left { left: 0; width: 0; border-right: 2px solid var(--accent); }
+        .trim-overlay.right { right: 0; width: 0; border-left: 2px solid var(--accent); }
+        .trim-handle { position: absolute; top: 0; width: 20px; height: 100%; cursor: ew-resize; z-index: 5; background: transparent; transform: translateX(-50%); touch-action: none; }
+        .trim-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 30px; background: var(--accent); border-radius: 2px; }
+ 
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    </style>
+</head>
+<body>
+ 
+    <nav class="app-bar">
+        <h1>Pulse<span>.</span></h1>
+    </nav>
+ 
+    <main class="main-recorder">
+        <div class="timer-section">
+            <div class="timer-display mono" id="main-timer">00:00:00</div>
+            <div class="quality-indicator">High Quality • 44.1kHz • Stereo</div>
+        </div>
+ 
+        <div class="waveform-section">
+            <canvas id="waveform"></canvas>
+        </div>
+ 
+        <div class="controls-section">
+            <!-- STATE 1: IDLE -->
+            <div class="state-panel active" id="state-idle">
+                <button class="btn-record-main" id="btn-start-record"></button>
+                <div class="hint-text">Tap to record</div>
+            </div>
+ 
+            <!-- STATE 2: RECORDING -->
+            <div class="state-panel" id="state-recording">
+                <div class="recording-status">
+                    <div class="pulse-dot"></div>
+                    <span id="recording-text-status">Recording...</span>
+                </div>
+                <div class="record-actions">
+                    <button class="btn-pause" id="btn-pause-record">⏸</button>
+                    <button class="btn-stop" id="btn-stop-record"><div class="square"></div></button>
+                </div>
+                <button class="btn-cancel-text" id="btn-cancel-record">Cancel</button>
+            </div>
+ 
+            <!-- STATE 3: RECORDED -->
+            <div class="state-panel" id="state-recorded">
+                <div class="playback-controls">
+                    <button class="btn-play-pause" id="btn-play">▶</button>
+                    <div class="seek-container">
+                        <span class="seek-time mono" id="seek-current">00:00</span>
+                        <input type="range" class="seek-bar" id="seek-bar" value="0" step="0.01">
+                        <span class="seek-time mono" id="seek-duration">00:00</span>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button class="btn-action" id="btn-discard"><span>🗑️</span> Discard</button>
+                    <button class="btn-action" id="btn-trim"><span>✂️</span> Trim</button>
+                    <button class="btn-action" id="btn-download-menu"><span>⬇️</span> Download</button>
+                </div>
+                <button class="btn-action" style="max-width: 100%; margin-bottom: 8px;" id="btn-effects">✨ Add Effects</button>
+                <button class="btn-secondary" id="btn-rerecord">Re-record</button>
+            </div>
+        </div>
+    </main>
+ 
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item"><span>🏠</span>Home</a>
+        <a href="#" class="nav-item"><span>🔍</span>Search</a>
+        <a href="#" class="nav-item active"><span>🎙️</span>Record</a>
+        <a href="#" class="nav-item"><span>📚</span>Library</a>
+    </nav>
+ 
+    <!-- Permission Modal -->
+    <div class="overlay" id="permission-overlay">
+        <div class="card" id="permission-card">
+            <div class="card-icon">🎙️</div>
+            <h2>Microphone Access</h2>
+            <p>Pulse needs mic access to record audio.</p>
+            <button class="btn-primary" id="btn-allow-mic">Allow Microphone</button>
+            <p id="mic-error-msg" style="color:var(--danger); margin-top:16px; display:none;">Microphone blocked. Please enable in browser settings.</p>
+        </div>
+    </div>
+ 
+    <!-- Trim Bottom Sheet -->
+    <div class="overlay" id="trim-overlay" style="z-index: 105;"></div>
+    <div class="bottom-sheet" id="trim-sheet">
+        <div class="sheet-header">
+            <h3>Trim Audio</h3>
+            <button class="sheet-close" id="close-trim">×</button>
+        </div>
+        <div class="sheet-content">
+            <div class="trim-waveform-container" id="trim-container">
+                <canvas class="trim-canvas" id="trim-canvas"></canvas>
+                <div class="trim-overlay left" id="trim-overlay-left"></div>
+                <div class="trim-overlay right" id="trim-overlay-right"></div>
+                <div class="trim-handle" id="trim-handle-left" style="left: 0%;"></div>
+                <div class="trim-handle" id="trim-handle-right" style="left: 100%;"></div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-action" id="btn-preview-trim" style="flex: 1;">▶ Preview</button>
+                <button class="btn-primary" id="btn-apply-trim" style="flex: 2;">Apply Trim</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Effects Bottom Sheet -->
+    <div class="overlay" id="fx-overlay" style="z-index: 105;"></div>
+    <div class="bottom-sheet" id="fx-sheet">
+        <div class="sheet-header">
+            <h3>Audio Effects</h3>
+            <button class="sheet-close" id="close-fx">×</button>
+        </div>
+        <div class="sheet-content">
+            <div class="effect-row">
+                <div class="effect-header">
+                    <h4>Reverb</h4>
+                    <input type="checkbox" class="toggle-switch" id="fx-reverb-toggle">
+                </div>
+                <div class="slider-group">
+                    <label>Decay Time <span id="val-reverb">4.0s</span></label>
+                    <input type="range" class="range-input" id="fx-reverb-decay" min="0.1" max="10" step="0.1" value="4">
+                </div>
+            </div>
+            <div class="effect-row">
+                <div class="effect-header">
+                    <h4>Echo / Delay</h4>
+                    <input type="checkbox" class="toggle-switch" id="fx-echo-toggle">
+                </div>
+                <div class="slider-group">
+                    <label>Delay Time <span id="val-delay">0.25s</span></label>
+                    <input type="range" class="range-input" id="fx-echo-time" min="0.05" max="1" step="0.01" value="0.25">
+                    <label style="margin-top:8px">Feedback <span id="val-feedback">30%</span></label>
+                    <input type="range" class="range-input" id="fx-echo-feedback" min="0" max="0.9" step="0.05" value="0.3">
+                </div>
+            </div>
+            <div class="effect-row">
+                <div class="effect-header">
+                    <h4>Pitch Shift</h4>
+                    <input type="checkbox" class="toggle-switch" id="fx-pitch-toggle">
+                </div>
+                <div class="slider-group">
+                    <label>Semitones <span id="val-pitch">0</span></label>
+                    <input type="range" class="range-input" id="fx-pitch-shift" min="-12" max="12" step="1" value="0">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-action" id="btn-preview-fx" style="flex: 1;">▶ Preview</button>
+                <button class="btn-primary" id="btn-apply-fx" style="flex: 2;">Apply Effects</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Download Bottom Sheet -->
+    <div class="overlay" id="dl-overlay" style="z-index: 105;"></div>
+    <div class="bottom-sheet" id="dl-sheet" style="max-height: 50dvh;">
+        <div class="sheet-header">
+            <h3>Download Recording</h3>
+            <button class="sheet-close" id="close-dl">×</button>
+        </div>
+        <div class="sheet-content">
+            <p style="color:var(--text-muted); margin-bottom: 20px;">Select audio format:</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-action" style="max-width: 100%;" onclick="downloadAudio('wav')">High Quality (WAV)</button>
+                <button class="btn-action" style="max-width: 100%;" onclick="downloadAudio('mp3')">Compressed (MP3)</button>
+                <button class="btn-action" style="max-width: 100%;" onclick="downloadAudio('webm')">Original (WebM/Ogg)</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Toast Notification -->
+    <div class="toast" id="toast-msg"></div>
+ 
+    <!-- Hidden Audio element for playback -->
+    <audio id="playback-audio" style="display: none;"></audio>
+ 
+<script>
+    // System Variables
+    let micGranted = false;
+    let audioStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordedBlob = null;
+    let audioContext = null;
+    let analyser = null;
+    let sourceNode = null;
+    let rafId = null;
+    let startTime = 0;
+    let timerInterval = null;
+    let pausedTime = 0;
+    let isPaused = false;
+ 
+    // Playback & Edit Variables
+    let currentAudioBuffer = null;
+    let isPlaying = false;
+    let trimStartPercent = 0;
+    let trimEndPercent = 1;
+    let previewTonePlayer = null;
+ 
+    // DOM Elements
+    const views = {
+        idle: document.getElementById('state-idle'),
+        recording: document.getElementById('state-recording'),
+        recorded: document.getElementById('state-recorded')
+    };
+    const mainTimer = document.getElementById('main-timer');
+    const canvas = document.getElementById('waveform');
+    const ctx = canvas.getContext('2d');
+    const playbackAudio = document.getElementById('playback-audio');
+    const seekBar = document.getElementById('seek-bar');
+ 
+    // Setup Canvas Resolution
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        drawIdleWaveform();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 100);
+ 
+    // Toast utility
+    function showToast(msg) {
+        const toast = document.getElementById('toast-msg');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+ 
+    // View Routing
+    function switchView(state) {
+        Object.values(views).forEach(v => v.classList.remove('active'));
+        views[state].classList.add('active');
+        if(state === 'recording') mainTimer.classList.add('recording');
+        else mainTimer.classList.remove('recording');
+    }
+ 
+    // Format time HH:MM:SS
+    function formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+ 
+    function formatTimeShort(sec) {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+ 
+    // --- Audio System Setup ---
+    async function requestMicrophone() {
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            micGranted = true;
+            document.getElementById('permission-overlay').classList.remove('active');
+            startRecordingEngine();
+        } catch (err) {
+            document.getElementById('mic-error-msg').style.display = 'block';
+        }
+    }
+ 
+    document.getElementById('btn-start-record').addEventListener('click', () => {
+        if (!micGranted) {
+            document.getElementById('permission-overlay').classList.add('active');
+        } else {
+            startRecordingEngine();
+        }
+    });
+ 
+    document.getElementById('btn-allow-mic').addEventListener('click', requestMicrophone);
+ 
+    function getSupportedMimeType() {
+        const types = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/ogg'
+        ];
+        return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+    }
+ 
+    async function startRecordingEngine() {
+        recordedChunks = [];
+        const mimeType = getSupportedMimeType();
+ 
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType });
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+ 
+        mediaRecorder.onstop = async () => {
+            recordedBlob = new Blob(recordedChunks, { type: mimeType });
+            await loadRecordedBlob(recordedBlob);
+            switchView('recorded');
+            stopVisualizer();
+            drawStaticWaveform();
+        };
+ 
+        // Web Audio for Live Visualizer
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        sourceNode = audioContext.createMediaStreamSource(audioStream);
+        sourceNode.connect(analyser);
+        // NO connection to destination (prevents feedback loop)
+ 
+        mediaRecorder.start(100);
+        startTime = Date.now();
+        pausedTime = 0;
+        isPaused = false;
+        document.getElementById('btn-pause-record').textContent = '⏸';
+        document.getElementById('recording-text-status').textContent = 'Recording...';
+ 
+        timerInterval = setInterval(() => {
+            if(!isPaused) {
+                const elapsed = Date.now() - startTime - pausedTime;
+                mainTimer.textContent = formatTime(elapsed);
+            }
+        }, 100);
+ 
+        switchView('recording');
+        showToast("Recording will be lost if you leave this page");
+        startLiveVisualizer();
+    }
+ 
+    // --- Recording Controls ---
+    document.getElementById('btn-pause-record').addEventListener('click', () => {
+        if(mediaRecorder.state === 'recording') {
+            mediaRecorder.pause();
+            isPaused = true;
+            document.getElementById('btn-pause-record').textContent = '▶';
+            document.getElementById('recording-text-status').textContent = 'Paused';
+            document.querySelector('.pulse-dot').style.animation = 'none';
+        } else if (mediaRecorder.state === 'paused') {
+            mediaRecorder.resume();
+            isPaused = false;
+            document.getElementById('btn-pause-record').textContent = '⏸';
+            document.getElementById('recording-text-status').textContent = 'Recording...';
+            document.querySelector('.pulse-dot').style.animation = 'pulse-red 1s infinite';
+        }
+    });
+ 
+    document.getElementById('btn-stop-record').addEventListener('click', () => {
+        clearInterval(timerInterval);
+        mediaRecorder.stop();
+        if(audioContext) audioContext.close();
+    });
+ 
+    document.getElementById('btn-cancel-record').addEventListener('click', () => {
+        clearInterval(timerInterval);
+        mediaRecorder.stop();
+        if(audioContext) audioContext.close();
+        // Immediately discard
+        setTimeout(() => { resetToIdle(); }, 100);
+    });
+ 
+    // --- Visualizer ---
+    function drawIdleWaveform() {
+        if(rafId) cancelAnimationFrame(rafId);
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
+        ctx.clearRect(0, 0, width, height);
+        ctx.beginPath();
+        ctx.moveTo(0, height/2);
+        ctx.lineTo(width, height/2);
+        ctx.strokeStyle = '#3f3f46';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+ 
+    function startLiveVisualizer() {
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+ 
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#a78bfa');
+        gradient.addColorStop(1, '#7eb8f7');
+ 
+        function draw() {
+            rafId = requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+ 
+            ctx.clearRect(0, 0, width, height);
+ 
+            const bars = 64;
+            const barWidth = (width / bars) * 0.8;
+            const gap = (width / bars) * 0.2;
+            const centerIdx = Math.floor(bars/2);
+ 
+            for(let i = 0; i < bars; i++) {
+                // Map visualization to spread from center
+                const distFromCenter = Math.abs(i - centerIdx);
+                const dataIndex = Math.floor((distFromCenter / centerIdx) * (bufferLength * 0.7)); 
+                const val = dataArray[dataIndex];
+ 
+                const percent = val / 255;
+                const barHeight = Math.max(2, height * percent);
+ 
+                const x = i * (barWidth + gap);
+                const y = (height - barHeight) / 2;
+ 
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight, 4);
+                ctx.fill();
+            }
+        }
+        draw();
+    }
+ 
+    function stopVisualizer() {
+        if(rafId) cancelAnimationFrame(rafId);
+    }
+ 
+    // --- Playback & Processing ---
+    async function loadRecordedBlob(blob) {
+        const url = URL.createObjectURL(blob);
+        playbackAudio.src = url;
+ 
+        // Decode to AudioBuffer for trimming/effects
+        const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await blob.arrayBuffer();
+        currentAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+        tempCtx.close();
+ 
+        playbackAudio.onloadedmetadata = () => {
+            document.getElementById('seek-duration').textContent = formatTimeShort(playbackAudio.duration);
+            seekBar.max = playbackAudio.duration;
+            mainTimer.textContent = formatTime(playbackAudio.duration * 1000);
+        };
+    }
+ 
+    // Generate static waveform from currentAudioBuffer
+    function drawStaticWaveform(canvasEl = canvas, color = '#a78bfa') {
+        if(!currentAudioBuffer) return;
+        const cCtx = canvasEl.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvasEl.getBoundingClientRect();
+ 
+        // Setup canvas resolution if trim canvas
+        if(canvasEl !== canvas) {
+            canvasEl.width = rect.width * dpr;
+            canvasEl.height = rect.height * dpr;
+            cCtx.scale(dpr, dpr);
+        }
+ 
+        const width = rect.width;
+        const height = rect.height;
+        cCtx.clearRect(0, 0, width, height);
+ 
+        const channelData = currentAudioBuffer.getChannelData(0);
+        const step = Math.ceil(channelData.length / width);
+        const amp = height / 2;
+ 
+        cCtx.fillStyle = color;
+        for(let i = 0; i < width; i++) {
+            let min = 1.0;
+            let max = -1.0;
+            for (let j = 0; j < step; j++) {
+                const datum = channelData[(i * step) + j];
+                if (datum < min) min = datum;
+                if (datum > max) max = datum;
+            }
+            const y = (1 + min) * amp;
+            const h = Math.max(1, (max - min) * amp);
+            cCtx.fillRect(i, y, 1, h);
+        }
+    }
+ 
+    // Playback Controls
+    let playbackInterval;
+    const btnPlay = document.getElementById('btn-play');
+ 
+    function togglePlay() {
+        if(playbackAudio.paused) {
+            playbackAudio.play();
+            btnPlay.textContent = '⏸';
+            playbackInterval = setInterval(() => {
+                seekBar.value = playbackAudio.currentTime;
+                document.getElementById('seek-current').textContent = formatTimeShort(playbackAudio.currentTime);
+            }, 100);
+        } else {
+            playbackAudio.pause();
+            btnPlay.textContent = '▶';
+            clearInterval(playbackInterval);
+        }
+    }
+ 
+    btnPlay.addEventListener('click', togglePlay);
+    playbackAudio.addEventListener('ended', () => {
+        btnPlay.textContent = '▶';
+        clearInterval(playbackInterval);
+        seekBar.value = 0;
+        document.getElementById('seek-current').textContent = "00:00";
+    });
+ 
+    seekBar.addEventListener('input', () => {
+        playbackAudio.currentTime = seekBar.value;
+        document.getElementById('seek-current').textContent = formatTimeShort(seekBar.value);
+    });
+ 
+    // Reset Flow
+    function resetToIdle() {
+        playbackAudio.pause();
+        playbackAudio.src = '';
+        recordedChunks = [];
+        recordedBlob = null;
+        currentAudioBuffer = null;
+        mainTimer.textContent = '00:00:00';
+        drawIdleWaveform();
+        switchView('idle');
+    }
+    document.getElementById('btn-discard').addEventListener('click', resetToIdle);
+    document.getElementById('btn-rerecord').addEventListener('click', resetToIdle);
+ 
+    // --- Helpers: Bottom Sheets ---
+    function openSheet(id) {
+        document.getElementById(id.replace('-sheet', '-overlay')).classList.add('active');
+        setTimeout(() => document.getElementById(id).classList.add('open'), 10);
+    }
+    function closeSheet(id) {
+        document.getElementById(id).classList.remove('open');
+        setTimeout(() => {
+            document.getElementById(id.replace('-sheet', '-overlay')).classList.remove('active');
+        }, 300);
+    }
+ 
+    // --- Trim Engine ---
+    document.getElementById('btn-trim').addEventListener('click', () => {
+        openSheet('trim-sheet');
+        drawStaticWaveform(document.getElementById('trim-canvas'), '#ffffff');
+        trimStartPercent = 0;
+        trimEndPercent = 1;
+        updateTrimUI();
+    });
+    document.getElementById('close-trim').addEventListener('click', () => {
+        closeSheet('trim-sheet');
+        if(previewTonePlayer) { previewTonePlayer.stop(); previewTonePlayer.dispose(); }
+    });
+ 
+    const trimHandleLeft = document.getElementById('trim-handle-left');
+    const trimHandleRight = document.getElementById('trim-handle-right');
+    const trimContainer = document.getElementById('trim-container');
+ 
+    function setupDrag(handle, isLeft) {
+        let isDragging = false;
+        handle.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            handle.setPointerCapture(e.pointerId);
+        });
+        handle.addEventListener('pointermove', (e) => {
+            if(!isDragging) return;
+            const rect = trimContainer.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let percent = Math.max(0, Math.min(1, x / rect.width));
+ 
+            if(isLeft) {
+                if(percent >= trimEndPercent - 0.05) percent = trimEndPercent - 0.05;
+                trimStartPercent = percent;
+            } else {
+                if(percent <= trimStartPercent + 0.05) percent = trimStartPercent + 0.05;
+                trimEndPercent = percent;
+            }
+            updateTrimUI();
+        });
+        handle.addEventListener('pointerup', (e) => { isDragging = false; handle.releasePointerCapture(e.pointerId); });
+    }
+    setupDrag(trimHandleLeft, true);
+    setupDrag(trimHandleRight, false);
+ 
+    function updateTrimUI() {
+        trimHandleLeft.style.left = `${trimStartPercent * 100}%`;
+        trimHandleRight.style.left = `${trimEndPercent * 100}%`;
+        document.getElementById('trim-overlay-left').style.width = `${trimStartPercent * 100}%`;
+        document.getElementById('trim-overlay-right').style.width = `${(1 - trimEndPercent) * 100}%`;
+    }
+ 
+    document.getElementById('btn-preview-trim').addEventListener('click', async () => {
+        if(previewTonePlayer) { previewTonePlayer.stop(); previewTonePlayer.dispose(); }
+        await Tone.start();
+        const startSec = trimStartPercent * currentAudioBuffer.duration;
+        const endSec = trimEndPercent * currentAudioBuffer.duration;
+        previewTonePlayer = new Tone.Player(currentAudioBuffer).toDestination();
+        previewTonePlayer.start(0, startSec, endSec - startSec);
+    });
+ 
+    document.getElementById('btn-apply-trim').addEventListener('click', async () => {
+        const startSample = Math.floor(trimStartPercent * currentAudioBuffer.length);
+        const endSample = Math.floor(trimEndPercent * currentAudioBuffer.length);
+        const newLength = endSample - startSample;
+ 
+        const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const newBuffer = tempCtx.createBuffer(currentAudioBuffer.numberOfChannels, newLength, currentAudioBuffer.sampleRate);
+ 
+        for(let c = 0; c < currentAudioBuffer.numberOfChannels; c++) {
+            const channelData = currentAudioBuffer.getChannelData(c);
+            newBuffer.copyToChannel(channelData.slice(startSample, endSample), c);
+        }
+ 
+        currentAudioBuffer = newBuffer;
+        recordedBlob = audioBufferToWav(newBuffer); // update blob
+        await loadRecordedBlob(recordedBlob);
+        drawStaticWaveform();
+        closeSheet('trim-sheet');
+        showToast("Trim applied!");
+    });
+ 
+ 
+    // --- AudioBuffer to WAV Encoder ---
+    function audioBufferToWav(buffer) {
+        let numOfChan = buffer.numberOfChannels;
+        let length = buffer.length * numOfChan * 2 + 44;
+        let bufferArray = new ArrayBuffer(length);
+        let view = new DataView(bufferArray);
+        let channels = [], i, sample, offset = 0, pos = 0;
+ 
+        function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
+        function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
+ 
+        setUint32(0x46464952); // "RIFF"
+        setUint32(length - 8); 
+        setUint32(0x45564157); // "WAVE"
+        setUint32(0x20746d66); // "fmt " chunk
+        setUint32(16); 
+        setUint16(1); // PCM 
+        setUint16(numOfChan);
+        setUint32(buffer.sampleRate);
+        setUint32(buffer.sampleRate * 2 * numOfChan); 
+        setUint16(numOfChan * 2); // block-align
+        setUint16(16); // 16-bit
+        setUint32(0x61746164); // "data" chunk
+        setUint32(length - pos - 44); 
+ 
+        for(i = 0; i < numOfChan; i++) channels.push(buffer.getChannelData(i));
+ 
+        while(pos < buffer.length) {
+            for(i = 0; i < numOfChan; i++) {
+                sample = Math.max(-1, Math.min(1, channels[i][pos])); 
+                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; 
+                view.setInt16(offset, sample, true); 
+                offset += 2;
+            }
+            pos++;
+        }
+        return new Blob([bufferArray], {type: "audio/wav"});
+    }
+ 
+    // --- AudioBuffer to MP3 Encoder (lamejs) ---
+    function encodeToMp3(audioBuffer) {
+        const channels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+        let mp3Data = [];
+ 
+        let samplesLeft = new Int16Array(audioBuffer.length);
+        let leftData = audioBuffer.getChannelData(0);
+        for(let i = 0; i < leftData.length; i++) samplesLeft[i] = leftData[i] * 32767.5;
+ 
+        let samplesRight = null;
+        if(channels > 1) {
+            samplesRight = new Int16Array(audioBuffer.length);
+            let rightData = audioBuffer.getChannelData(1);
+            for(let i = 0; i < rightData.length; i++) samplesRight[i] = rightData[i] * 32767.5;
+        }
+ 
+        const blockSize = 1152; 
+        for (let i = 0; i < samplesLeft.length; i += blockSize) {
+            let leftChunk = samplesLeft.subarray(i, i + blockSize);
+            let rightChunk = samplesRight ? samplesRight.subarray(i, i + blockSize) : null;
+            let mp3buf = channels === 1 ? mp3encoder.encodeBuffer(leftChunk) : mp3encoder.encodeBuffer(leftChunk, rightChunk);
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+        }
+        let mp3buf = mp3encoder.flush();
+        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+ 
+        return new Blob(mp3Data, {type: 'audio/mp3'});
+    }
+ 
+ 
+    // --- Effects Engine (Tone.js) ---
+    document.getElementById('btn-effects').addEventListener('click', () => openSheet('fx-sheet'));
+    document.getElementById('close-fx').addEventListener('click', () => {
+        closeSheet('fx-sheet');
+        if(previewTonePlayer) { previewTonePlayer.stop(); previewTonePlayer.dispose(); }
+    });
+ 
+    // Link UI labels
+    const bindSlider = (id, valId, suffix="") => {
+        document.getElementById(id).addEventListener('input', e => {
+            document.getElementById(valId).textContent = e.target.value + suffix;
+        });
+    }
+    bindSlider('fx-reverb-decay', 'val-reverb', 's');
+    bindSlider('fx-echo-time', 'val-delay', 's');
+    bindSlider('fx-echo-feedback', 'val-feedback', '');
+    document.getElementById('fx-echo-feedback').addEventListener('input', e => {
+        document.getElementById('val-feedback').textContent = Math.round(e.target.value * 100) + '%';
+    });
+    bindSlider('fx-pitch-shift', 'val-pitch', '');
+ 
+    function buildEffectChain() {
+        const effects = [];
+        if(document.getElementById('fx-reverb-toggle').checked) {
+            effects.push(new Tone.Reverb({ decay: parseFloat(document.getElementById('fx-reverb-decay').value) }));
+        }
+        if(document.getElementById('fx-echo-toggle').checked) {
+            effects.push(new Tone.FeedbackDelay({
+                delayTime: parseFloat(document.getElementById('fx-echo-time').value),
+                feedback: parseFloat(document.getElementById('fx-echo-feedback').value)
+            }));
+        }
+        if(document.getElementById('fx-pitch-toggle').checked) {
+            effects.push(new Tone.PitchShift({ pitch: parseInt(document.getElementById('fx-pitch-shift').value) }));
+        }
+        return effects;
+    }
+ 
+    document.getElementById('btn-preview-fx').addEventListener('click', async () => {
+        if(previewTonePlayer) { previewTonePlayer.stop(); previewTonePlayer.dispose(); }
+        await Tone.start();
+ 
+        const effects = buildEffectChain();
+        previewTonePlayer = new Tone.Player(currentAudioBuffer);
+        if(effects.length > 0) {
+            effects[effects.length - 1].toDestination();
+            previewTonePlayer.chain(...effects);
+        } else {
+            previewTonePlayer.toDestination();
+        }
+        previewTonePlayer.start();
+    });
+ 
+    document.getElementById('btn-apply-fx').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-apply-fx');
+        btn.textContent = "Processing...";
+        btn.disabled = true;
+ 
+        await Tone.start();
+        const duration = currentAudioBuffer.duration;
+        const effectsConfig = buildEffectChain();
+ 
+        try {
+            const renderedToneBuffer = await Tone.Offline(({ transport }) => {
+                const player = new Tone.Player(currentAudioBuffer);
+                if(effectsConfig.length > 0) {
+                    effectsConfig[effectsConfig.length - 1].toDestination();
+                    player.chain(...effectsConfig);
+                } else {
+                    player.toDestination();
+                }
+                player.start(0);
+            }, duration);
+ 
+            currentAudioBuffer = renderedToneBuffer.get(); // native AudioBuffer
+            recordedBlob = audioBufferToWav(currentAudioBuffer);
+            await loadRecordedBlob(recordedBlob);
+            drawStaticWaveform();
+ 
+            showToast("Effects applied!");
+            closeSheet('fx-sheet');
+        } catch (err) {
+            console.error(err);
+            showToast("Error processing effects");
+        }
+ 
+        btn.textContent = "Apply Effects";
+        btn.disabled = false;
+    });
+ 
+    // --- Download System ---
+    document.getElementById('btn-download-menu').addEventListener('click', () => openSheet('dl-sheet'));
+    document.getElementById('close-dl').addEventListener('click', () => closeSheet('dl-sheet'));
+ 
+    async function downloadAudio(format) {
+        closeSheet('dl-sheet');
+        showToast("Preparing download...");
+ 
+        setTimeout(async () => {
+            let exportBlob = recordedBlob;
+            let ext = format;
+ 
+            if (format === 'wav') {
+                exportBlob = audioBufferToWav(currentAudioBuffer);
+            } else if (format === 'mp3') {
+                exportBlob = encodeToMp3(currentAudioBuffer);
+            } else {
+                // webm/ogg (original) - use recordedBlob but if it was edited, it's already converted to WAV internally.
+                // In that case, download the internal WAV if it was edited.
+                if(recordedBlob.type !== 'audio/webm' && recordedBlob.type !== 'audio/ogg' && recordedBlob.type !== 'audio/mp4') {
+                   ext = 'wav'; 
+                }
+            }
+ 
+            const now = new Date();
+            const pad = n => n.toString().padStart(2, '0');
+            const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+            const filename = `pulse-recording-${timestamp}.${ext}`;
+ 
+            const url = URL.createObjectURL(exportBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+ 
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Download complete");
+            }, 100);
+        }, 50); // slight delay to allow UI to update
+    }
+ 
+</script>
+</body>
+</html>
