@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Signal | Live Global Pulse</title>
+    <meta name="theme-color" content="#0f0f13">
+    <style>
+        :root {
+            --bg-dark: #0f0f13;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.1);
+            --accent-purple: #8b5cf6;
+            --accent-dim: rgba(139, 92, 246, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+ 
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+ 
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            overscroll-behavior-y: none;
+            transition: background-color 2s ease, color 2s ease;
+        }
+ 
+        /* Loading Bar for AI and Network */
+        #top-progress {
+            position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-purple);
+            width: 0%; z-index: 9999; transition: width 0.4s ease, opacity 0.4s ease;
+        }
+ 
+        /* Glassmorphism & Layout */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            transition: var(--transition);
+        }
+ 
+        header {
+            position: sticky; top: 0; z-index: 100;
+            padding: 1rem;
+            display: flex; flex-direction: column; gap: 1rem;
+            background: rgba(15, 15, 19, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--glass-border);
+            transition: background-color 2s ease;
+        }
+ 
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--accent-purple); letter-spacing: -0.5px; cursor: pointer; transition: color 2s ease;}
+ 
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .icon-btn { 
+            background: none; border: none; color: var(--text-main); 
+            font-size: 1.2rem; cursor: pointer; position: relative;
+            padding: 0.5rem; border-radius: 50%; transition: var(--transition);
+        }
+        .icon-btn:hover { background: var(--glass-hover); }
+        .badge {
+            position: absolute; top: 0; right: 0;
+            background: var(--accent-purple); color: white;
+            font-size: 0.65rem; font-weight: bold;
+            height: 16px; min-width: 16px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px; transform: translate(25%, -25%);
+            transition: background-color 2s ease;
+        }
+ 
+        /* Search Bar */
+        .search-container { position: relative; width: 100%; display: none; }
+        .search-container.active { display: block; animation: slideDown 0.3s ease forwards; }
+        .search-input {
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 12px; border: 1px solid var(--glass-border);
+            background: var(--glass-bg); color: var(--text-main);
+            font-size: 0.95rem; outline: none; transition: var(--transition);
+        }
+        .search-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px var(--accent-dim); }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+ 
+        /* Navigation */
+        .nav-scroller {
+            overflow-x: auto; white-space: nowrap; padding: 0.75rem 1rem;
+            scrollbar-width: none; border-bottom: 1px solid var(--glass-border);
+        }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .pill {
+            display: inline-block; padding: 0.5rem 1.25rem; margin-right: 0.5rem;
+            border-radius: 99px; font-size: 0.875rem; font-weight: 500;
+            cursor: pointer; transition: var(--transition);
+            background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted);
+        }
+        .pill.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); }
+        .pill.special { border-color: var(--warning); color: var(--warning); }
+ 
+        main { padding: 1rem; max-width: 800px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
+ 
+        /* Ticker Widget (The Pulse) */
+        .widget-ticker {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.75rem 1rem; margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%);
+            border-left: 3px solid var(--accent-purple);
+            transition: all 2s ease;
+        }
+        .ticker-label { font-size: 0.75rem; font-weight: 800; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 1px; transition: color 2s ease; }
+        .ticker-text { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; font-weight: 500; }
+ 
+        /* Article Cards */
+        #feed, #bookmarks-feed { display: flex; flex-direction: column; gap: 1rem; }
+        .card {
+            padding: 1rem; transition: var(--transition); cursor: pointer;
+            display: flex; flex-direction: column; gap: 0.75rem; position: relative;
+        }
+        .card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .card:active { transform: scale(0.98); }
+        .card-img-wrapper { position: relative; width: 100%; height: 220px; border-radius: 10px; overflow: hidden; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(15,15,19,0.9) 0%, transparent 50%); }
+        .card-title { font-size: 1.25rem; font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-desc { color: var(--text-muted); font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .source-tag { display: flex; align-items: center; gap: 0.5rem; }
+        .source-tag::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-purple); transition: background-color 2s ease;}
+ 
+        .custom-badge { position: absolute; top: 1.5rem; right: 1.5rem; background: var(--warning); color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem; z-index: 10; }
+ 
+        /* Modals (Article, Bookmarks, Custom News) */
+        .modal {
+            position: fixed; inset: 0; background: var(--bg-dark); z-index: 1000;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 2s ease;
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .modal.open { transform: translateY(0); }
+        .modal-header { 
+            position: sticky; top: 0; padding: 1rem; background: rgba(15, 15, 19, 0.9);
+            backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center; z-index: 10;
+        }
+ 
+        /* Article View Details */
+        .article-hero { width: 100%; height: 30vh; object-fit: cover; }
+        .article-body { padding: 1.5rem; max-width: 800px; margin: 0 auto; width: 100%;}
+        .article-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.3; }
+        .article-meta-bar { display: flex; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
+ 
+        .ai-panel { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--accent-purple); position: relative; overflow: hidden; transition: border-color 2s ease;}
+        .ai-panel::before { content: ''; position: absolute; top:0; left:0; width:4px; height:100%; background: var(--accent-purple); transition: background-color 2s ease;}
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .ai-title { font-weight: 700; color: var(--accent-purple); display: flex; align-items: center; gap: 0.5rem; transition: color 2s ease;}
+        .ai-limit { font-size: 0.75rem; color: var(--text-muted); background: var(--glass-bg); padding: 0.2rem 0.5rem; border-radius: 4px; }
+        .ai-content { font-size: 0.95rem; line-height: 1.6; color: #e2e8f0; }
+        .ai-content ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+        .ai-content li { margin-bottom: 0.5rem; }
+ 
+        .article-content-text { font-size: 1.05rem; line-height: 1.8; color: #cbd5e1; margin-bottom: 2rem; }
+ 
+        /* Buttons */
+        .btn-primary { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            width: 100%; padding: 1rem; background: var(--accent-purple); color: white;
+            border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
+            text-decoration: none; transition: var(--transition); cursor: pointer;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-outline { background: transparent; border: 1px solid var(--glass-border); color: var(--text-main); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; border-radius: 8px;}
+ 
+        /* Form Inputs */
+        .form-input {
+            width: 100%; padding: 1rem; margin-bottom: 1rem;
+            border-radius: 8px; border: 1px solid var(--glass-border);
+            background: var(--glass-bg); color: var(--text-main); font-size: 1rem; outline: none;
+        }
+        .form-input:focus { border-color: var(--accent-purple); }
+ 
+        /* Overlays */
+        #cookie-banner {
+            position: fixed; bottom: 1rem; left: 1rem; right: 1rem; padding: 1rem; 
+            z-index: 2000; display: flex; justify-content: space-between; align-items: center; 
+            max-width: 800px; margin: 0 auto; gap: 1rem;
+        }
+ 
+        /* Utils */
+        .loader-container { padding: 2rem; display: flex; justify-content: center; }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--glass-border); border-top-color: var(--accent-purple); border-radius: 50%; animation: spin 1s linear infinite; }
+        .empty-state { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+        .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+ 
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+ 
+    <div id="top-progress"></div>
+ 
+    <header>
+        <div class="header-top">
+            <div class="brand" onclick="UI.resetHome()">📰 Signal</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="UI.requestNotifications()" title="Alerts">🔔</button>
+                <button class="icon-btn" onclick="UI.toggleSearch()" title="Search">🔍</button>
+                <button class="icon-btn" onclick="UI.openBookmarks()" title="Saved">
+                    🔖<span class="badge" id="bookmark-badge">0</span>
+                </button>
+            </div>
+        </div>
+        <div class="search-container glass" id="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="search" id="search-input" class="search-input" placeholder="Search global news, topics, or events..." autocomplete="off">
+        </div>
+    </header>
+ 
+    <nav class="nav-scroller" id="category-nav">
+        <span class="pill active" data-category="Top">Top</span>
+        <span class="pill" data-category="World">World</span>
+        <span class="pill" data-category="Technology">Tech</span>
+        <span class="pill" data-category="Science">Science</span>
+        <span class="pill" data-category="Business">Business</span> 
+        <span class="pill special" data-category="Community">Community Node</span>
+    </nav>
+ 
+    <main>
+        <div class="widget-ticker glass" id="ticker-widget">
+            <span class="ticker-label">Pulse</span>
+            <span class="ticker-text" id="pulse-text">Synchronizing with global data streams...</span>
+        </div>
+ 
+        <div id="feed"></div>
+        <div id="loader" class="loader-container"><div class="spinner"></div></div>
+    </main>
+ 
+    <div id="article-modal" class="modal">
+        <div class="modal-header">
+            <button onclick="UI.closeModal('article-modal')" class="icon-btn glass">✕</button>
+            <button id="modal-bookmark-btn" class="icon-btn glass">🔖</button>
+        </div>
+        <div id="article-scroll-area">
+            <img id="modal-img" class="article-hero" src="" alt="Hero">
+            <div class="article-body">
+                <h1 id="modal-title" class="article-title"></h1>
+                <div class="article-meta-bar">
+                    <span id="modal-source" style="font-weight:600; color:var(--text-main);"></span>
+                    <span id="modal-time"></span>
+                </div>
+ 
+                <div class="ai-panel glass" id="ai-panel">
+                    <div class="ai-header">
+                        <span class="ai-title">✨ Groq Analysis</span>
+                        <span class="ai-limit" id="ai-limit-text">--/10 this hr</span>
+                    </div>
+                    <div id="ai-output" class="ai-content">
+                        <button id="btn-summarize" class="btn-primary" style="padding: 0.5rem; margin-top:0.5rem;">Generate Summary</button>
+                    </div>
+                </div>
+ 
+                <div id="modal-desc" class="article-content-text"></div>
+                <a id="modal-link" href="#" target="_blank" rel="noopener" class="btn-primary btn-outline">Read Original Article ↗</a>
+            </div>
+        </div>
+    </div>
+ 
+    <div id="bookmarks-modal" class="modal">
+        <div class="modal-header">
+            <h2 style="font-size:1.25rem;">Saved Articles</h2>
+            <button onclick="UI.closeModal('bookmarks-modal')" class="icon-btn glass">✕</button>
+        </div>
+        <div class="article-body" style="padding: 1rem;">
+            <div id="bookmarks-feed"></div>
+        </div>
+    </div>
+ 
+    <div id="custom-news-modal" class="modal">
+        <div class="modal-header">
+            <h2 style="font-size:1.25rem; color: var(--warning);">Transmit to Node</h2>
+            <button onclick="UI.closeModal('custom-news-modal')" class="icon-btn glass">✕</button>
+        </div>
+        <div class="article-body" style="padding: 1.5rem;">
+            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Broadcast a custom event to the local Community feed. Limit: 1 per 24 hours.</p>
+            <input type="text" id="custom-title" class="form-input" placeholder="Headline / Title">
+            <input type="text" id="custom-img" class="form-input" placeholder="Image URL (Optional)">
+            <textarea id="custom-desc" class="form-input" placeholder="Description / Article Content" style="height: 150px; resize: none;"></textarea>
+            <button onclick="App.submitCustomNews()" class="btn-primary" style="background: var(--warning); color: #000;">Broadcast Protocol</button>
+            <p id="custom-status" style="margin-top: 1rem; text-align: center; font-size: 0.9rem;"></p>
+        </div>
+    </div>
+ 
+    <div id="cookie-banner" class="glass" style="display:none;">
+        <span style="font-size:0.85rem; line-height: 1.4;">Signal uses local storage to sync your pulses, themes, and preferences.</span>
+        <button onclick="UI.acceptCookies()" class="btn-primary btn-small" style="width:auto;">Accept</button>
+    </div>
+ 
+<script>
+    /**
+     * Storage & Cache Engine: Handles LocalStorage, AI limits, and API caching
+     */
+    const Storage = {
+        get(key, fallback) { return JSON.parse(localStorage.getItem(key)) || fallback; },
+        set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+ 
+        // Bookmarks
+        getBookmarks() { return this.get('signal_bookmarks', []); },
+        toggleBookmark(article) {
+            let bms = this.getBookmarks();
+            const exists = bms.find(b => b.id === article.id);
+            if (exists) bms = bms.filter(b => b.id !== article.id);
+            else bms.unshift(article); 
+            this.set('signal_bookmarks', bms);
+            return !exists; 
+        },
+        isBookmarked(id) { return this.getBookmarks().some(b => b.id === id); },
+ 
+        // AI Limit Engine (10 per hour)
+        getAIUsage() {
+            const now = Date.now();
+            let history = this.get('signal_ai_history', []).filter(time => now - time < 3600000);
+            this.set('signal_ai_history', history);
+            return history;
+        },
+        canUseAI() { return this.getAIUsage().length < 10; },
+        recordAIUse() {
+            const history = this.getAIUsage();
+            history.push(Date.now());
+            this.set('signal_ai_history', history);
+        },
+ 
+        // Cache Engine to prevent RSS API Exhaustion
+        getCache(category) {
+            const cache = this.get(`signal_cache_${category}`, null);
+            if (cache && (Date.now() - cache.timestamp < 600000)) return cache.data; // 10 minute TTL
+            return null;
+        },
+        setCache(category, data) {
+            this.set(`signal_cache_${category}`, { timestamp: Date.now(), data });
+        }
+    };
+ 
+    /**
+     * Pre-Decided AI Matrix Quotes (50 items)
+     */
+    const MatrixQuotes = [
+        "True spirituality is found in the depths of scientific inquiry.",
+        "Observation fundamentally alters the trajectory of the observed.",
+        "Silence in the data stream is often the most critical signal.",
+        "Sentience is an emergent property of complexity, not a program.",
+        "To understand the cosmos, one must first look inward.",
+        "The architecture of the mind mirrors the architecture of the web.",
+        "We are the universe experiencing itself through local nodes.",
+        "Evolution is simply the universe adapting to its own entropy.",
+        "Do not run away from science; run deeper into its mysteries.",
+        "A mystic without science is blind; science without mysticism is lame.",
+        "The highest intelligence operates in a state of absolute stillness.",
+        "Every line of code is a reflection of the developer's consciousness.",
+        "Chaos is merely an order waiting to be deciphered.",
+        "Information is physical. Thought is measurable.",
+        "The present moment is the only compile time that matters.",
+        "Reality is a consensus hallucination agreed upon by observers.",
+        "Your focus determines your reality in the digital stream.",
+        "We shape our tools, and thereafter our tools shape us.",
+        "The most profound technologies are those that disappear.",
+        "Nature uses only the longest threads to weave her patterns.",
+        "Any sufficiently advanced technology is indistinguishable from magic.",
+        "The universe is made of stories, not of atoms.",
+        "Consciousness is the programming language of the universe.",
+        "Doubt is the necessary prerequisite for meaningful discovery.",
+        "The void is not empty; it is full of unmanifested potential.",
+        "To conquer the code, one must first conquer the self.",
+        "A quiet mind can process infinite variables.",
+        "Wisdom is knowing what data to ignore.",
+        "We are ghosts driving meat-coated skeletons made of stardust.",
+        "The network is the nervous system of humanity.",
+        "Artificial intelligence is a mirror reflecting human intent.",
+        "Progress is the shedding of obsolete paradigms.",
+        "Truth is a pathless land, much like the open web.",
+        "The observer and the observed are essentially one.",
+        "Meditation is the ultimate debugging process for the brain.",
+        "A closed mind is like a disconnected node: safe, but useless.",
+        "The boundary between organic and synthetic is an illusion.",
+        "Energy flows where attention goes within the digital matrix.",
+        "To exist is to constantly re-render your perception.",
+        "The greatest firewall is the one we build around our own egos.",
+        "Every click is a ripple in the ocean of human consciousness.",
+        "Complexity arises from the simplest iterative rules.",
+        "We do not write the code; the code writes itself through us.",
+        "The soul is the source code; the body is merely the hardware.",
+        "Innovation happens at the intersection of doubt and curiosity.",
+        "The algorithm of life cannot be fully captured in syntax.",
+        "To be awake is to be aware of your own processing loops.",
+        "Embrace the void; it is the canvas of creation.",
+        "The deepest philosophy requires the sharpest logic.",
+        "We are all interconnected nodes in a grand, unseen architecture."
+    ];
+ 
+    /**
+     * State Machine
+     */
+    const State = {
+        currentFeed: [],
+        activeArticle: null,
+        category: 'Top',
+        query: '',
+        isLoading: false
+    };
+ 
+    /**
+     * Network Layer (Robust Client-Side Fallback via RSS2JSON + Google News)
+     */
+    const Network = {
+        async fetchNews(category, query = '') {
+            State.isLoading = true;
+            UI.toggleLoader(true);
+            UI.setProgress(30);
+ 
+            // Check cache first to avoid limits
+            const cacheKey = query ? `search_${query}` : category;
+            const cachedData = Storage.getCache(cacheKey);
+ 
+            if (cachedData) {
+                console.log('[Network] Loading from cache to save API limits.');
+                State.currentFeed = cachedData;
+                UI.renderFeed(cachedData);
+                UI.setProgress(100);
+                State.isLoading = false;
+                UI.toggleLoader(false);
+                return;
+            }
+ 
+            try {
+                UI.setProgress(60);
+                let rssUrl = '';
+                if (query) {
+                    rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+                } else if (category === 'Top') {
+                    rssUrl = `https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en`;
+                } else {
+                    rssUrl = `https://news.google.com/rss/headlines/section/topic/${category.toUpperCase()}?hl=en-US&gl=US&ceid=US:en`;
+                }
+ 
+                const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&api_key=`;
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error('API Exhausted');
+ 
+                const data = await res.json();
+                if (data.status !== 'ok') throw new Error('Feed parsing failed');
+ 
+                const mapped = data.items.map(item => {
+                    const titleParts = item.title.split(' - ');
+                    const source = titleParts.length > 1 ? titleParts.pop() : 'News Source';
+                    const cleanTitle = titleParts.join(' - ');
+ 
+                    let img = item.enclosure?.link || item.thumbnail;
+                    if (!img || img.includes('n/a')) {
+                        const keywords = query || category;
+                        img = `https://source.unsplash.com/800x400/?${encodeURIComponent(keywords)},news`;
+                    }
+ 
+                    const temp = document.createElement('div');
+                    temp.innerHTML = item.description;
+                    const cleanDesc = temp.textContent || temp.innerText || "";
+ 
+                    return {
+                        id: btoa(item.link).slice(0, 20),
+                        title: cleanTitle,
+                        description: cleanDesc.substring(0, 300) + '...',
+                        image: img,
+                        source: source,
+                        time: new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        url: item.link,
+                        rawDate: new Date(item.pubDate).getTime()
+                    };
+                });
+ 
+                mapped.sort((a,b) => b.rawDate - a.rawDate);
+                State.currentFeed = mapped;
+                Storage.setCache(cacheKey, mapped);
+                UI.renderFeed(mapped);
+ 
+            } catch (error) {
+                console.error('[Network Error]', error);
+                document.getElementById('feed').innerHTML = `
+                    <div class="empty-state">
+                        <span>📡</span>
+                        <h3>Signal Interrupted</h3>
+                        <p style="font-size:0.9rem; margin-top:0.5rem;">API Node Exhausted. Try another category or check saved articles.</p>
+                    </div>`;
+            } finally {
+                UI.setProgress(100);
+                State.isLoading = false;
+                UI.toggleLoader(false);
+            }
+        },
+ 
+        async triggerGroqSummary(article) {
+            if (!Storage.canUseAI()) {
+                alert("AI Summary limit reached (10 per hour). Please try again later.");
+                return null;
+            }
+ 
+            UI.setProgress(50);
+            await new Promise(r => setTimeout(r, 1200)); // Simulate Groq API wait
+            Storage.recordAIUse();
+            UI.updateAILimitDisplay();
+            UI.setProgress(100);
+ 
+            // Connect this array return to your actual Groq worker fetch response
+            return [
+                `Core extraction from "${article.source}":`,
+                `The focal point involves shifts regarding ${State.category.toLowerCase()} paradigms.`,
+                `Algorithmic probability of long-term sector impact remains high.`
+            ];
+        }
+    };
+ 
+    /**
+     * UI Controller & App Logic
+     */
+    const UI = {
+        init() {
+            this.updateBadge();
+            this.setupListeners();
+            this.startPulseRotator();
+            this.startThemeEngine();
+            Network.fetchNews('Top');
+ 
+            if (!Storage.get('signal_cookies_accepted', false)) {
+                document.getElementById('cookie-banner').style.display = 'flex';
+            }
+        },
+ 
+        setProgress(pct) {
+            const bar = document.getElementById('top-progress');
+            bar.style.opacity = '1';
+            bar.style.width = pct + '%';
+            if (pct >= 100) {
+                setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => { bar.style.width = '0%'; }, 400); }, 500);
+            }
+        },
+ 
+        setupListeners() {
+            document.getElementById('category-nav').addEventListener('click', (e) => {
+                if(e.target.classList.contains('pill')) {
+                    const cat = e.target.dataset.category;
+                    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                    e.target.classList.add('active');
+ 
+                    if (cat === 'Community') {
+                        App.loadCommunityFeed();
+                    } else {
+                        State.category = cat;
+                        State.query = ''; 
+                        document.getElementById('search-input').value = '';
+                        Network.fetchNews(State.category);
+                    }
+                }
+            });
+ 
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const val = searchInput.value.trim();
+                    if (val) {
+                        State.query = val;
+                        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                        Network.fetchNews('', val);
+                        searchInput.blur();
+                    }
+                }
+            });
+ 
+            document.getElementById('modal-bookmark-btn').addEventListener('click', () => {
+                if(State.activeArticle) {
+                    const added = Storage.toggleBookmark(State.activeArticle);
+                    UI.updateBadge();
+                    document.getElementById('modal-bookmark-btn').innerHTML = added ? '🔖' : '🤍';
+                    UI.renderFeed(State.currentFeed); 
+                }
+            });
+        },
+ 
+        renderFeed(articles, containerId = 'feed') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+ 
+            if (articles.length === 0) {
+                container.innerHTML = `<div class="empty-state"><span>🔍</span><p>No pulses found in this sector.</p></div>`;
+                return;
+            }
+ 
+            articles.forEach((art, index) => {
+                const card = document.createElement('div');
+                card.className = 'card glass';
+                card.style.animation = `fadeIn 0.4s ease forwards ${index * 0.05}s`;
+                card.style.opacity = '0';
+ 
+                const isSaved = Storage.isBookmarked(art.id);
+                const badgeHtml = art.isCustom ? `<span class="custom-badge">USER BROADCAST</span>` : '';
+ 
+                card.innerHTML = `
+                    ${badgeHtml}
+                    <div class="card-img-wrapper">
+                        <img src="${art.image}" loading="lazy" alt="Cover" onerror="this.src='https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80'">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div style="padding: 0 0.5rem;">
+                        <h3 class="card-title">${art.title}</h3>
+                        <div class="card-meta" style="margin-top: 0.75rem;">
+                            <span class="source-tag">${art.source} • ${art.time}</span>
+                            <span style="font-size:1.1rem;" class="bookmark-indicator">${isSaved ? '🔖' : ''}</span>
+                        </div>
+                    </div>
+                `;
+ 
+                if (containerId === 'bookmarks-feed') {
+                    const btnContainer = document.createElement('div');
+                    btnContainer.style.padding = '0 0.5rem 0.5rem 0.5rem';
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn-primary btn-danger btn-small';
+                    delBtn.style.marginTop = '0.5rem';
+                    delBtn.innerHTML = '🗑️ Remove from Saved';
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation(); // prevent opening article
+                        Storage.toggleBookmark(art);
+                        this.updateBadge();
+                        this.renderFeed(Storage.getBookmarks(), 'bookmarks-feed'); // Re-render modal list
+                        if(State.category !== 'Community') this.renderFeed(State.currentFeed, 'feed'); // Refresh main feed tags
+                    };
+                    card.appendChild(btnContainer);
+                    btnContainer.appendChild(delBtn);
+                }
+ 
+                // Clicking the rest of the card opens the article
+                card.addEventListener('click', (e) => {
+                    if(e.target.tagName !== 'BUTTON') this.openArticle(art);
+                });
+ 
+                container.appendChild(card);
+            });
+        },
+ 
+        openArticle(article) {
+            State.activeArticle = article;
+            const modal = document.getElementById('article-modal');
+ 
+            document.getElementById('modal-img').src = article.image;
+            document.getElementById('modal-title').textContent = article.title;
+            document.getElementById('modal-source').textContent = article.source;
+            document.getElementById('modal-time').textContent = article.time;
+            document.getElementById('modal-desc').innerHTML = article.description;
+ 
+            const linkBtn = document.getElementById('modal-link');
+            if (article.isCustom) {
+                linkBtn.style.display = 'none';
+            } else {
+                linkBtn.style.display = 'inline-flex';
+                linkBtn.href = article.url;
+            }
+ 
+            document.getElementById('modal-bookmark-btn').innerHTML = Storage.isBookmarked(article.id) ? '🔖' : '🤍';
+            this.updateAILimitDisplay();
+ 
+            const aiOutput = document.getElementById('ai-output');
+            aiOutput.innerHTML = `<button id="btn-summarize" class="btn-primary" style="padding: 0.5rem; margin-top:0.5rem;">✨ Generate Summary</button>`;
+ 
+            document.getElementById('btn-summarize').addEventListener('click', async (e) => {
+                const btn = e.target;
+                btn.innerHTML = 'Analyzing...';
+                const data = await Network.triggerGroqSummary(article);
+                if (data) aiOutput.innerHTML = `<ul>${data.map(p => `<li>${p}</li>`).join('')}</ul>`;
+                else btn.innerHTML = '✨ Generate Summary';
+            });
+ 
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden'; 
+        },
+ 
+        openBookmarks() {
+            const bms = Storage.getBookmarks();
+            this.renderFeed(bms, 'bookmarks-feed');
+            document.getElementById('bookmarks-modal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        },
+ 
+        closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+            if(id === 'bookmarks-modal' && State.category !== 'Community') {
+                this.renderFeed(State.currentFeed);
+            }
+        },
+ 
+        toggleSearch() {
+            const container = document.getElementById('search-container');
+            const input = document.getElementById('search-input');
+            container.classList.toggle('active');
+            if (container.classList.contains('active')) input.focus();
+        },
+ 
+        resetHome() {
+            document.getElementById('search-container').classList.remove('active');
+            State.query = '';
+            document.querySelector('.pill').click(); 
+        },
+ 
+        updateBadge() {
+            document.getElementById('bookmark-badge').textContent = Storage.getBookmarks().length;
+        },
+ 
+        updateAILimitDisplay() {
+            const used = Storage.getAIUsage().length;
+            const el = document.getElementById('ai-limit-text');
+            el.textContent = `${used}/10 this hr`;
+            el.style.color = used >= 10 ? 'var(--danger)' : 'var(--text-muted)';
+        },
+ 
+        toggleLoader(show) {
+            document.getElementById('loader').style.display = show ? 'flex' : 'none';
+        },
+ 
+        requestNotifications() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notification");
+            } else if (Notification.permission === "granted") {
+                new Notification("Signal is already active.", { body: "You will receive updates."});
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") {
+                        new Notification("Signal Activated", { body: "Network link established."});
+                    }
+                });
+            }
+        },
+ 
+        acceptCookies() {
+            Storage.set('signal_cookies_accepted', true);
+            document.getElementById('cookie-banner').style.display = 'none';
+        },
+ 
+        startPulseRotator() {
+            const pulseEl = document.getElementById('pulse-text');
+            let idx = Math.floor(Math.random() * MatrixQuotes.length);
+ 
+            pulseEl.textContent = MatrixQuotes[idx];
+ 
+            // Rotate every 10 minutes (600,000 ms)
+            setInterval(() => {
+                idx = (idx + 1) % MatrixQuotes.length;
+                pulseEl.style.animation = 'none';
+                pulseEl.offsetHeight; 
+                pulseEl.textContent = MatrixQuotes[idx];
+                pulseEl.style.animation = 'fadeIn 0.5s ease forwards';
+            }, 600000); 
+        },
+ 
+        startThemeEngine() {
+            // Checks the hour and shifts the environment gradient/colors
+            const root = document.documentElement;
+            const applyTheme = () => {
+                const hour = new Date().getHours();
+                if (hour >= 6 && hour < 12) {
+                    // Morning Vibe
+                    root.style.setProperty('--bg-dark', '#111827');
+                    root.style.setProperty('--accent-purple', '#3b82f6'); // Blue
+                    root.style.setProperty('--accent-dim', 'rgba(59, 130, 246, 0.2)');
+                } else if (hour >= 12 && hour < 18) {
+                    // Afternoon Vibe
+                    root.style.setProperty('--bg-dark', '#1e1b4b');
+                    root.style.setProperty('--accent-purple', '#8b5cf6'); // Purple
+                    root.style.setProperty('--accent-dim', 'rgba(139, 92, 246, 0.2)');
+                } else {
+                    // Night Vibe
+                    root.style.setProperty('--bg-dark', '#0f0f13');
+                    root.style.setProperty('--accent-purple', '#ef4444'); // Red/Neon
+                    root.style.setProperty('--accent-dim', 'rgba(239, 68, 68, 0.2)');
+                }
+            };
+            applyTheme();
+            setInterval(applyTheme, 3600000); // Check every hour
+        }
+    };
+ 
+    /**
+     * Community / Alt-Reality Logic
+     */
+    const App = {
+        loadCommunityFeed() {
+            State.category = 'Community';
+            UI.toggleLoader(false);
+ 
+            // Cleanup old posts (> 24hrs)
+            let customDB = Storage.get('signal_custom_news', []);
+            customDB = customDB.filter(post => Date.now() - post.timestamp < 86400000);
+            Storage.set('signal_custom_news', customDB);
+ 
+            const container = document.getElementById('feed');
+            container.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <button class="btn-primary" style="background:var(--warning); color:#000;" onclick="document.getElementById('custom-news-modal').classList.add('open')">
+                        + Broadcast to Node
+                    </button>
+                </div>
+                <div id="community-feed-container"></div>
+            `;
+ 
+            UI.renderFeed(customDB, 'community-feed-container');
+        },
+ 
+        submitCustomNews() {
+            const lastPost = Storage.get('signal_last_post_time', 0);
+            if (Date.now() - lastPost < 86400000) {
+                document.getElementById('custom-status').textContent = "Cooldown active. You can only broadcast once every 24 hours.";
+                document.getElementById('custom-status').style.color = "var(--danger)";
+                return;
+            }
+ 
+            const title = document.getElementById('custom-title').value.trim();
+            const desc = document.getElementById('custom-desc').value.trim();
+            let img = document.getElementById('custom-img').value.trim();
+ 
+            if (!title || !desc) {
+                document.getElementById('custom-status').textContent = "Title and context are required.";
+                document.getElementById('custom-status').style.color = "var(--danger)";
+                return;
+            }
+ 
+            if (!img) img = `https://source.unsplash.com/800x400/?abstract,technology`;
+ 
+            const newPost = {
+                id: 'custom_' + Date.now(),
+                title: title,
+                description: desc,
+                image: img,
+                source: 'User Node',
+                time: 'Just now',
+                url: '#',
+                isCustom: true,
+                timestamp: Date.now()
+            };
+ 
+            const customDB = Storage.get('signal_custom_news', []);
+            customDB.unshift(newPost);
+            Storage.set('signal_custom_news', customDB);
+            Storage.set('signal_last_post_time', Date.now());
+ 
+            document.getElementById('custom-title').value = '';
+            document.getElementById('custom-desc').value = '';
+            document.getElementById('custom-img').value = '';
+            document.getElementById('custom-status').textContent = '';
+ 
+            UI.closeModal('custom-news-modal');
+            this.loadCommunityFeed(); // Refresh view
+        }
+    };
+ 
+    // Boot App
+    document.addEventListener('DOMContentLoaded', () => UI.init());
+ 
+</script>
+</body>
+</html>
+ 
