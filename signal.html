@@ -181,20 +181,7 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
  
         /* Welcome Modal */
         #welcome-modal { z-index: 9999; justify-content: center; align-items: center; padding: 1rem; background: rgba(10,10,12,0.98); backdrop-filter: blur(40px);}
-        .welcome-content { 
-    max-width: 400px; 
-    width: 90%; 
-    max-height: 75dvh; /* Dynamic height avoids mobile URL bars */
-    height: max-content;
-    overflow-y: auto; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 1.5rem; 
-    text-align: center; 
-    padding: 1.5rem; 
-    box-sizing: border-box; /* Stops padding from pushing buttons out */
-    margin: auto;
-}
+        .welcome-content { max-width: 400px; width: 90%; max-height: 75dvh; /* Dynamic height avoids mobile URL bars */height: max-content;overflow-y: auto; display: flex; flex-direction: column;   gap: 1.5rem;   text-align: center;     padding: 1.5rem;     box-sizing: border-box; /* Stops padding from pushing buttons out */    margin: auto;}
         .perm-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); text-align: left;}
         .perm-info h4 { font-size: 1rem; margin-bottom: 0.2rem;}
         .perm-info p { font-size: 0.8rem; color: var(--text-muted);}
@@ -403,32 +390,7 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
                 </div>
             </div>
  
-           completeOnboarding() {
-            State.permissions = {
-                notifications: document.getElementById('perm-notif').checked,
-                sound: document.getElementById('perm-sound').checked
-            };
-            Store.set('sig_perms', State.permissions);
-            Store.set('signal_onboarded', true);
-            
-            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
-            AudioEngine.init(); AudioEngine.play('chime');
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal');
-            this.boot();
-        },
-
-        skipOnboarding() {
-            State.permissions = { notifications: false, sound: false };
-            Store.set('sig_perms', State.permissions); 
-            Store.set('signal_onboarded', true);
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal'); 
-            UI.toast('Defaults applied.'); 
-            this.boot();
-        },
+          
         </div>
     </div>
  
@@ -1030,7 +992,32 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
             // Cookie banner
             if(!Store.get('sig_cookies', false)) document.getElementById('cookie-banner').style.display = 'flex';
         },
- 
+         completeOnboarding() {
+            State.permissions = {
+                notifications: document.getElementById('perm-notif').checked,
+                sound: document.getElementById('perm-sound').checked
+            };
+            Store.set('sig_perms', State.permissions);
+            Store.set('signal_onboarded', true);
+            
+            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
+            AudioEngine.init(); AudioEngine.play('chime');
+            
+            this.acceptCookies(); // <-- ADD THIS LINE
+            UI.closeModal('welcome-modal');
+            this.boot();
+        },
+
+        skipOnboarding() {
+            State.permissions = { notifications: false, sound: false };
+            Store.set('sig_perms', State.permissions); 
+            Store.set('signal_onboarded', true);
+            
+            this.acceptCookies(); // <-- ADD THIS LINE
+            UI.closeModal('welcome-modal'); 
+            UI.toast('Defaults applied.'); 
+            this.boot();
+        },
         async boot() {
             State.theme = Store.get('sig_theme', 'dark');
             document.documentElement.setAttribute('data-theme', State.theme);
