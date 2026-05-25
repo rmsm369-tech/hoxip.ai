@@ -391,31 +391,7 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
                 </div>
             </div>
  
-           completeOnboarding() {
-            State.permissions = {
-                notifications: document.getElementById('perm-notif').checked,
-                sound: document.getElementById('perm-sound').checked
-            };
-            Store.set('sig_perms', State.permissions);
-            Store.set('signal_onboarded', true);
-            
-            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
-            AudioEngine.init(); AudioEngine.play('chime');
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal');
-            this.boot();
-        },
-
-        skipOnboarding() {
-            State.permissions = { notifications: false, sound: false };
-            Store.set('sig_perms', State.permissions); 
-            Store.set('signal_onboarded', true);
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal'); 
-            UI.toast('Defaults applied.'); 
-            this.boot();
+         boot();
         },
         </div>
     </div>
