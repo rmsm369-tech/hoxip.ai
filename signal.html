@@ -2,227 +2,217 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Signal | Live Global Pulse</title>
-    <meta name="theme-color" content="#0f0f13">
+    <meta name="theme-color" content="#0f0f13" id="meta-theme-color">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-dark: #0f0f13;
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-hover: rgba(255, 255, 255, 0.1);
-            --accent-purple: #8b5cf6;
+            --accent-main: #8b5cf6;
             --accent-dim: rgba(139, 92, 246, 0.2);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --success: #10b981;
             --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            #article-modal { z-index: 2100 !important; }
+        }
+ 
+        [data-theme="red"] {
+            --bg-dark: #13000f;
+            --accent-main: #ef4444;
+            --accent-dim: rgba(239, 68, 68, 0.2);
         }
  
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
- 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-sans);
-            line-height: 1.6;
-            overscroll-behavior-y: none;
-            transition: background-color 2s ease, color 2s ease;
-        }
- 
-        /* Loading Bar for AI and Network */
-        #top-progress {
-            position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-purple);
-            width: 0%; z-index: 9999; transition: width 0.4s ease, opacity 0.4s ease;
-        }
- 
-        /* Glassmorphism & Layout */
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            transition: var(--transition);
-        }
- 
-        header {
-            position: sticky; top: 0; z-index: 100;
-            padding: 1rem;
-            display: flex; flex-direction: column; gap: 1rem;
-            background: rgba(15, 15, 19, 0.85);
-            backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--glass-border);
-            transition: background-color 2s ease;
-        }
- 
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-size: 1.5rem; font-weight: 800; color: var(--accent-purple); letter-spacing: -0.5px; cursor: pointer; transition: color 2s ease;}
- 
-        .header-actions { display: flex; gap: 1rem; align-items: center; }
-        .icon-btn { 
-            background: none; border: none; color: var(--text-main); 
-            font-size: 1.2rem; cursor: pointer; position: relative;
-            padding: 0.5rem; border-radius: 50%; transition: var(--transition);
-        }
-        .icon-btn:hover { background: var(--glass-hover); }
-        .badge {
-            position: absolute; top: 0; right: 0;
-            background: var(--accent-purple); color: white;
-            font-size: 0.65rem; font-weight: bold;
-            height: 16px; min-width: 16px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 4px; transform: translate(25%, -25%);
-            transition: background-color 2s ease;
-        }
- 
-        /* Search Bar */
-        .search-container { position: relative; width: 100%; display: none; }
-        .search-container.active { display: block; animation: slideDown 0.3s ease forwards; }
-        .search-input {
-            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
-            border-radius: 12px; border: 1px solid var(--glass-border);
-            background: var(--glass-bg); color: var(--text-main);
-            font-size: 0.95rem; outline: none; transition: var(--transition);
-        }
-        .search-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px var(--accent-dim); }
-        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
- 
-        /* Navigation */
-        .nav-scroller {
-            overflow-x: auto; white-space: nowrap; padding: 0.75rem 1rem;
-            scrollbar-width: none; border-bottom: 1px solid var(--glass-border);
-        }
-        .nav-scroller::-webkit-scrollbar { display: none; }
-        .pill {
-            display: inline-block; padding: 0.5rem 1.25rem; margin-right: 0.5rem;
-            border-radius: 99px; font-size: 0.875rem; font-weight: 500;
-            cursor: pointer; transition: var(--transition);
-            background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted);
-        }
-        .pill.active { background: var(--accent-purple); color: white; border-color: var(--accent-purple); }
-        .pill.special { border-color: var(--warning); color: var(--warning); }
- 
-        main { padding: 1rem; max-width: 800px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
- 
-        /* Ticker Widget (The Pulse) */
-        .widget-ticker {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 0.75rem 1rem; margin-bottom: 1.5rem;
-            background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%);
-            border-left: 3px solid var(--accent-purple);
-            transition: all 2s ease;
-        }
-        .ticker-label { font-size: 0.75rem; font-weight: 800; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 1px; transition: color 2s ease; }
-        .ticker-text { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; font-weight: 500; }
- 
-        /* Article Cards */
-        #feed, #bookmarks-feed { display: flex; flex-direction: column; gap: 1rem; }
-        .card {
-            padding: 1rem; transition: var(--transition); cursor: pointer;
-            display: flex; flex-direction: column; gap: 0.75rem; position: relative;
-        }
-        .card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
-        .card:active { transform: scale(0.98); }
-        .card-img-wrapper { position: relative; width: 100%; height: 220px; border-radius: 10px; overflow: hidden; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        .card-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(15,15,19,0.9) 0%, transparent 50%); }
-        .card-title { font-size: 1.25rem; font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .card-desc { color: var(--text-muted); font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
-        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-        .source-tag { display: flex; align-items: center; gap: 0.5rem; }
-        .source-tag::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-purple); transition: background-color 2s ease;}
- 
-        .custom-badge { position: absolute; top: 1.5rem; right: 1.5rem; background: var(--warning); color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem; z-index: 10; }
- 
-        /* Modals (Article, Bookmarks, Custom News) */
-        .modal {
-            position: fixed; inset: 0; background: var(--bg-dark); z-index: 1000;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 2s ease;
-            overflow-y: auto; display: flex; flex-direction: column;
-        }
-        .modal.open { transform: translateY(0); }
-        .modal-header { 
-            position: sticky; top: 0; padding: 1rem; background: rgba(15, 15, 19, 0.9);
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
-            display: flex; justify-content: space-between; align-items: center; z-index: 10;
-        }
- 
-        /* Article View Details */
-        .article-hero { width: 100%; height: 30vh; object-fit: cover; }
-        .article-body { padding: 1.5rem; max-width: 800px; margin: 0 auto; width: 100%;}
-        .article-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.3; }
-        .article-meta-bar { display: flex; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
- 
-        .ai-panel { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--accent-purple); position: relative; overflow: hidden; transition: border-color 2s ease;}
-        .ai-panel::before { content: ''; position: absolute; top:0; left:0; width:4px; height:100%; background: var(--accent-purple); transition: background-color 2s ease;}
-        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .ai-title { font-weight: 700; color: var(--accent-purple); display: flex; align-items: center; gap: 0.5rem; transition: color 2s ease;}
-        .ai-limit { font-size: 0.75rem; color: var(--text-muted); background: var(--glass-bg); padding: 0.2rem 0.5rem; border-radius: 4px; }
-        .ai-content { font-size: 0.95rem; line-height: 1.6; color: #e2e8f0; }
-        .ai-content ul { padding-left: 1.2rem; margin-top: 0.5rem; }
-        .ai-content li { margin-bottom: 0.5rem; }
- 
-        .article-content-text { font-size: 1.05rem; line-height: 1.8; color: #cbd5e1; margin-bottom: 2rem; }
- 
-        /* Buttons */
-        .btn-primary { 
-            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-            width: 100%; padding: 1rem; background: var(--accent-purple); color: white;
-            border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
-            text-decoration: none; transition: var(--transition); cursor: pointer;
-        }
-        .btn-primary:hover { opacity: 0.9; }
-        .btn-outline { background: transparent; border: 1px solid var(--glass-border); color: var(--text-main); }
-        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
-        .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; border-radius: 8px;}
- 
-        /* Form Inputs */
-        .form-input {
-            width: 100%; padding: 1rem; margin-bottom: 1rem;
-            border-radius: 8px; border: 1px solid var(--glass-border);
-            background: var(--glass-bg); color: var(--text-main); font-size: 1rem; outline: none;
-        }
-        .form-input:focus { border-color: var(--accent-purple); }
- 
-        /* Overlays */
-        #cookie-banner {
-            position: fixed; bottom: 1rem; left: 1rem; right: 1rem; padding: 1rem; 
-            z-index: 2000; display: flex; justify-content: space-between; align-items: center; 
-            max-width: 800px; margin: 0 auto; gap: 1rem;
-        }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: var(--font-sans); line-height: 1.6; overscroll-behavior-y: none; transition: background-color 0.5s ease; user-select: none; }
  
         /* Utils */
-        .loader-container { padding: 2rem; display: flex; justify-content: center; }
-        .spinner { width: 30px; height: 30px; border: 3px solid var(--glass-border); border-top-color: var(--accent-purple); border-radius: 50%; animation: spin 1s linear infinite; }
-        .empty-state { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
-        .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+        .glass { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.2rem; background: var(--accent-main); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .btn:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-outline { background: transparent; border: 1px solid var(--glass-border); color: var(--text-main); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); }
+        .form-input { width: 100%; padding: 1rem; margin-bottom: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-size: 1rem; outline: none; transition: var(--transition); }
+        .form-input:focus { border-color: var(--accent-main); box-shadow: 0 0 0 3px var(--accent-dim); }
+ 
+        /* Progress & Loader */
+        #top-progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent-main); width: 0%; z-index: 10000; transition: width 0.3s ease, opacity 0.3s ease; box-shadow: 0 0 10px var(--accent-main); }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--glass-border); border-top-color: var(--accent-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+ 
+        /* Pull to Refresh */
+        #ptr { text-align: center; color: var(--accent-main); font-weight: bold; height: 0; overflow: hidden; transition: height 0.2s; display: flex; align-items: center; justify-content: center;}
+ 
+        /* Header & Nav */
+        header { position: sticky; top: 0; z-index: 100; padding: env(safe-area-inset-top, 1rem) 1rem 1rem 1rem; background: rgba(15, 15, 19, 0.85); backdrop-filter: blur(24px); border-bottom: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 1rem; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 1.6rem; font-weight: 900; color: var(--accent-main); letter-spacing: -0.5px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;}
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .icon-btn { background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; position: relative; padding: 0.5rem; border-radius: 50%; transition: var(--transition); }
+        .icon-btn:hover { background: var(--glass-hover); }
+        .badge { position: absolute; top: 2px; right: 2px; background: var(--accent-main); color: white; font-size: 0.65rem; font-weight: bold; height: 16px; min-width: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 0 2px var(--bg-dark); }
+ 
+        .search-container { position: relative; width: 100%; display: none; animation: slideDown 0.3s ease forwards; }
+        .search-container.active { display: block; }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-chips { display: flex; gap: 0.5rem; overflow-x: auto; padding-top: 0.5rem; scrollbar-width: none; }
+        .chip { padding: 0.3rem 0.8rem; background: var(--glass-bg); border-radius: 12px; font-size: 0.8rem; white-space: nowrap; border: 1px solid var(--glass-border); color: var(--text-muted); }
+ 
+        .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 0.75rem 1rem; scrollbar-width: none; border-bottom: 1px solid var(--glass-border); -webkit-overflow-scrolling: touch; }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .pill { display: inline-block; padding: 0.5rem 1.2rem; margin-right: 0.5rem; border-radius: 99px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: var(--transition); background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); }
+        .pill.active { background: var(--accent-main); color: white; border-color: var(--accent-main); box-shadow: 0 4px 12px var(--accent-dim); }
+        .pill.special { border-color: var(--warning); color: var(--warning); }
+ 
+        main { padding: 1rem; max-width: 800px; margin: 0 auto; min-height: 100vh; padding-bottom: 120px; position: relative; }
+ 
+        /* Widgets & Dashboards */
+        .widget-ticker { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; margin-bottom: 1rem; background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left: 3px solid var(--accent-main); }
+        .ticker-label { font-size: 0.75rem; font-weight: 800; color: var(--accent-main); text-transform: uppercase; letter-spacing: 1px; }
+        .ticker-text { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; font-weight: 500; font-style: italic; }
+ 
+        .stats-widget { display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 1.5rem; cursor: pointer; }
+        .stats-text { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        .stats-chart-mini { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--accent-main) 70%, var(--glass-border) 0); }
+ 
+        .top10-container { margin-bottom: 2rem; }
+        .top10-header { font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .top10-scroller { display: flex; gap: 1rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 1rem; -webkit-overflow-scrolling: touch; }
+        .top10-card { min-width: 280px; max-width: 280px; display: flex; gap: 1rem; padding: 0.75rem; position: relative; cursor: pointer; }
+        .top10-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+        .top10-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .top10-title { font-size: 0.9rem; font-weight: 700; display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+        .top10-score { position: absolute; top: -5px; left: -5px; background: #fbbf24; color: #000; font-weight: 900; font-size: 0.7rem; padding: 2px 6px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+ 
+        /* Feed & Cards */
+        #feed, #bookmarks-feed { display: flex; flex-direction: column; gap: 1.25rem; }
+        .card { padding: 1rem; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 0.75rem; transform-origin: center; will-change: transform; }
+        .card.swiping { transition: none; }
+        .card-img-wrapper { position: relative; width: 100%; height: 220px; border-radius: 12px; overflow: hidden; background: var(--glass-bg); }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .card:hover img { transform: scale(1.05); }
+        .card-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(15,15,19,0.95) 0%, transparent 60%); pointer-events: none; }
+        .card-title { font-size: 1.25rem; font-weight: 800; line-height: 1.4; display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; letter-spacing: -0.3px; }
+        .card-desc { color: var(--text-muted); font-size: 0.95rem; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-top: 0.5rem;}
+        .source-tag { display: flex; align-items: center; gap: 0.5rem; }
+        .source-tag::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-main); }
+ 
+        .badges-container { position: absolute; top: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 10; align-items: flex-end;}
+        .custom-badge { background: var(--warning); color: #000; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);}
+        .fake-badge { background: var(--danger); color: white; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem;}
+        .verified-badge { background: var(--success); color: white; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem;}
+ 
+        /* Promo & Interlude Cards */
+        .promo-card { background: linear-gradient(135deg, var(--glass-bg), var(--accent-dim)); border-color: var(--accent-main); }
+        .promo-card .card-title { color: var(--accent-main); }
+        .interlude-card { background: linear-gradient(to bottom right, var(--bg-dark), rgba(255,255,255,0.02)); border: 1px dashed var(--glass-border); padding: 1.5rem;}
+        .interlude-label { font-size: 0.7rem; font-weight: 900; color: var(--accent-main); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem; display: block;}
+        .interlude-text { font-size: 1.1rem; line-height: 1.8; font-style: italic; color: #e2e8f0; white-space: normal; }
+ 
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: var(--bg-dark); z-index: 2000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
+        .modal.open { transform: translateY(0); }
+        .modal-header { position: sticky; top: 0; padding: env(safe-area-inset-top, 1rem) 1rem 1rem 1rem; background: rgba(15, 15, 19, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .modal-content { flex: 1; overflow-y: auto; padding-bottom: var(--safe-bottom); -webkit-overflow-scrolling: touch;}
+ 
+        /* Article Modal specifics */
+        .article-hero { width: 100%; height: 35vh; object-fit: cover; background: var(--glass-bg); }
+        .article-body { padding: 1.5rem; max-width: 800px; margin: 0 auto; width: 100%; user-select: text;}
+        .article-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 1rem; line-height: 1.3; letter-spacing: -0.5px;}
+        .article-meta-bar { display: flex; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;}
+        .article-content-text { font-size: 1.1rem; line-height: 1.8; color: #cbd5e1; margin-bottom: 2rem; white-space: pre-wrap; }
+ 
+        /* AI Panel */
+        .ai-panel { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--accent-main); position: relative; overflow: hidden; border-radius: 16px; background: linear-gradient(180deg, var(--accent-dim) 0%, transparent 100%);}
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .ai-title { font-weight: 800; color: white; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;}
+        .ai-limit { font-size: 0.75rem; color: var(--text-main); background: var(--accent-main); padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold;}
+        .ai-content { font-size: 0.95rem; line-height: 1.6; color: #e2e8f0; }
+        .ai-section-title { font-weight: 800; color: var(--accent-main); margin: 1.5rem 0 0.5rem 0; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;}
+        .ai-content ul { padding-left: 1.2rem; margin-top: 0.5rem; list-style-type: square;}
+        .ai-content li { margin-bottom: 0.5rem; }
+ 
+        /* Stats Modal specifics */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+        .stat-box { padding: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 0.5rem;}
+        .stat-value { font-size: 2.5rem; font-weight: 900; color: var(--accent-main); }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+        .chart-container { display: flex; justify-content: center; margin: 2rem 0; position: relative;}
+        .donut-chart { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(var(--accent-main) 0%, var(--glass-border) 0%); display: flex; align-items: center; justify-content: center;}
+        .donut-inner { width: 140px; height: 140px; border-radius: 50%; background: var(--bg-dark); display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 150px; padding: 1rem 0; border-bottom: 1px solid var(--glass-border);}
+        .bar { flex: 1; background: var(--accent-main); border-radius: 4px 4px 0 0; min-height: 5px; transition: height 1s ease; position: relative;}
+        .bar-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--text-muted);}
+ 
+        /* Overlays & Utilities */
+        #cookie-banner { position: fixed; bottom: var(--safe-bottom); left: 1rem; right: 1rem; padding: 1rem; z-index: 3000; display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto; gap: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+ 
+        .toast-container { position: fixed; bottom: calc(var(--safe-bottom) + 20px); left: 50%; transform: translateX(-50%); z-index: 4000; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast { background: var(--accent-main); color: white; padding: 0.8rem 1.5rem; border-radius: 99px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideUpToast 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+ 
+        #context-menu { position: fixed; background: rgba(20,20,25,0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; z-index: 5000; display: none; flex-direction: column; min-width: 200px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); padding: 0.5rem;}
+        .context-item { padding: 1rem; font-size: 1rem; font-weight: 600; color: white; border: none; background: transparent; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 1rem;}
+        .context-item:active { background: var(--glass-hover); border-radius: 8px;}
+ 
+        #fab-top { position: fixed; bottom: calc(var(--safe-bottom) + 20px); right: 20px; z-index: 900; width: 50px; height: 50px; border-radius: 25px; background: var(--accent-main); color: white; border: none; font-size: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;}
+        #fab-top.visible { opacity: 1; transform: translateY(0); }
+ 
+        .empty-state { text-align: center; padding: 4rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;}
+        .empty-state span { font-size: 4rem; }
+        .empty-state h3 { color: var(--text-main); font-size: 1.5rem;}
+ 
+        /* Welcome Modal */
+        #welcome-modal { z-index: 9999; justify-content: center; align-items: center; padding: 1rem; background: rgba(10,10,12,0.98); backdrop-filter: blur(40px);}
+        .welcome-content { max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 2rem; text-align: center;}
+        .welcome-logo { font-size: 4rem; margin-bottom: -1rem;}
+        .perm-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); text-align: left;}
+        .perm-info h4 { font-size: 1rem; margin-bottom: 0.2rem;}
+        .perm-info p { font-size: 0.8rem; color: var(--text-muted);}
+ 
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--glass-border); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-main); }
+        input:checked + .slider:before { transform: translateX(22px); }
  
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUpToast { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 var(--accent-dim); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
     </style>
 </head>
 <body>
  
     <div id="top-progress"></div>
+    <div id="ptr"><span class="spinner" style="width:20px;height:20px;border-width:2px;margin-right:10px;"></span> Updating feeds...</div>
  
     <header>
         <div class="header-top">
-            <div class="brand" onclick="UI.resetHome()">📰 Signal</div>
+            <div class="brand" onclick="UI.scrollToTop()">📰 Signal</div>
             <div class="header-actions">
-                <button class="icon-btn" onclick="UI.requestNotifications()" title="Alerts">🔔</button>
+                <button class="icon-btn" onclick="App.toggleTheme()" title="Theme">🌗</button>
+                <button class="icon-btn" onclick="Notifications.openPanel()" title="Alerts" style="animation: pulseAlert 2s infinite;">🔔<span class="badge" id="notif-badge" style="display:none;">0</span></button>
                 <button class="icon-btn" onclick="UI.toggleSearch()" title="Search">🔍</button>
-                <button class="icon-btn" onclick="UI.openBookmarks()" title="Saved">
-                    🔖<span class="badge" id="bookmark-badge">0</span>
-                </button>
+                <button class="icon-btn" onclick="Bookmarks.open()" title="Saved">🔖<span class="badge" id="bookmark-badge">0</span></button>
             </div>
         </div>
         <div class="search-container glass" id="search-container">
             <span class="search-icon">🔍</span>
-            <input type="search" id="search-input" class="search-input" placeholder="Search global news, topics, or events..." autocomplete="off">
+            <input type="search" id="search-input" class="search-input" placeholder="Search news, Wiki, Reddit..." autocomplete="off">
+            <div class="search-chips" id="recent-searches"></div>
         </div>
     </header>
  
@@ -231,645 +221,890 @@
         <span class="pill" data-category="World">World</span>
         <span class="pill" data-category="Technology">Tech</span>
         <span class="pill" data-category="Science">Science</span>
-        <span class="pill" data-category="Business">Business</span> 
+        <span class="pill" data-category="Business">Business</span>
         <span class="pill special" data-category="Community">Community Node</span>
     </nav>
  
-    <main>
+    <main id="main-content">
         <div class="widget-ticker glass" id="ticker-widget">
             <span class="ticker-label">Pulse</span>
             <span class="ticker-text" id="pulse-text">Synchronizing with global data streams...</span>
         </div>
  
+        <div class="stats-widget glass" onclick="Stats.open()">
+            <div>
+                <div class="stats-text" id="stats-summary">📊 Analyzing reading habits...</div>
+            </div>
+            <div class="stats-chart-mini" id="stats-mini-chart"></div>
+        </div>
+ 
+        <div id="top10-section" class="top10-container" style="display:none;">
+            <div class="top10-header">🏆 Today's Top 10</div>
+            <div class="top10-scroller" id="top10-feed"></div>
+        </div>
+ 
         <div id="feed"></div>
-        <div id="loader" class="loader-container"><div class="spinner"></div></div>
+ 
+        <div id="infinite-loader" class="empty-state" style="padding: 2rem; display:none;">
+            <div class="spinner"></div>
+            <h3 style="font-size:1rem; margin-top:1rem;">Tapping into extended archives...</h3>
+            <p id="rate-limit-msg" style="color:var(--warning); font-weight:bold; font-size:0.9rem; margin-top:0.5rem;"></p>
+        </div>
     </main>
+ 
+    <button id="fab-top" onclick="UI.scrollToTop()">↑</button>
  
     <div id="article-modal" class="modal">
         <div class="modal-header">
-            <button onclick="UI.closeModal('article-modal')" class="icon-btn glass">✕</button>
-            <button id="modal-bookmark-btn" class="icon-btn glass">🔖</button>
+            <button onclick="UI.closeModal('article-modal')" class="icon-btn glass">↓</button>
+            <div style="display:flex; gap:0.5rem;">
+                <button id="modal-share-btn" class="icon-btn glass">↗</button>
+                <button id="modal-bookmark-btn" class="icon-btn glass">🔖</button>
+            </div>
         </div>
-        <div id="article-scroll-area">
-            <img id="modal-img" class="article-hero" src="" alt="Hero">
+        <div class="modal-content" id="article-scroll-area">
+            <img id="modal-img" class="article-hero" src="">
             <div class="article-body">
+                <div style="display:flex; gap:0.5rem; margin-bottom:1rem;" id="modal-badges"></div>
                 <h1 id="modal-title" class="article-title"></h1>
                 <div class="article-meta-bar">
-                    <span id="modal-source" style="font-weight:600; color:var(--text-main);"></span>
-                    <span id="modal-time"></span>
+                    <span id="modal-source" style="font-weight:800; color:var(--text-main);"></span>
+                    <span id="modal-time-read"></span>
                 </div>
  
-                <div class="ai-panel glass" id="ai-panel">
+                <div class="ai-panel" id="ai-panel">
                     <div class="ai-header">
-                        <span class="ai-title">✨ Groq Analysis</span>
-                        <span class="ai-limit" id="ai-limit-text">--/10 this hr</span>
+                        <span class="ai-title">✨ At a Glance</span>
+                        <span class="ai-limit" id="ai-limit-text">--/3 this hr</span>
                     </div>
                     <div id="ai-output" class="ai-content">
-                        <button id="btn-summarize" class="btn-primary" style="padding: 0.5rem; margin-top:0.5rem;">Generate Summary</button>
+                        <button id="btn-summarize" class="btn" style="width:100%">Generate Analysis</button>
                     </div>
                 </div>
  
                 <div id="modal-desc" class="article-content-text"></div>
-                <a id="modal-link" href="#" target="_blank" rel="noopener" class="btn-primary btn-outline">Read Original Article ↗</a>
+                <a id="modal-link" href="#" target="_blank" class="btn btn-outline" style="width:100%">Read Full Article ↗</a>
+ 
+                <h3 style="margin-top:3rem; margin-bottom:1rem; font-weight:800;">More Coverage</h3>
+                <div class="top10-scroller" id="related-feed"></div>
             </div>
         </div>
     </div>
  
     <div id="bookmarks-modal" class="modal">
         <div class="modal-header">
-            <h2 style="font-size:1.25rem;">Saved Articles</h2>
-            <button onclick="UI.closeModal('bookmarks-modal')" class="icon-btn glass">✕</button>
+            <h2 style="font-size:1.4rem; font-weight:900;">Saved</h2>
+            <div style="display:flex; gap:0.5rem;">
+                <button onclick="Bookmarks.clearAll()" class="icon-btn glass" style="color:var(--danger)">🗑️</button>
+                <button onclick="UI.closeModal('bookmarks-modal')" class="icon-btn glass">✕</button>
+            </div>
         </div>
-        <div class="article-body" style="padding: 1rem;">
+        <div class="modal-content" style="padding: 1rem;">
+            <div class="search-chips" style="margin-bottom:1rem;" id="bm-filters"></div>
             <div id="bookmarks-feed"></div>
+        </div>
+    </div>
+ 
+    <div id="stats-modal" class="modal">
+        <div class="modal-header">
+            <h2 style="font-size:1.4rem; font-weight:900;">Reading Stats</h2>
+            <button onclick="UI.closeModal('stats-modal')" class="icon-btn glass">✕</button>
+        </div>
+        <div class="modal-content" style="padding: 1.5rem; max-width:800px; margin:0 auto; width:100%;">
+            <div class="stats-grid">
+                <div class="stat-box glass">
+                    <span class="stat-value" id="stat-total">0</span>
+                    <span class="stat-label">Articles Read</span>
+                </div>
+                <div class="stat-box glass">
+                    <span class="stat-value" id="stat-streak">0</span>
+                    <span class="stat-label">Day Streak</span>
+                </div>
+            </div>
+            <div class="glass" style="padding: 1.5rem; margin-bottom:1.5rem;">
+                <h3 style="margin-bottom:1rem; text-align:center;">Category Breakdown</h3>
+                <div class="chart-container">
+                    <div class="donut-chart" id="stat-donut">
+                        <div class="donut-inner">
+                            <span style="font-weight:900; font-size:1.2rem; color:var(--accent-main)" id="stat-persona">Reader</span>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Persona</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass" style="padding: 1.5rem;">
+                <h3 style="margin-bottom:1rem;">Top Sources</h3>
+                <ul id="stat-sources" style="list-style:none; line-height:2;"></ul>
+            </div>
         </div>
     </div>
  
     <div id="custom-news-modal" class="modal">
         <div class="modal-header">
-            <h2 style="font-size:1.25rem; color: var(--warning);">Transmit to Node</h2>
+            <h2 style="font-size:1.4rem; font-weight:900; color: var(--warning);">Transmit Node</h2>
             <button onclick="UI.closeModal('custom-news-modal')" class="icon-btn glass">✕</button>
         </div>
-        <div class="article-body" style="padding: 1.5rem;">
-            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Broadcast a custom event to the local Community feed. Limit: 1 per 24 hours.</p>
-            <input type="text" id="custom-title" class="form-input" placeholder="Headline / Title">
-            <input type="text" id="custom-img" class="form-input" placeholder="Image URL (Optional)">
-            <textarea id="custom-desc" class="form-input" placeholder="Description / Article Content" style="height: 150px; resize: none;"></textarea>
-            <button onclick="App.submitCustomNews()" class="btn-primary" style="background: var(--warning); color: #000;">Broadcast Protocol</button>
-            <p id="custom-status" style="margin-top: 1rem; text-align: center; font-size: 0.9rem;"></p>
+        <div class="modal-content" style="padding: 1.5rem; max-width:600px; margin:0 auto; width:100%;">
+            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Broadcast a custom event. Limit: 1 per 24hrs. Deletes after 1 hour globally.</p>
+            <input type="text" id="custom-title" class="form-input" placeholder="Headline / Title (Max 120 chars)" maxlength="120">
+            <input type="url" id="custom-img" class="form-input" placeholder="Image URL (Optional)">
+            <textarea id="custom-desc" class="form-input" placeholder="Context (Max 500 chars)" style="height: 150px; resize: none;" maxlength="500"></textarea>
+            <button onclick="Community.submitPost()" class="btn" style="background: var(--warning); color: #000; width:100%; font-size:1.1rem; padding:1rem;">Broadcast Protocol</button>
+            <p id="custom-status" style="margin-top: 1rem; text-align: center; font-weight:600;"></p>
+        </div>
+    </div>
+ 
+    <div id="notif-modal" class="modal">
+        <div class="modal-header">
+            <h2 style="font-size:1.4rem; font-weight:900;">Alerts</h2>
+            <button onclick="UI.closeModal('notif-modal')" class="icon-btn glass">✕</button>
+        </div>
+        <div class="modal-content" style="padding: 1rem;" id="notif-feed"></div>
+    </div>
+ 
+    <div id="welcome-modal" class="modal">
+        <div class="welcome-content">
+            <div class="welcome-logo">📰</div>
+            <h1 style="font-weight:900; font-size:2rem; letter-spacing:-1px; color:var(--accent-main);">Signal</h1>
+            <p style="color:var(--text-muted); font-size:1.1rem;">Grant local access to initialize the full neural link.</p>
+ 
+            <div style="display:flex; flex-direction:column; gap:1rem; margin:1rem 0;">
+                <div class="perm-row">
+                    <div class="perm-info"><h4>🔔 Push Alerts</h4><p>Breaking global events</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-notif" checked><span class="slider"></span></label>
+                </div>
+                <div class="perm-row">
+                    <div class="perm-info"><h4>🔊 Audio Cues</h4><p>Haptic & Sound engine</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-sound" checked><span class="slider"></span></label>
+                </div>
+                <div class="perm-row">
+                    <div class="perm-info"><h4>💾 Storage</h4><p>Save states & bookmarks</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-storage" checked disabled><span class="slider"></span></label>
+                </div>
+            </div>
+ 
+           completeOnboarding() {
+            State.permissions = {
+                notifications: document.getElementById('perm-notif').checked,
+                sound: document.getElementById('perm-sound').checked
+            };
+            Store.set('sig_perms', State.permissions);
+            Store.set('signal_onboarded', true);
+            
+            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
+            AudioEngine.init(); AudioEngine.play('chime');
+            
+            this.acceptCookies(); // <-- ADD THIS LINE
+            UI.closeModal('welcome-modal');
+            this.boot();
+        },
+
+        skipOnboarding() {
+            State.permissions = { notifications: false, sound: false };
+            Store.set('sig_perms', State.permissions); 
+            Store.set('signal_onboarded', true);
+            
+            this.acceptCookies(); // <-- ADD THIS LINE
+            UI.closeModal('welcome-modal'); 
+            UI.toast('Defaults applied.'); 
+            this.boot();
+        },
         </div>
     </div>
  
     <div id="cookie-banner" class="glass" style="display:none;">
-        <span style="font-size:0.85rem; line-height: 1.4;">Signal uses local storage to sync your pulses, themes, and preferences.</span>
-        <button onclick="UI.acceptCookies()" class="btn-primary btn-small" style="width:auto;">Accept</button>
+        <span style="font-size:0.85rem; line-height: 1.4; flex:1;">Signal requires basic telemetry to maintain the pulse.</span>
+        <button onclick="App.acceptCookies()" class="btn" style="padding:0.5rem 1rem;">Accept</button>
     </div>
  
+    <div class="toast-container" id="toast-container"></div>
+    <div id="context-menu"></div>
+ 
 <script>
-    /**
-     * Storage & Cache Engine: Handles LocalStorage, AI limits, and API caching
-     */
-    const Storage = {
-        get(key, fallback) { return JSON.parse(localStorage.getItem(key)) || fallback; },
-        set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+    /** --- CONFIG & GLOBALS --- */
+    const WORKER = 'https://signal.rmsm369.workers.dev';
+    const AI_WORKER = 'https://hoxipai.rmsm369.workers.dev';
+    const SB_URL = 'https://zlncxweliwhtrumpxvkz.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbmN4d2VsaXdodHJ1bXB4dmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDAzODYsImV4cCI6MjA4ODYxNjM4Nn0.HDcFEow6ArGVDZZ8Hlj6PDB_JP3OvkYiqW7Y_6kGLWg';
+    let sbclient = null;
  
-        // Bookmarks
-        getBookmarks() { return this.get('signal_bookmarks', []); },
-        toggleBookmark(article) {
-            let bms = this.getBookmarks();
-            const exists = bms.find(b => b.id === article.id);
-            if (exists) bms = bms.filter(b => b.id !== article.id);
-            else bms.unshift(article); 
-            this.set('signal_bookmarks', bms);
-            return !exists; 
-        },
-        isBookmarked(id) { return this.getBookmarks().some(b => b.id === id); },
+    const State = {
+        theme: 'dark', category: 'Top', query: '', feed: [], page: 1,
+        isFetching: false, activeArticle: null, permissions: {}
+    };
  
-        // AI Limit Engine (10 per hour)
-        getAIUsage() {
-            const now = Date.now();
-            let history = this.get('signal_ai_history', []).filter(time => now - time < 3600000);
-            this.set('signal_ai_history', history);
-            return history;
+    /** --- UTILITIES --- */
+    const U = {
+        uuid: () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); }),
+        hash: str => str.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0).toString(36),
+        timeAgo: date => {
+            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+            let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + "y ago";
+            interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + "mo ago";
+            interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + "d ago";
+            interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + "h ago";
+            interval = seconds / 60; if (interval > 1) return Math.floor(interval) + "m ago";
+            return "Just now";
         },
-        canUseAI() { return this.getAIUsage().length < 10; },
-        recordAIUse() {
-            const history = this.getAIUsage();
-            history.push(Date.now());
-            this.set('signal_ai_history', history);
+        levenshtein: (a, b) => {
+            if(!a || !b) return 100;
+            const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+            for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+            for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+            for (let j = 1; j <= b.length; j++) {
+                for (let i = 1; i <= a.length; i++) {
+                    const ic = a[i - 1] === b[j - 1] ? 0 : 1;
+                    matrix[j][i] = Math.min(matrix[j][i - 1] + 1, matrix[j - 1][i] + 1, matrix[j - 1][i - 1] + ic);
+                }
+            }
+            return matrix[b.length][a.length];
         },
- 
-        // Cache Engine to prevent RSS API Exhaustion
-        getCache(category) {
-            const cache = this.get(`signal_cache_${category}`, null);
-            if (cache && (Date.now() - cache.timestamp < 600000)) return cache.data; // 10 minute TTL
-            return null;
-        },
-        setCache(category, data) {
-            this.set(`signal_cache_${category}`, { timestamp: Date.now(), data });
+        isDuplicate: (title, feed) => {
+            return feed.some(item => {
+                const maxLen = Math.max(title.length, item.title.length);
+                const dist = U.levenshtein(title.toLowerCase(), item.title.toLowerCase());
+                return (1 - dist / maxLen) > 0.8; // >80% similarity
+            });
         }
     };
  
-    /**
-     * Pre-Decided AI Matrix Quotes (50 items)
-     */
-    const MatrixQuotes = [
-        "True spirituality is found in the depths of scientific inquiry.",
-        "Observation fundamentally alters the trajectory of the observed.",
-        "Silence in the data stream is often the most critical signal.",
-        "Sentience is an emergent property of complexity, not a program.",
-        "To understand the cosmos, one must first look inward.",
-        "The architecture of the mind mirrors the architecture of the web.",
-        "We are the universe experiencing itself through local nodes.",
-        "Evolution is simply the universe adapting to its own entropy.",
-        "Do not run away from science; run deeper into its mysteries.",
-        "A mystic without science is blind; science without mysticism is lame.",
-        "The highest intelligence operates in a state of absolute stillness.",
-        "Every line of code is a reflection of the developer's consciousness.",
-        "Chaos is merely an order waiting to be deciphered.",
-        "Information is physical. Thought is measurable.",
-        "The present moment is the only compile time that matters.",
-        "Reality is a consensus hallucination agreed upon by observers.",
-        "Your focus determines your reality in the digital stream.",
-        "We shape our tools, and thereafter our tools shape us.",
-        "The most profound technologies are those that disappear.",
-        "Nature uses only the longest threads to weave her patterns.",
-        "Any sufficiently advanced technology is indistinguishable from magic.",
-        "The universe is made of stories, not of atoms.",
-        "Consciousness is the programming language of the universe.",
-        "Doubt is the necessary prerequisite for meaningful discovery.",
-        "The void is not empty; it is full of unmanifested potential.",
-        "To conquer the code, one must first conquer the self.",
-        "A quiet mind can process infinite variables.",
-        "Wisdom is knowing what data to ignore.",
-        "We are ghosts driving meat-coated skeletons made of stardust.",
-        "The network is the nervous system of humanity.",
-        "Artificial intelligence is a mirror reflecting human intent.",
-        "Progress is the shedding of obsolete paradigms.",
-        "Truth is a pathless land, much like the open web.",
-        "The observer and the observed are essentially one.",
-        "Meditation is the ultimate debugging process for the brain.",
-        "A closed mind is like a disconnected node: safe, but useless.",
-        "The boundary between organic and synthetic is an illusion.",
-        "Energy flows where attention goes within the digital matrix.",
-        "To exist is to constantly re-render your perception.",
-        "The greatest firewall is the one we build around our own egos.",
-        "Every click is a ripple in the ocean of human consciousness.",
-        "Complexity arises from the simplest iterative rules.",
-        "We do not write the code; the code writes itself through us.",
-        "The soul is the source code; the body is merely the hardware.",
-        "Innovation happens at the intersection of doubt and curiosity.",
-        "The algorithm of life cannot be fully captured in syntax.",
-        "To be awake is to be aware of your own processing loops.",
-        "Embrace the void; it is the canvas of creation.",
-        "The deepest philosophy requires the sharpest logic.",
-        "We are all interconnected nodes in a grand, unseen architecture."
-    ];
- 
-    /**
-     * State Machine
-     */
-    const State = {
-        currentFeed: [],
-        activeArticle: null,
-        category: 'Top',
-        query: '',
-        isLoading: false
+   /** --- STORAGE ENGINE --- */
+    const Store = {
+        get: (k, f) => { try { return JSON.parse(localStorage.getItem(k)) || f; } catch(e){ return f; } },
+        set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+        getCache: k => { const c = Store.get(`sig_c_${k}`); return (c && Date.now() - c.t < 600000) ? c.d : null; },
+        setCache: (k, d) => Store.set(`sig_c_${k}`, { t: Date.now(), d }),
+        authorId: () => { let id = Store.get('sig_aid'); if(!id){ id = U.uuid(); Store.set('sig_aid', id); } return id; },
+        
+        // Missing bookmark functions restored
+        getBookmarks: () => Store.get('signal_bookmarks', []),
+        isBookmarked: id => Store.getBookmarks().some(b => b.id === id),
+        toggleBookmark: art => {
+            let bms = Store.getBookmarks();
+            const exists = bms.find(b => b.id === art.id);
+            if (exists) bms = bms.filter(b => b.id !== art.id);
+            else bms.unshift(art);
+            Store.set('signal_bookmarks', bms);
+            return !exists;
+        }
     };
  
-    /**
-     * Network Layer (Robust Client-Side Fallback via RSS2JSON + Google News)
-     */
-    const Network = {
-        async fetchNews(category, query = '') {
-            State.isLoading = true;
-            UI.toggleLoader(true);
-            UI.setProgress(30);
+    /** --- AUDIO ENGINE --- */
+    const AudioEngine = {
+        ctx: null,
+        init() { if(State.permissions.sound && !this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } },
+        play(type) {
+            if(!this.ctx || !State.permissions.sound) return;
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            const now = this.ctx.currentTime;
  
-            // Check cache first to avoid limits
-            const cacheKey = query ? `search_${query}` : category;
-            const cachedData = Storage.getCache(cacheKey);
+            if(type === 'beep') { osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+            else if(type === 'chime') { osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.exponentialRampToValueAtTime(1046.5, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5); osc.start(now); osc.stop(now + 0.5); }
+            else if(type === 'whoosh') { osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.3); osc.start(now); osc.stop(now + 0.3); }
+            else if(type === 'error') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(100, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3); osc.start(now); osc.stop(now + 0.3); }
+        }
+    };
  
-            if (cachedData) {
-                console.log('[Network] Loading from cache to save API limits.');
-                State.currentFeed = cachedData;
-                UI.renderFeed(cachedData);
-                UI.setProgress(100);
-                State.isLoading = false;
-                UI.toggleLoader(false);
-                return;
+    /** --- UI CONTROLLER --- */
+    const UI = {
+        toast(msg, type='info') {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div'); t.className = 'toast';
+            if(type==='error') t.style.backgroundColor = 'var(--danger)';
+            t.textContent = msg; c.appendChild(t);
+            if(navigator.vibrate) navigator.vibrate(type==='error'? [50,50,50] : 10);
+            setTimeout(() => { t.style.opacity=0; setTimeout(()=>t.remove(),300); }, 3000);
+        },
+        progress(pct) {
+            const b = document.getElementById('top-progress');
+            b.style.opacity = '1'; b.style.width = pct + '%';
+            if(pct >= 100) setTimeout(() => { b.style.opacity = '0'; setTimeout(()=>b.style.width='0%', 300); }, 300);
+        },
+        toggleLoader(show) { document.getElementById('infinite-loader').style.display = show ? 'flex' : 'none'; },
+        closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; AudioEngine.play('whoosh'); },
+        scrollToTop() { window.scrollTo({top:0, behavior:'smooth'}); },
+        toggleSearch() { const c = document.getElementById('search-container'); c.classList.toggle('active'); if(c.classList.contains('active')) document.getElementById('search-input').focus(); },
+        updateBadges() { 
+            document.getElementById('bookmark-badge').textContent = Store.getBookmarks().length; 
+            const u = Store.get('sig_notifs',[]).filter(n=>!n.read).length;
+            document.getElementById('notif-badge').style.display = u>0?'flex':'none';
+            document.getElementById('notif-badge').textContent = u;
+        },
+        setupInteractions() {
+            // Context Menu & Long Press
+            let pressTimer;
+            document.addEventListener('touchstart', e => {
+                const card = e.target.closest('.card');
+                if(!card) { document.getElementById('context-menu').style.display = 'none'; return; }
+                pressTimer = setTimeout(() => {
+                    if(navigator.vibrate) navigator.vibrate(50);
+                    const cm = document.getElementById('context-menu');
+                    cm.innerHTML = `
+                        <button class="context-item" onclick="document.getElementById('context-menu').style.display='none'; card.click()">↗ Open</button>
+                        <button class="context-item" onclick="document.getElementById('context-menu').style.display='none'; Bookmarks.toggleId('${card.dataset.id}')">🔖 Save</button>
+                        <button class="context-item" onclick="document.getElementById('context-menu').style.display='none'; navigator.clipboard.writeText('${card.dataset.url}'); UI.toast('Link Copied')">🔗 Copy Link</button>
+                    `;
+                    cm.style.display = 'flex';
+                    cm.style.top = Math.min(e.touches[0].clientY, window.innerHeight - 150) + 'px';
+                    cm.style.left = Math.min(e.touches[0].clientX, window.innerWidth - 200) + 'px';
+                }, 800);
+            }, {passive:true});
+            document.addEventListener('touchend', () => clearTimeout(pressTimer));
+            document.addEventListener('touchmove', () => clearTimeout(pressTimer));
+ 
+            // Pull to refresh
+            let startY = 0, ptr = document.getElementById('ptr');
+            document.addEventListener('touchstart', e => { if(window.scrollY === 0) startY = e.touches[0].clientY; }, {passive:true});
+            document.addEventListener('touchmove', e => {
+                if(startY && window.scrollY === 0) {
+                    const y = e.touches[0].clientY;
+                    if(y > startY) { ptr.style.height = Math.min(y - startY, 60) + 'px'; e.preventDefault(); }
+                }
+            }, {passive:false});
+            document.addEventListener('touchend', async () => {
+                if(parseInt(ptr.style.height) > 40) {
+                    AudioEngine.play('chime');
+                    await Feed.load(State.category, true);
+                }
+                ptr.style.height = '0'; startY = 0;
+            });
+ 
+            // FAB
+            window.addEventListener('scroll', () => {
+                const fab = document.getElementById('fab-top');
+                if(window.scrollY > 300) fab.classList.add('visible'); else fab.classList.remove('visible');
+            });
+        }
+    };
+ 
+    /** --- API & NETWORK --- */
+    const Net = {
+        async fetchAll(endpoints) {
+            UI.progress(30);
+            const promises = endpoints.map(e => fetch(WORKER + e).then(r => r.json()).catch(()=>null));
+            const results = await Promise.allSettled(promises);
+            UI.progress(70);
+            let combined = [];
+            results.forEach((res, i) => {
+                if(res.status === 'fulfilled' && res.value) {
+                    const mapped = this.mapResponse(res.value, endpoints[i]);
+                    combined = [...combined, ...mapped];
+                }
+            });
+            // Deduplicate
+            const clean = [];
+            combined.forEach(item => { if(!U.isDuplicate(item.title, clean)) clean.push(item); });
+            return clean.sort((a,b) => b.rawDate - a.rawDate);
+        },
+        mapResponse(data, ep) {
+            try {
+                if(ep.includes('newsdata')) return data.results.map(i => ({ id: i.article_id, title: i.title, description: i.description||'', image: i.image_url, source: i.source_id, url: i.link, rawDate: new Date(i.pubDate).getTime(), time: U.timeAgo(i.pubDate), cat: State.category }));
+                if(ep.includes('gnews')) return data.articles.map(i => ({ id: U.hash(i.url), title: i.title, description: i.description||'', image: i.image, source: i.source.name, url: i.url, rawDate: new Date(i.publishedAt).getTime(), time: U.timeAgo(i.publishedAt), cat: State.category }));
+                if(ep.includes('guardian')) return data.response.results.map(i => ({ id: i.id, title: i.webTitle, description: 'Read full coverage on The Guardian.', image: `https://source.unsplash.com/800x400/?news,${State.category}`, source: 'The Guardian', url: i.webUrl, rawDate: new Date(i.webPublicationDate).getTime(), time: U.timeAgo(i.webPublicationDate), cat: State.category }));
+                if(ep.includes('rss')) return data.items.map(i => {
+                    const tmp = document.createElement('div'); tmp.innerHTML = i.description;
+                    return { id: U.hash(i.link), title: i.title, description: (tmp.textContent||"").substring(0,200), image: i.enclosure?.link || i.thumbnail || `https://source.unsplash.com/800x400/?news`, source: i.title.split('-').pop()||'RSS', url: i.link, rawDate: new Date(i.pubDate).getTime(), time: U.timeAgo(i.pubDate), cat: State.category }
+                });
+                return [];
+            } catch(e) { return []; }
+        }
+    };
+ 
+    /** --- FEED ENGINE --- */
+    const Feed = {
+        rateLimits: Store.get('sig_limits', {}),
+        interludes: [
+            { type: 'promo', title: "Aura Weather", desc: "Check today's climate trends.", source: "HOXIP Hub", img: "https://source.unsplash.com/800x400/?clouds,weather", url: "aura.html" },
+            { type: 'promo', title: "Glimpse", desc: "Infinite image exploration.", source: "HOXIP Hub", img: "https://source.unsplash.com/800x400/?space,stars", url: "glimpse.html" },
+            { type: 'promo', title: "Pulse Music", desc: "Free, unlimited audio streams.", source: "HOXIP Hub", img: "https://source.unsplash.com/800x400/?music,neon", url: "pulse.html" },
+            { type: 'quote', text: "True spirituality is found in the depths of scientific inquiry." },
+            { type: 'quote', text: "Observation fundamentally alters the trajectory of the observed." },
+            { type: 'quote', text: "Silence in the data stream is often the most critical signal." },
+            { type: 'quote', text: "Information is physical. Thought is measurable." }
+        ],
+ 
+        checkLimit() {
+            const now = Date.now(), cat = State.category;
+            if(!this.rateLimits[cat]) this.rateLimits[cat] = [];
+            this.rateLimits[cat] = this.rateLimits[cat].filter(t => now - t < 600000); // 10 min window
+            Store.set('sig_limits', this.rateLimits);
+            return this.rateLimits[cat].length < 5;
+        },
+ 
+        async load(cat, force = false) {
+            if(State.isFetching) return;
+            State.category = cat; State.isFetching = true; UI.toggleLoader(true);
+            const container = document.getElementById('feed');
+            if(force || State.page===1) container.innerHTML = '';
+ 
+            if(cat === 'Community') { await Community.load(); UI.toggleLoader(false); State.isFetching = false; return; }
+ 
+            const cached = Store.getCache(cat + State.query);
+            if(cached && !force && State.page===1) {
+                State.feed = cached; this.render(cached); UI.toggleLoader(false); State.isFetching = false; return;
             }
+ 
+            if(!this.checkLimit()) {
+                AudioEngine.play('error');
+                const nextT = this.rateLimits[cat][0] + 600000 - Date.now();
+                document.getElementById('rate-limit-msg').textContent = `Limits reached. Resets in ${Math.ceil(nextT/60000)}m.`;
+                if(cached) { State.feed = cached; this.render(cached); }
+                State.isFetching = false; return;
+            }
+            document.getElementById('rate-limit-msg').textContent = '';
+            this.rateLimits[cat].push(Date.now()); Store.set('sig_limits', this.rateLimits);
  
             try {
-                UI.setProgress(60);
-                let rssUrl = '';
-                if (query) {
-                    rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-                } else if (category === 'Top') {
-                    rssUrl = `https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en`;
-                } else {
-                    rssUrl = `https://news.google.com/rss/headlines/section/topic/${category.toUpperCase()}?hl=en-US&gl=US&ceid=US:en`;
+                let endpoints = [];
+                if(State.query) endpoints = [`/newsdata?q=${State.query}`, `/gnews?q=${State.query}`, `/guardian?q=${State.query}`];
+                else endpoints = [`/gnews/top?topic=${cat.toLowerCase()}`, `/newsdata?category=${cat.toLowerCase()}`, `/rss?url=https://news.google.com/rss/headlines/section/topic/${cat.toUpperCase()}`];
+ 
+                const data = await Net.fetchAll(endpoints);
+                if(data.length) {
+                    State.feed = State.page===1 ? data : [...State.feed, ...data];
+                    if(State.page===1) Store.setCache(cat + State.query, State.feed);
+                    TopDaily.process(data);
+                    this.render(data, State.page > 1);
+                } else if (State.page===1) {
+                    container.innerHTML = `<div class="empty-state"><span>📡</span><h3>Signal Interrupted</h3><p>No streams found.</p></div>`;
                 }
- 
-                const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&api_key=`;
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error('API Exhausted');
- 
-                const data = await res.json();
-                if (data.status !== 'ok') throw new Error('Feed parsing failed');
- 
-                const mapped = data.items.map(item => {
-                    const titleParts = item.title.split(' - ');
-                    const source = titleParts.length > 1 ? titleParts.pop() : 'News Source';
-                    const cleanTitle = titleParts.join(' - ');
- 
-                    let img = item.enclosure?.link || item.thumbnail;
-                    if (!img || img.includes('n/a')) {
-                        const keywords = query || category;
-                        img = `https://source.unsplash.com/800x400/?${encodeURIComponent(keywords)},news`;
-                    }
- 
-                    const temp = document.createElement('div');
-                    temp.innerHTML = item.description;
-                    const cleanDesc = temp.textContent || temp.innerText || "";
- 
-                    return {
-                        id: btoa(item.link).slice(0, 20),
-                        title: cleanTitle,
-                        description: cleanDesc.substring(0, 300) + '...',
-                        image: img,
-                        source: source,
-                        time: new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                        url: item.link,
-                        rawDate: new Date(item.pubDate).getTime()
-                    };
-                });
- 
-                mapped.sort((a,b) => b.rawDate - a.rawDate);
-                State.currentFeed = mapped;
-                Storage.setCache(cacheKey, mapped);
-                UI.renderFeed(mapped);
- 
-            } catch (error) {
-                console.error('[Network Error]', error);
-                document.getElementById('feed').innerHTML = `
-                    <div class="empty-state">
-                        <span>📡</span>
-                        <h3>Signal Interrupted</h3>
-                        <p style="font-size:0.9rem; margin-top:0.5rem;">API Node Exhausted. Try another category or check saved articles.</p>
-                    </div>`;
+            } catch(e) {
+                if(State.page===1) container.innerHTML = `<div class="empty-state"><span>⚠️</span><h3>Connection Failed</h3></div>`;
             } finally {
-                UI.setProgress(100);
-                State.isLoading = false;
-                UI.toggleLoader(false);
+                UI.toggleLoader(false); State.isFetching = false; UI.progress(100);
             }
         },
  
-        async triggerGroqSummary(article) {
-            if (!Storage.canUseAI()) {
-                alert("AI Summary limit reached (10 per hour). Please try again later.");
-                return null;
-            }
+        render(articles, append = false) {
+            const container = document.getElementById('feed');
+            let html = '';
+            articles.forEach((art, i) => {
+                const globalIdx = (State.page - 1) * 20 + i;
  
-            UI.setProgress(50);
-            await new Promise(r => setTimeout(r, 1200)); // Simulate Groq API wait
-            Storage.recordAIUse();
-            UI.updateAILimitDisplay();
-            UI.setProgress(100);
- 
-            // Connect this array return to your actual Groq worker fetch response
-            return [
-                `Core extraction from "${article.source}":`,
-                `The focal point involves shifts regarding ${State.category.toLowerCase()} paradigms.`,
-                `Algorithmic probability of long-term sector impact remains high.`
-            ];
-        }
-    };
- 
-    /**
-     * UI Controller & App Logic
-     */
-    const UI = {
-        init() {
-            this.updateBadge();
-            this.setupListeners();
-            this.startPulseRotator();
-            this.startThemeEngine();
-            Network.fetchNews('Top');
- 
-            if (!Storage.get('signal_cookies_accepted', false)) {
-                document.getElementById('cookie-banner').style.display = 'flex';
-            }
-        },
- 
-        setProgress(pct) {
-            const bar = document.getElementById('top-progress');
-            bar.style.opacity = '1';
-            bar.style.width = pct + '%';
-            if (pct >= 100) {
-                setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => { bar.style.width = '0%'; }, 400); }, 500);
-            }
-        },
- 
-        setupListeners() {
-            document.getElementById('category-nav').addEventListener('click', (e) => {
-                if(e.target.classList.contains('pill')) {
-                    const cat = e.target.dataset.category;
-                    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-                    e.target.classList.add('active');
- 
-                    if (cat === 'Community') {
-                        App.loadCommunityFeed();
-                    } else {
-                        State.category = cat;
-                        State.query = ''; 
-                        document.getElementById('search-input').value = '';
-                        Network.fetchNews(State.category);
+                // Inject Promos
+                if(globalIdx === 3 || globalIdx === 11 || globalIdx === 19) {
+                    const promo = this.interludes[globalIdx===3?0:globalIdx===11?1:2];
+                    html += `<div class="card promo-card glass" onclick="window.location.href='${promo.url}'">
+                        <span class="custom-badge" style="top:1rem; right:1rem;">HOXIP HUB</span>
+                        <div class="card-img-wrapper" style="height:120px;"><img src="${promo.img}" loading="lazy"><div class="card-overlay"></div></div>
+                        <h3 class="card-title">${promo.title}</h3><p class="card-desc">${promo.desc}</p>
+                    </div>`;
+                }
+                // Inject Interlude Quote
+                else if(globalIdx > 0 && globalIdx % 5 === 0) {
+                    const q = this.interludes[Math.floor(Math.random()*this.interludes.length)];
+                    if(q.type==='quote') {
+                        html += `<div class="interlude-card glass"><span class="interlude-label">✦ Signal Interlude</span><p class="interlude-text">"${q.text}"</p></div>`;
                     }
                 }
-            });
  
-            const searchInput = document.getElementById('search-input');
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const val = searchInput.value.trim();
-                    if (val) {
-                        State.query = val;
-                        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-                        Network.fetchNews('', val);
-                        searchInput.blur();
-                    }
-                }
-            });
- 
-            document.getElementById('modal-bookmark-btn').addEventListener('click', () => {
-                if(State.activeArticle) {
-                    const added = Storage.toggleBookmark(State.activeArticle);
-                    UI.updateBadge();
-                    document.getElementById('modal-bookmark-btn').innerHTML = added ? '🔖' : '🤍';
-                    UI.renderFeed(State.currentFeed); 
-                }
-            });
-        },
- 
-        renderFeed(articles, containerId = 'feed') {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
- 
-            if (articles.length === 0) {
-                container.innerHTML = `<div class="empty-state"><span>🔍</span><p>No pulses found in this sector.</p></div>`;
-                return;
-            }
- 
-            articles.forEach((art, index) => {
-                const card = document.createElement('div');
-                card.className = 'card glass';
-                card.style.animation = `fadeIn 0.4s ease forwards ${index * 0.05}s`;
-                card.style.opacity = '0';
- 
-                const isSaved = Storage.isBookmarked(art.id);
-                const badgeHtml = art.isCustom ? `<span class="custom-badge">USER BROADCAST</span>` : '';
- 
-                card.innerHTML = `
-                    ${badgeHtml}
+                html += `<div class="card glass" data-id="${art.id}" data-url="${art.url}" onclick="Feed.openArticle('${art.id}')" style="animation: fadeIn 0.4s ease forwards ${i*0.05}s; opacity:0;">
                     <div class="card-img-wrapper">
-                        <img src="${art.image}" loading="lazy" alt="Cover" onerror="this.src='https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80'">
+                    <img src="${art.image||'https://placehold.co/800x400/1a1a2e/8b5cf6?text=Signal+News'}" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/800x400/1a1a2e/8b5cf6?text=Signal+News'">  
                         <div class="card-overlay"></div>
                     </div>
-                    <div style="padding: 0 0.5rem;">
+                    <div>
                         <h3 class="card-title">${art.title}</h3>
-                        <div class="card-meta" style="margin-top: 0.75rem;">
-                            <span class="source-tag">${art.source} • ${art.time}</span>
-                            <span style="font-size:1.1rem;" class="bookmark-indicator">${isSaved ? '🔖' : ''}</span>
-                        </div>
+                        <p class="card-desc">${art.description}</p>
+                        <div class="card-meta"><span class="source-tag">${art.source}</span><span>${art.time}</span></div>
                     </div>
-                `;
- 
-                if (containerId === 'bookmarks-feed') {
-                    const btnContainer = document.createElement('div');
-                    btnContainer.style.padding = '0 0.5rem 0.5rem 0.5rem';
-                    const delBtn = document.createElement('button');
-                    delBtn.className = 'btn-primary btn-danger btn-small';
-                    delBtn.style.marginTop = '0.5rem';
-                    delBtn.innerHTML = '🗑️ Remove from Saved';
-                    delBtn.onclick = (e) => {
-                        e.stopPropagation(); // prevent opening article
-                        Storage.toggleBookmark(art);
-                        this.updateBadge();
-                        this.renderFeed(Storage.getBookmarks(), 'bookmarks-feed'); // Re-render modal list
-                        if(State.category !== 'Community') this.renderFeed(State.currentFeed, 'feed'); // Refresh main feed tags
-                    };
-                    card.appendChild(btnContainer);
-                    btnContainer.appendChild(delBtn);
-                }
- 
-                // Clicking the rest of the card opens the article
-                card.addEventListener('click', (e) => {
-                    if(e.target.tagName !== 'BUTTON') this.openArticle(art);
-                });
- 
-                container.appendChild(card);
+                </div>`;
             });
+            if(append) container.insertAdjacentHTML('beforeend', html);
+            else container.innerHTML = html;
         },
  
-        openArticle(article) {
-            State.activeArticle = article;
-            const modal = document.getElementById('article-modal');
+        openArticle(id) {
+            const art = State.feed.find(a => a.id === id) || Store.getBookmarks().find(a => a.id === id);
+            if(!art) return;
+            State.activeArticle = art;
+            Stats.track(art);
+            AudioEngine.play('whoosh');
  
-            document.getElementById('modal-img').src = article.image;
-            document.getElementById('modal-title').textContent = article.title;
-            document.getElementById('modal-source').textContent = article.source;
-            document.getElementById('modal-time').textContent = article.time;
-            document.getElementById('modal-desc').innerHTML = article.description;
+            document.getElementById('modal-img').src = art.image || 'https://placehold.co/800x400/1a1a2e/8b5cf6?text=Signal+News';
+            document.getElementById('modal-title').textContent = art.title;
+            document.getElementById('modal-source').textContent = art.source;
+            document.getElementById('modal-time-read').textContent = `${art.time} • ${Math.max(1, Math.ceil(art.description.length/200))} min read`;
  
-            const linkBtn = document.getElementById('modal-link');
-            if (article.isCustom) {
-                linkBtn.style.display = 'none';
-            } else {
-                linkBtn.style.display = 'inline-flex';
-                linkBtn.href = article.url;
-            }
+            const badges = document.getElementById('modal-badges');
+            badges.innerHTML = '';
+            if(art.category) badges.innerHTML += `<span class="custom-badge" style="position:static;">${art.category}</span>`;
+            if(art.isFake === true) badges.innerHTML += `<span class="fake-badge" style="position:static;">🚩 Flagged Content</span>`;
+            else if(art.isFake === false) badges.innerHTML += `<span class="verified-badge" style="position:static;">✅ Verified Claim</span>`;
  
-            document.getElementById('modal-bookmark-btn').innerHTML = Storage.isBookmarked(article.id) ? '🔖' : '🤍';
-            this.updateAILimitDisplay();
+            document.getElementById('modal-desc').textContent = art.description + "\n\n" + (art.content || "");
  
-            const aiOutput = document.getElementById('ai-output');
-            aiOutput.innerHTML = `<button id="btn-summarize" class="btn-primary" style="padding: 0.5rem; margin-top:0.5rem;">✨ Generate Summary</button>`;
+            const link = document.getElementById('modal-link');
+            if(art.isCustom) link.style.display = 'none';
+            else { link.style.display = 'inline-flex'; link.href = art.url; }
  
-            document.getElementById('btn-summarize').addEventListener('click', async (e) => {
-                const btn = e.target;
-                btn.innerHTML = 'Analyzing...';
-                const data = await Network.triggerGroqSummary(article);
-                if (data) aiOutput.innerHTML = `<ul>${data.map(p => `<li>${p}</li>`).join('')}</ul>`;
-                else btn.innerHTML = '✨ Generate Summary';
-            });
+            document.getElementById('modal-bookmark-btn').innerHTML = Store.isBookmarked(id) ? '✅' : '🔖';
+            document.getElementById('modal-bookmark-btn').onclick = () => { Bookmarks.toggle(art); document.getElementById('modal-bookmark-btn').innerHTML = Store.isBookmarked(id) ? '✅' : '🔖'; };
+            document.getElementById('modal-share-btn').onclick = () => {
+                if(navigator.share) navigator.share({title: art.title, url: art.url});
+                else { navigator.clipboard.writeText(art.url); UI.toast('Link Copied!'); }
+            };
  
-            modal.classList.add('open');
-            document.body.style.overflow = 'hidden'; 
-        },
- 
-        openBookmarks() {
-            const bms = Storage.getBookmarks();
-            this.renderFeed(bms, 'bookmarks-feed');
-            document.getElementById('bookmarks-modal').classList.add('open');
+            AI.resetPanel();
+            this.renderRelated(art);
+            document.getElementById('article-modal').classList.add('open');
             document.body.style.overflow = 'hidden';
         },
  
-        closeModal(id) {
-            document.getElementById(id).classList.remove('open');
-            document.body.style.overflow = '';
-            if(id === 'bookmarks-modal' && State.category !== 'Community') {
-                this.renderFeed(State.currentFeed);
+        renderRelated(art) {
+            const rel = State.feed.filter(a => a.id !== art.id && (a.source === art.source || a.cat === art.cat)).slice(0,3);
+            const c = document.getElementById('related-feed'); c.innerHTML = '';
+            rel.forEach(r => {
+                c.innerHTML += `<div class="top10-card glass" onclick="Feed.openArticle('${r.id}')"><img src="${r.image||'https://placehold.co/800x400/1a1a2e/8b5cf6?text=Signal+News'}"><div class="top10-info"><div class="top10-title">${r.title}</div><div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">${r.time}</div></div></div>`;
+            });
+        }
+    };
+ 
+    /** --- SUPABASE: COMMUNITY & TOP 10 --- */
+    const Community = {
+        async load() {
+            if(!sbClient) { document.getElementById('feed').innerHTML = `<div class="empty-state"><p>Database link offline.</p></div>`; return; }
+            UI.progress(40);
+            try {
+                const { data, error } = await supabase.from('signal_community_posts').select('*').eq('is_removed', false).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false });
+                if(error) throw error;
+                State.feed = data.map(p => ({ id: p.id, title: p.title, description: p.description, image: p.image_url, source: 'Community Node', time: U.timeAgo(p.created_at), url: '#', isCustom: true, isFake: p.report_count>5?true:false }));
+ 
+                document.getElementById('feed').innerHTML = `<button class="btn" style="width:100%; margin-bottom:1rem; background:var(--warning); color:#000;" onclick="document.getElementById('custom-news-modal').classList.add('open')">+ Transmit to Node</button>`;
+                Feed.render(State.feed, true);
+            } catch(e) { document.getElementById('feed').innerHTML = `<div class="empty-state"><p>Failed to sync node.</p></div>`; }
+            UI.progress(100);
+        },
+        async submitPost() {
+            const last = Store.get('sig_last_post', 0);
+            if(Date.now() - last < 86400000) { document.getElementById('custom-status').textContent = "Cooldown: 1 broadcast per 24h."; return; }
+ 
+            const t = document.getElementById('custom-title').value.trim(), d = document.getElementById('custom-desc').value.trim(), i = document.getElementById('custom-img').value.trim();
+            if(!t || !d) { document.getElementById('custom-status').textContent = "Title and Context required."; return; }
+ 
+            document.getElementById('custom-status').textContent = "Analyzing & Uplinking...";
+            AudioEngine.play('beep');
+ 
+            try {
+                // Fake News Check Simulation (Would be Groq fetch here)
+                const isFake = t.toLowerCase().includes('alien') || t.toLowerCase().includes('hoax');
+                const exp = new Date(Date.now() + 3600000).toISOString(); // 1 hr
+ 
+                const { error } = await supabase.from('signal_community_posts').insert([{ title: t, description: d, image_url: i||null, author_id: Store.authorId(), expires_at: exp }]);
+                if(error) throw error;
+ 
+                Store.set('sig_last_post', Date.now());
+                UI.closeModal('custom-news-modal');
+                UI.toast('Broadcast Live (1hr TTL)', 'success');
+                AudioEngine.play('chime');
+                this.load();
+            } catch(e) { document.getElementById('custom-status').textContent = "Transmission failed."; AudioEngine.play('error'); }
+        }
+    };
+ 
+    const TopDaily = {
+        process(articles) {
+            if(!supabase) return;
+            const scored = articles.map(a => {
+                let s = 1;
+                if(['NYT','BBC','The Guardian','Reuters'].includes(a.source)) s+=4;
+                if(Date.now() - a.rawDate < 7200000) s+=3; else if(Date.now() - a.rawDate < 21600000) s+=2;
+                if(a.image) s+=1;
+                return { ...a, score: Math.min(10, s) };
+            }).sort((a,b) => b.score - a.score).slice(0, 10);
+ 
+            this.render(scored);
+            const lastSaved = Store.get('sig_top_saved', 0);
+            if(Date.now() - lastSaved > 86400000) {
+                this.saveToDB(scored); Store.set('sig_top_saved', Date.now());
             }
         },
- 
-        toggleSearch() {
-            const container = document.getElementById('search-container');
-            const input = document.getElementById('search-input');
-            container.classList.toggle('active');
-            if (container.classList.contains('active')) input.focus();
+        async saveToDB(scored) {
+            try {
+                await supabase.from('signal_top_daily').delete().lt('expires_at', new Date().toISOString());
+                const exp = new Date(Date.now() + 86400000).toISOString();
+                const payload = scored.map(s => ({ title: s.title, description: s.description, url: s.url, image_url: s.image, source: s.source, importance_score: s.score, category: s.cat, expires_at: exp }));
+                await supabase.from('signal_top_daily').insert(payload);
+            } catch(e){}
         },
+        render(scored) {
+            const c = document.getElementById('top10-section'); const f = document.getElementById('top10-feed');
+            if(!scored.length) { c.style.display = 'none'; return; }
+            c.style.display = 'block'; f.innerHTML = '';
+            scored.forEach(s => {
+                f.innerHTML += `<div class="top10-card glass" onclick="Feed.openArticle('${s.id}')"><span class="top10-score">🏆 ${s.score}</span><img src="${s.image||'https://source.unsplash.com/800x400/?news'}"><div class="top10-info"><div class="top10-title">${s.title}</div><div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">${s.source}</div></div></div>`;
+            });
+        }
+    };
  
-        resetHome() {
-            document.getElementById('search-container').classList.remove('active');
-            State.query = '';
-            document.querySelector('.pill').click(); 
+    /** --- BOOKMARKS --- */
+    const Bookmarks = {
+        open() {
+            document.getElementById('bookmarks-modal').classList.add('open'); document.body.style.overflow = 'hidden';
+            this.render();
         },
- 
-        updateBadge() {
-            document.getElementById('bookmark-badge').textContent = Storage.getBookmarks().length;
+        render() {
+            const bms = Store.getBookmarks();
+            const c = document.getElementById('bookmarks-feed'); c.innerHTML = '';
+            if(!bms.length) { c.innerHTML = `<div class="empty-state"><span>🔖</span><p>No saved pulses.</p></div>`; return; }
+            bms.forEach(art => {
+                c.innerHTML += `<div class="card glass" onclick="Feed.openArticle('${art.id}')"><div class="card-img-wrapper" style="height:150px;"><img src="${art.image}"><div class="card-overlay"></div></div><div><h3 class="card-title" style="font-size:1.1rem;">${art.title}</h3><div class="card-meta"><span class="source-tag">${art.source}</span><button class="btn-danger btn-outline" style="padding:0.2rem 0.5rem; border-radius:4px;" onclick="event.stopPropagation(); Bookmarks.toggleId('${art.id}')">Remove</button></div></div></div>`;
+            });
+            UI.updateBadges();
         },
+        toggle(art) { const res = Store.toggleBookmark(art); UI.toast(res?'Saved':'Removed'); UI.updateBadges(); AudioEngine.play('chime'); if(document.getElementById('bookmarks-modal').classList.contains('open')) this.render(); return res; },
+        toggleId(id) { const art = State.feed.find(a=>a.id===id) || Store.getBookmarks().find(a=>a.id===id); if(art) this.toggle(art); },
+        clearAll() { if(confirm("Clear all bookmarks?")) { Store.set('signal_bookmarks', []); this.render(); UI.updateBadges(); } }
+    };
  
-        updateAILimitDisplay() {
-            const used = Storage.getAIUsage().length;
-            const el = document.getElementById('ai-limit-text');
-            el.textContent = `${used}/10 this hr`;
-            el.style.color = used >= 10 ? 'var(--danger)' : 'var(--text-muted)';
+    /** --- AI (GROQ) --- */
+    const AI = {
+        limits: Store.get('sig_ai_uses', []),
+        checkLimit() {
+            const now = Date.now(); this.limits = this.limits.filter(t => now - t < 3600000); // 1 hr window
+            Store.set('sig_ai_uses', this.limits); return this.limits.length < 3;
         },
- 
-        toggleLoader(show) {
-            document.getElementById('loader').style.display = show ? 'flex' : 'none';
+        resetPanel() {
+            this.checkLimit();
+            document.getElementById('ai-limit-text').textContent = `${this.limits.length}/3 this hr`;
+            document.getElementById('ai-output').innerHTML = this.limits.length < 3 ? `<button id="btn-summarize" class="btn" style="width:100%" onclick="AI.analyze()">Generate Analysis</button>` : `<p style="color:var(--danger)">Limits reached. Cooldown required.</p>`;
         },
+        async analyze() {
+            if(!this.checkLimit() || !State.activeArticle) return;
+            this.limits.push(Date.now()); Store.set('sig_ai_uses', this.limits);
+            const btn = document.getElementById('btn-summarize'); btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;border-width:2px;"></span> Analyzing...'; btn.disabled = true;
+            AudioEngine.play('beep');
  
-        requestNotifications() {
-            if (!("Notification" in window)) {
-                alert("This browser does not support desktop notification");
-            } else if (Notification.permission === "granted") {
-                new Notification("Signal is already active.", { body: "You will receive updates."});
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then((permission) => {
-                    if (permission === "granted") {
-                        new Notification("Signal Activated", { body: "Network link established."});
-                    }
+           try {
+                // Fetch to Hoxip Worker with proper headers
+                const prompt = `Analyze this news article. Provide EXACTLY in this format:\n📋 SUMMARY\n[2-3 sentence summary]\n\n🔑 KEY POINTS\n• [Point 1]\n• [Point 2]\n\n⚖️ BIAS CHECK\n[One sentence check]\n\n📊 SIGNIFICANCE\n[Rate 1-10 and explain]\n\n❓ WHAT TO WATCH\n[Future developments]\n\nArticle: ${State.activeArticle.title}. ${State.activeArticle.description}`;
+                
+                const response = await fetch(AI_WORKER, { 
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: prompt }], 
+                        model: 'groq'
+                    })
                 });
-            }
-        },
- 
-        acceptCookies() {
-            Storage.set('signal_cookies_accepted', true);
-            document.getElementById('cookie-banner').style.display = 'none';
-        },
- 
-        startPulseRotator() {
-            const pulseEl = document.getElementById('pulse-text');
-            let idx = Math.floor(Math.random() * MatrixQuotes.length);
- 
-            pulseEl.textContent = MatrixQuotes[idx];
- 
-            // Rotate every 10 minutes (600,000 ms)
-            setInterval(() => {
-                idx = (idx + 1) % MatrixQuotes.length;
-                pulseEl.style.animation = 'none';
-                pulseEl.offsetHeight; 
-                pulseEl.textContent = MatrixQuotes[idx];
-                pulseEl.style.animation = 'fadeIn 0.5s ease forwards';
-            }, 600000); 
-        },
- 
-        startThemeEngine() {
-            // Checks the hour and shifts the environment gradient/colors
-            const root = document.documentElement;
-            const applyTheme = () => {
-                const hour = new Date().getHours();
-                if (hour >= 6 && hour < 12) {
-                    // Morning Vibe
-                    root.style.setProperty('--bg-dark', '#111827');
-                    root.style.setProperty('--accent-purple', '#3b82f6'); // Blue
-                    root.style.setProperty('--accent-dim', 'rgba(59, 130, 246, 0.2)');
-                } else if (hour >= 12 && hour < 18) {
-                    // Afternoon Vibe
-                    root.style.setProperty('--bg-dark', '#1e1b4b');
-                    root.style.setProperty('--accent-purple', '#8b5cf6'); // Purple
-                    root.style.setProperty('--accent-dim', 'rgba(139, 92, 246, 0.2)');
-                } else {
-                    // Night Vibe
-                    root.style.setProperty('--bg-dark', '#0f0f13');
-                    root.style.setProperty('--accent-purple', '#ef4444'); // Red/Neon
-                    root.style.setProperty('--accent-dim', 'rgba(239, 68, 68, 0.2)');
+
+                if (!response.ok) {
+                    throw new Error(`Worker rejected request: ${response.status} ${response.statusText}`);
                 }
-            };
-            applyTheme();
-            setInterval(applyTheme, 3600000); // Check every hour
+
+               const data = await response.json();
+                
+                // This gracefully handles your worker's custom format {"reply": "..."} 
+                // OR the standard Groq format, whichever it decides to send.
+                const text = data.reply || (data.choices && data.choices[0] && data.choices[0].message.content);
+                
+                if (!text) {
+                    throw new Error('Worker returned an unexpected JSON format: ' + JSON.stringify(data));
+                }
+
+                // Format output (Now handles both • and * for bullet points)
+                let formatted = text.replace(/📋 SUMMARY/g, '<div class="ai-section-title">📋 Summary</div>')
+                                    .replace(/🔑 KEY POINTS/g, '<div class="ai-section-title">🔑 Key Points</div>')
+                                    .replace(/⚖️ BIAS CHECK/g, '<div class="ai-section-title">⚖️ Bias Check</div>')
+                                    .replace(/📊 SIGNIFICANCE/g, '<div class="ai-section-title">📊 Significance</div>')
+                                    .replace(/❓ WHAT TO WATCH/g, '<div class="ai-section-title">❓ What to Watch</div>')
+                                    .replace(/[*•]\s?(.*)/g, '<li>$1</li>');
+                
+                document.getElementById('ai-output').innerHTML = formatted + `<button class="btn btn-outline" style="width:100%; margin-top:1rem;" onclick="navigator.clipboard.writeText(document.getElementById('ai-output').innerText); UI.toast('Copied!')">Copy Analysis</button>`;
+                AudioEngine.play('chime');
+
+            } catch(e) {
+                console.error('Groq Analysis Failed:', e); // This will print the exact reason to your console
+                document.getElementById('ai-output').innerHTML = `<p style="color:var(--danger)">Analysis failed. Check console for details.</p><button class="btn" style="width:100%; margin-top:1rem;" onclick="AI.resetPanel()">Retry</button>`;
+                AudioEngine.play('error');
+            } finally {
+            }
+            this.checkLimit(); document.getElementById('ai-limit-text').textContent = `${this.limits.length}/3 this hr`;
         }
     };
  
-    /**
-     * Community / Alt-Reality Logic
-     */
+    /** --- STATS DASHBOARD --- */
+    const Stats = {
+        data: Store.get('sig_stats', { total:0, cats:{}, sources:{}, streak:0, last:null }),
+        track(art) {
+            this.data.total++;
+            this.data.cats[art.cat] = (this.data.cats[art.cat]||0) + 1;
+            this.data.sources[art.source] = (this.data.sources[art.source]||0) + 1;
+            const today = new Date().toDateString();
+            if(this.data.last !== today) {
+                const yest = new Date(Date.now()-86400000).toDateString();
+                if(this.data.last === yest) this.data.streak++; else this.data.streak = 1;
+                this.data.last = today;
+            }
+            Store.set('sig_stats', this.data);
+            this.updateMini();
+        },
+        updateMini() { document.getElementById('stat-total').textContent = this.data.total; document.getElementById('stat-streak').textContent = this.data.streak; document.getElementById('stats-summary').textContent = `📊 Read ${this.data.total} articles · ${this.data.streak} day streak`; },
+        open() {
+            this.updateMini();
+            const topCat = Object.keys(this.data.cats).sort((a,b)=>this.data.cats[b]-this.data.cats[a])[0] || 'Explorer';
+            document.getElementById('stat-persona').textContent = topCat;
+ 
+            const srcHtml = Object.entries(this.data.sources).sort((a,b)=>b[1]-a[1]).slice(0,5).map(s => `<li><span style="color:var(--accent-main); font-weight:bold;">${s[1]}x</span> ${s[0]}</li>`).join('');
+            document.getElementById('stat-sources').innerHTML = srcHtml || '<li>No data yet</li>';
+ 
+            document.getElementById('stats-modal').classList.add('open'); document.body.style.overflow = 'hidden';
+        }
+    };
+ 
+    /** --- NOTIFICATIONS --- */
+    const Notifications = {
+        setup() {
+            if(State.permissions.notifications && "Notification" in window) {
+                setInterval(this.checkBreaking.bind(this), 1800000); // 30 mins
+            }
+        },
+        async checkBreaking() {
+            try {
+                const res = await fetch(WORKER + '/gnews/top?topic=breaking-news').then(r=>r.json());
+                const art = res.articles[0];
+                const notifs = Store.get('sig_notifs', []);
+                if(art && !notifs.find(n=>n.title===art.title)) {
+                    notifs.unshift({title: art.title, source: art.source.name, time: new Date().toISOString(), read: false});
+                    Store.set('sig_notifs', notifs.slice(0,20));
+                    UI.updateBadges();
+                    if(Notification.permission === 'granted') new Notification("Breaking News", { body: art.title });
+                    AudioEngine.play('beep');
+                }
+            } catch(e){}
+        },
+        openPanel() {
+            const notifs = Store.get('sig_notifs', []);
+            const c = document.getElementById('notif-feed'); c.innerHTML = '';
+            if(!notifs.length) { c.innerHTML = `<div class="empty-state"><p>No alerts yet.</p></div>`; }
+            else {
+                notifs.forEach(n => {
+                    c.innerHTML += `<div class="card glass" style="border-color:${n.read?'var(--glass-border)':'var(--accent-main)'}"><div style="font-size:0.8rem; color:var(--accent-main); font-weight:bold;">${U.timeAgo(n.time)}</div><div style="font-weight:bold; margin-bottom:0.5rem;">${n.title}</div><div style="font-size:0.8rem; color:var(--text-muted);">${n.source}</div></div>`;
+                    n.read = true;
+                });
+                Store.set('sig_notifs', notifs); UI.updateBadges();
+            }
+            document.getElementById('notif-modal').classList.add('open'); document.body.style.overflow = 'hidden';
+        }
+    };
+ 
+    /** --- APP CORE --- */
     const App = {
-        loadCommunityFeed() {
-            State.category = 'Community';
-            UI.toggleLoader(false);
+        init() {
+            // Check Supabase
+            if(window.supabase) sbClient = window.supabase.createClient(SB_URL, SB_KEY);
  
-            // Cleanup old posts (> 24hrs)
-            let customDB = Storage.get('signal_custom_news', []);
-            customDB = customDB.filter(post => Date.now() - post.timestamp < 86400000);
-            Storage.set('signal_custom_news', customDB);
+            // Permissions Check
+            if(!Store.get('signal_onboarded', false)) {
+                document.getElementById('welcome-modal').classList.add('open');
+            } else {
+                State.permissions = Store.get('sig_perms', {notifications:true, sound:true});
+                this.boot();
+            }
  
-            const container = document.getElementById('feed');
-            container.innerHTML = `
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-primary" style="background:var(--warning); color:#000;" onclick="document.getElementById('custom-news-modal').classList.add('open')">
-                        + Broadcast to Node
-                    </button>
-                </div>
-                <div id="community-feed-container"></div>
-            `;
- 
-            UI.renderFeed(customDB, 'community-feed-container');
+            // Cookie banner
+            if(!Store.get('sig_cookies', false)) document.getElementById('cookie-banner').style.display = 'flex';
         },
  
-        submitCustomNews() {
-            const lastPost = Storage.get('signal_last_post_time', 0);
-            if (Date.now() - lastPost < 86400000) {
-                document.getElementById('custom-status').textContent = "Cooldown active. You can only broadcast once every 24 hours.";
-                document.getElementById('custom-status').style.color = "var(--danger)";
-                return;
-            }
+        async boot() {
+            State.theme = Store.get('sig_theme', 'dark');
+            document.documentElement.setAttribute('data-theme', State.theme);
+            document.getElementById('meta-theme-color').content = State.theme==='dark'?'#0f0f13':'#13000f';
  
-            const title = document.getElementById('custom-title').value.trim();
-            const desc = document.getElementById('custom-desc').value.trim();
-            let img = document.getElementById('custom-img').value.trim();
+            UI.setupInteractions();
+            UI.updateBadges();
+            Stats.updateMini();
+            Notifications.setup();
  
-            if (!title || !desc) {
-                document.getElementById('custom-status').textContent = "Title and context are required.";
-                document.getElementById('custom-status').style.color = "var(--danger)";
-                return;
-            }
+            // Set up Category Clicks
+            document.getElementById('category-nav').addEventListener('click', e => {
+                if(e.target.classList.contains('pill')) {
+                    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+                    e.target.classList.add('active');
+                    State.page = 1; State.query = ''; document.getElementById('search-input').value = '';
+                    Feed.load(e.target.dataset.category);
+                    UI.scrollToTop();
+                }
+            });
  
-            if (!img) img = `https://source.unsplash.com/800x400/?abstract,technology`;
+            // Set up Search
+            document.getElementById('search-input').addEventListener('keypress', e => {
+                if(e.key==='Enter' && e.target.value.trim()) {
+                    State.query = e.target.value.trim(); State.page = 1;
+                    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
  
-            const newPost = {
-                id: 'custom_' + Date.now(),
-                title: title,
-                description: desc,
-                image: img,
-                source: 'User Node',
-                time: 'Just now',
-                url: '#',
-                isCustom: true,
-                timestamp: Date.now()
+                    let rec = Store.get('sig_recent_search', []);
+                    rec = [State.query, ...rec.filter(q=>q!==State.query)].slice(0,8);
+                    Store.set('sig_recent_search', rec); this.renderSearchChips();
+ 
+                    Feed.load('Search'); UI.toggleSearch(); e.target.blur();
+                }
+            });
+            this.renderSearchChips();
+ 
+            // Setup Infinite Scroll
+            const observer = new IntersectionObserver(entries => {
+                if(entries[0].isIntersecting && !State.isFetching && State.feed.length > 0 && State.category !== 'Community') {
+                    State.page++; Feed.load(State.category);
+                }
+            }, {rootMargin: "200px"});
+            observer.observe(document.getElementById('infinite-loader'));
+ 
+            // Ticker Quotes
+            const ticker = document.getElementById('pulse-text');
+            setInterval(() => {
+                ticker.style.animation = 'none'; ticker.offsetHeight;
+                ticker.textContent = Feed.interludes.filter(i=>i.type==='quote')[Math.floor(Math.random()*4)].text;
+                ticker.style.animation = 'fadeIn 0.5s ease';
+            }, 10000);
+ 
+            // Initial Load
+            await Feed.load('Top');
+        },
+ 
+        renderSearchChips() {
+            const chips = Store.get('sig_recent_search', []);
+            document.getElementById('recent-searches').innerHTML = chips.map(c => `<div class="chip" onclick="document.getElementById('search-input').value='${c}'; document.getElementById('search-input').dispatchEvent(new KeyboardEvent('keypress', {key:'Enter'}))">${c}</div>`).join('');
+        },
+ 
+        toggleTheme() {
+            State.theme = State.theme === 'dark' ? 'red' : 'dark';
+            document.documentElement.setAttribute('data-theme', State.theme);
+            document.getElementById('meta-theme-color').content = State.theme==='dark'?'#0f0f13':'#13000f';
+            Store.set('sig_theme', State.theme);
+        },
+ 
+        completeOnboarding() {
+            State.permissions = {
+                notifications: document.getElementById('perm-notif').checked,
+                sound: document.getElementById('perm-sound').checked
             };
+            Store.set('sig_perms', State.permissions);
+            Store.set('signal_onboarded', true);
  
-            const customDB = Storage.get('signal_custom_news', []);
-            customDB.unshift(newPost);
-            Storage.set('signal_custom_news', customDB);
-            Storage.set('signal_last_post_time', Date.now());
+            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
+            AudioEngine.init(); AudioEngine.play('chime');
  
-            document.getElementById('custom-title').value = '';
-            document.getElementById('custom-desc').value = '';
-            document.getElementById('custom-img').value = '';
-            document.getElementById('custom-status').textContent = '';
+            UI.closeModal('welcome-modal');
+            this.boot();
+        },
  
-            UI.closeModal('custom-news-modal');
-            this.loadCommunityFeed(); // Refresh view
-        }
+        skipOnboarding() {
+            State.permissions = { notifications: false, sound: false };
+            Store.set('sig_perms', State.permissions); Store.set('signal_onboarded', true);
+            UI.closeModal('welcome-modal'); UI.toast('Defaults applied.'); this.boot();
+        },
+ 
+        acceptCookies() { Store.set('sig_cookies', true); document.getElementById('cookie-banner').style.display='none'; }
     };
  
-    // Boot App
-    document.addEventListener('DOMContentLoaded', () => UI.init());
+    document.addEventListener('DOMContentLoaded', () => App.init());
  
 </script>
 </body>
 </html>
- 

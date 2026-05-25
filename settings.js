@@ -65,3 +65,10 @@ const HoxSettings = {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => HoxSettings.init());
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data: { user } } = await window.sharedSupabase.auth.getUser();
+  if (user) {
+    document.getElementById('settings-username').textContent = user.user_metadata?.full_name || 'User';
+    document.getElementById('settings-email').textContent = user.email;
+  }
+});

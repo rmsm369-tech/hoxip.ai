@@ -364,6 +364,25 @@
   }
 
   loadImages();
+  let touchStartX = 0;
+const tabs = ['terms', 'privacy', 'data'];
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+});
+
+document.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) < 50) return;
+  const activTab = document.querySelector('.tab.active');
+  const allTabs = document.querySelectorAll('.tab');
+  const idx = [...allTabs].indexOf(activTab);
+  if (diff > 0 && idx < tabs.length - 1) {
+    allTabs[idx + 1].click();
+  } else if (diff < 0 && idx > 0) {
+    allTabs[idx - 1].click();
+  }
+});
 </script>
 </body>
 </html>

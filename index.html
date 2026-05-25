@@ -398,6 +398,7 @@ const extraPrompt = specId ? specPrompts[specId] : '';
       const data = await response.json();
       if (!data.reply) throw new Error('No reply');
       replyText = data.reply;
+      replyText = replyText.replace(/[\s\S]*?<\/think>/g, '').trim();
       usedSource = 'sarvam';
     } catch (error) {
       console.warn('Sarvam failed, falling back to Groq');
@@ -417,6 +418,7 @@ const extraPrompt = specId ? specPrompts[specId] : '';
       const data = await response.json();
       if (!data.reply) throw new Error('No reply');
       replyText = data.reply;
+      replyText = replyText.replace(/[\s\S]*?<\/think>/g, '').trim();
       usedSource = 'groq';
     } catch (error) {
       console.warn('Groq failed:', error);
