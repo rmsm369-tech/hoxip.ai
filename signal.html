@@ -392,6 +392,10 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
                     <div class="perm-info"><h4 style="margin:0 0 0.2rem 0;">🔊 Audio Cues</h4><p style="margin:0; font-size: 0.85rem; color:var(--text-muted);">Haptic & Sound engine</p></div>
                     <label class="switch"><input type="checkbox" id="perm-sound" checked><span class="slider"></span></label>
                 </div>
+                <div style="display: flex; gap: 10px; margin-top: 1rem; width: 100%;">
+    <button onclick="App.skipOnboarding()" style="flex: 1; padding: 1rem; background: #444; color: white; border: none; border-radius: 8px; font-weight: bold;">Bypass</button>
+    <button onclick="App.completeOnboarding()" class="btn" style="flex: 1; padding: 1rem;">Accept</button>
+</div>
             </div>
  
           
