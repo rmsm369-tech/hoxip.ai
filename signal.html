@@ -375,18 +375,22 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
             <h1 style="font-weight:900; font-size:2rem; letter-spacing:-1px; color:var(--accent-main);">Signal</h1>
             <p style="color:var(--text-muted); font-size:1.1rem;">Grant local access to initialize the full neural link.</p>
  
-            <div style="display:flex; flex-direction:column; gap:1rem; margin:1rem 0;">
-                <div class="perm-row">
-                    <div class="perm-info"><h4>🔔 Push Alerts</h4><p>Breaking global events</p></div>
+          <div style="display:flex; flex-direction:column; gap:1rem; text-align: left;">
+                <div class="perm-row" style="display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 1rem; border-radius: 12px;">
+                    <div class="perm-info"><h4 style="margin:0 0 0.2rem 0;">🔔 Push Alerts</h4><p style="margin:0; font-size: 0.85rem; color:var(--text-muted);">Breaking global events</p></div>
                     <label class="switch"><input type="checkbox" id="perm-notif" checked><span class="slider"></span></label>
                 </div>
-                <div class="perm-row">
-                    <div class="perm-info"><h4>🔊 Audio Cues</h4><p>Haptic & Sound engine</p></div>
-                    <label class="switch"><input type="checkbox" id="perm-sound" checked><span class="slider"></span></label>
+                <div class="perm-row" style="display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 1rem; border-radius: 12px;">
+                    <div class="perm-info"><h4 style="margin:0 0 0.2rem 0;">📍 Location</h4><p style="margin:0; font-size: 0.85rem; color:var(--text-muted);">Local pulse & regional data</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-location"><span class="slider"></span></label>
                 </div>
-                <div class="perm-row">
-                    <div class="perm-info"><h4>💾 Storage</h4><p>Save states & bookmarks</p></div>
-                    <label class="switch"><input type="checkbox" id="perm-storage" checked disabled><span class="slider"></span></label>
+                <div class="perm-row" style="display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 1rem; border-radius: 12px;">
+                    <div class="perm-info"><h4 style="margin:0 0 0.2rem 0;">📷 Camera & Mic</h4><p style="margin:0; font-size: 0.85rem; color:var(--text-muted);">Community Node reporting</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-camera"><span class="slider"></span></label>
+                </div>
+                <div class="perm-row" style="display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); padding: 1rem; border-radius: 12px;">
+                    <div class="perm-info"><h4 style="margin:0 0 0.2rem 0;">🔊 Audio Cues</h4><p style="margin:0; font-size: 0.85rem; color:var(--text-muted);">Haptic & Sound engine</p></div>
+                    <label class="switch"><input type="checkbox" id="perm-sound" checked><span class="slider"></span></label>
                 </div>
             </div>
  
@@ -992,32 +996,48 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
             // Cookie banner
             if(!Store.get('sig_cookies', false)) document.getElementById('cookie-banner').style.display = 'flex';
         },
-         completeOnboarding() {
-            State.permissions = {
-                notifications: document.getElementById('perm-notif').checked,
-                sound: document.getElementById('perm-sound').checked
-            };
-            Store.set('sig_perms', State.permissions);
-            Store.set('signal_onboarded', true);
-            
-            if(State.permissions.notifications && "Notification" in window) Notification.requestPermission();
-            AudioEngine.init(); AudioEngine.play('chime');
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal');
-            this.boot();
-        },
+        async completeOnboarding() {
+        State.permissions = {
+            notifications: document.getElementById('perm-notif').checked,
+            sound: document.getElementById('perm-sound').checked,
+            location: document.getElementById('perm-location').checked,
+            camera: document.getElementById('perm-camera').checked
+        };
+        
+        Store.set('sig_perms', State.permissions);
+        Store.set('signal_onboarded', true);
+        
+        // 1. Trigger Notification Prompt
+        if (State.permissions.notifications && "Notification" in window) {
+            Notification.requestPermission();
+        }
+        
+        // 2. Trigger Geolocation Prompt
+        if (State.permissions.location && "geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => console.log("Location secured."), 
+                (err) => console.warn("Location denied.")
+            );
+        }
 
-        skipOnboarding() {
-            State.permissions = { notifications: false, sound: false };
-            Store.set('sig_perms', State.permissions); 
-            Store.set('signal_onboarded', true);
-            
-            this.acceptCookies(); // <-- ADD THIS LINE
-            UI.closeModal('welcome-modal'); 
-            UI.toast('Defaults applied.'); 
-            this.boot();
-        },
+        // 3. Trigger Camera/Mic Prompt
+        if (State.permissions.camera && navigator.mediaDevices) {
+            try {
+                // Requests access, then immediately stops the hardware so the recording light turns off
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                stream.getTracks().forEach(track => track.stop());
+            } catch(e) {
+                console.warn("Camera/Mic denied.");
+            }
+        }
+        
+        AudioEngine.init(); 
+        if (State.permissions.sound) AudioEngine.play('chime');
+        
+        this.acceptCookies();
+        UI.closeModal('welcome-modal');
+        this.boot();
+    },
         async boot() {
             State.theme = Store.get('sig_theme', 'dark');
             document.documentElement.setAttribute('data-theme', State.theme);
