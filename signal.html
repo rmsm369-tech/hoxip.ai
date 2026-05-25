@@ -202,22 +202,20 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
         /* ... all your other css above this ... */
     
     .pulse {
-        overflow: hidden; /* Keeps the red box from stretching */
-    }
-
-    .pulse p {
-        display: inline-block;
-        padding-left: 100%;
-        animation: marquee 15s linear infinite;
+        overflow-x: auto;
         white-space: nowrap;
-        margin: 0;
+        -webkit-overflow-scrolling: touch; /* Makes scrolling silky smooth on phones */
+        padding-bottom: 8px; /* Adds space so the scrollbar doesn't cover text */
     }
 
-    @keyframes marquee {
-        0%   { transform: translate(0, 0); }
-        100% { transform: translate(-100%, 0); }
+    /* Makes the scrollbar look sleek instead of chunky */
+    .pulse::-webkit-scrollbar {
+        height: 4px;
     }
-
+    .pulse::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 4px;
+    }
 </style> </head>
     </style>
 </head>
