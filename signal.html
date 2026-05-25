@@ -181,8 +181,20 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
  
         /* Welcome Modal */
         #welcome-modal { z-index: 9999; justify-content: center; align-items: center; padding: 1rem; background: rgba(10,10,12,0.98); backdrop-filter: blur(40px);}
-        .welcome-content { max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 2rem; text-align: center; padding: 1rem 0; }
-        .welcome-logo { font-size: 4rem; margin-bottom: -1rem;}
+        .welcome-content { 
+    max-width: 400px; 
+    width: 90%; 
+    max-height: 75dvh; /* Dynamic height avoids mobile URL bars */
+    height: max-content;
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    text-align: center; 
+    padding: 1.5rem; 
+    box-sizing: border-box; /* Stops padding from pushing buttons out */
+    margin: auto;
+}
         .perm-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); text-align: left;}
         .perm-info h4 { font-size: 1rem; margin-bottom: 0.2rem;}
         .perm-info p { font-size: 0.8rem; color: var(--text-muted);}
