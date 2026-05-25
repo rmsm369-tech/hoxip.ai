@@ -201,21 +201,25 @@ input[type="text"], input[type="url"], input[type="search"], textarea {
         @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 var(--accent-dim); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
         /* ... all your other css above this ... */
     
-    .pulse {
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch; /* Makes scrolling silky smooth on phones */
-        padding-bottom: 8px; /* Adds space so the scrollbar doesn't cover text */
+.ticker-text {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        text-overflow: clip !important; /* Kills the ... cutoff */
+        display: block !important; /* Spans need this to scroll */
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        flex: 1; /* Ensures it fills the remaining space next to the label */
     }
 
-    /* Makes the scrollbar look sleek instead of chunky */
-    .pulse::-webkit-scrollbar {
-        height: 4px;
+    /* Sleek micro-scrollbar */
+    .ticker-text::-webkit-scrollbar {
+        height: 3px;
     }
-    .pulse::-webkit-scrollbar-thumb {
+    .ticker-text::-webkit-scrollbar-thumb {
         background: #555;
-        border-radius: 4px;
+        border-radius: 3px;
     }
+    
 </style> </head>
     </style>
 </head>
