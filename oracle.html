@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="oracle.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#020203">
-    <meta name="description" content="Oracle Protocol - Mathematical Scrying Engine">
+    <meta name="theme-color" content="#030305">
+    <meta name="description" content="Oracle Protocol - Deterministic Scrying Engine">
     <title>Oracle | HOX Hub</title>
     <link rel="stylesheet" href="oracle.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body class="oracle-body">
 
@@ -16,134 +18,149 @@
         <canvas id="sacred-geometry-canvas" aria-label="Sacred Geometry Boot Sequence"></canvas>
         <div class="boot-ui-wrapper text-center">
             <h1 class="oracle-title-text pulse-glow">THE ORACLE</h1>
-            <p class="matrix-subtext mb-30">Mathematical determinism initializing...</p>
-            
-            <div class="boot-action-group">
-                <button id="btn-enter-oracle" class="btn-primary massive-btn touch-target">
-                    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" class="mr-10"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            <p class="matrix-subtext">Deterministic paths loading...</p>
+            <div class="boot-action-group mt-40">
+                <button id="btn-enter-oracle" class="btn-primary massive-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
                     BREACH THE VEIL
                 </button>
-            </div>
-            
-            <div class="boot-footer mt-40">
-                <span class="text-xs text-muted font-terminal">v2.0 // OFFLINE MATH ENGINES ACTIVE</span>
             </div>
         </div>
     </section>
 
     <section id="layer-auth" class="oracle-layer hidden" data-layer-id="auth">
-        <div class="glass-panel text-center auth-panel mx-auto max-w-500 fade-in">
+        <div class="glass-panel text-center auth-panel mx-auto max-w-500">
             <div class="auth-icon-wrapper">
-                <svg viewBox="0 0 24 24" width="56" height="56" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             </div>
-            <h2 class="mystic-title text-gold mb-10">Align Frequency</h2>
-            <p class="text-muted mb-30 font-terminal text-sm">The Oracle requires a bound identity to generate accurate deterministic vectors.</p>
+            <h2 class="mystic-title text-gold">Align Frequency</h2>
+            <p class="text-muted mb-20">The Oracle requires a bound identity to generate accurate deterministic vectors.</p>
             
             <div class="auth-form-container">
                 <form id="auth-form" class="auth-form">
                     <div class="input-group">
-                        <input type="email" id="auth-email" class="glass-input full-width text-center" placeholder="Email / Frequency ID" required autocomplete="email">
+                        <input type="email" id="auth-email" class="glass-input full-width" placeholder="Email / Frequency ID" required autocomplete="email">
                         <span class="input-focus-border"></span>
                     </div>
-                    <div class="input-group mt-20">
-                        <input type="password" id="auth-password" class="glass-input full-width text-center" placeholder="Cipher Key" required autocomplete="current-password">
+                    <div class="input-group mt-15">
+                        <input type="password" id="auth-password" class="glass-input full-width" placeholder="Cipher Key" required autocomplete="current-password">
                         <span class="input-focus-border"></span>
                     </div>
                     
-                    <div id="god-mode-indicator" class="hidden mt-20 border-gold p-15 bg-void-dark text-left border-radius-8 box-shadow-gold">
-                        <p class="text-gold font-terminal text-sm mb-5">>> Root Access: rmsm369@gmail.com</p>
-                        <p class="text-gold font-terminal text-sm mb-5">>> Infinite Entropy Credits Granted.</p>
-                        <p class="text-gold font-terminal text-sm">>> All Limits Disengaged.</p>
+                    <div id="god-mode-indicator" class="hidden mt-15 border-gold p-10 bg-void-dark">
+                        <p class="text-gold font-terminal text-sm">>> Root Access Detected: rmsm369@gmail.com</p>
+                        <p class="text-gold font-terminal text-sm">>> Infinite Entropy Credits Granted.</p>
+                        <p class="text-gold font-terminal text-sm">>> All Mathematical Limits Disengaged.</p>
                     </div>
 
-                    <button type="submit" id="btn-login" class="btn-primary auth-btn full-width mt-30 touch-target">SYNCHRONIZE</button>
+                    <button type="submit" id="btn-login" class="btn-primary auth-btn full-width mt-20">Synchronize</button>
                 </form>
             </div>
         </div>
     </section>
 
     <section id="layer-dashboard" class="oracle-layer hidden" data-layer-id="dashboard">
-        <div class="dashboard-container max-w-1200 mx-auto">
-            <header class="dashboard-header flex-between align-center mb-40 border-bottom-glass pb-20">
+        <div class="dashboard-container">
+            <header class="dashboard-header flex-between align-center">
                 <div class="header-titles">
-                    <h2 class="mystic-title text-gold m-0 text-2xl">Oracle Protocol</h2>
-                    <p class="text-muted font-terminal text-sm mt-5">State: <span id="user-sync-status" class="text-gold">Bound</span> | EC: <span id="entropy-balance" class="text-cyan">0</span></p>
+                    <h2 class="mystic-title text-gold m-0">Oracle Protocol</h2>
+                    <p class="text-muted font-terminal text-sm">State: <span id="user-sync-status" class="text-gold">Bound</span> | Balance: <span id="entropy-balance" class="text-cyan">0</span> EC</p>
                 </div>
-                <button id="btn-return-hub" class="btn-icon-text font-terminal text-sm">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                    EXIT TO HUB
+                <button id="btn-return-hub" class="btn-icon-text">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Exit to Hub
                 </button>
             </header>
 
             <div class="oracle-grid">
                 <div class="oracle-card" data-target="module-astral" role="button" tabindex="0">
                     <div class="card-bg-glow purple-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-purple)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></div>
-                    <h3 class="mt-15 text-lg">I. Astral Sync</h3>
-                    <p class="mt-10 text-sm text-muted">Database-driven daily alignments.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-purple)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                    </div>
+                    <h3 class="mt-15">I. Astral Sync</h3>
+                    <p class="mt-5">Database-driven daily alignments.</p>
                 </div>
                 
                 <div class="oracle-card" data-target="module-familiar" role="button" tabindex="0">
                     <div class="card-bg-glow cyan-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
-                    <h3 class="mt-15 text-lg">II. The Familiar</h3>
-                    <p class="mt-10 text-sm text-muted">Emulator nexus and anime lore.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <h3 class="mt-15">II. The Familiar</h3>
+                    <p class="mt-5">Emulator nexus and anime lore extraction.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-panopticon" role="button" tabindex="0">
                     <div class="card-bg-glow matrix-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-matrix)" stroke-width="1.5" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
-                    <h3 class="mt-15 text-lg">III. The Panopticon</h3>
-                    <p class="mt-10 text-sm text-muted">Live global tectonic & flight telemetry.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-matrix)" stroke-width="1.5" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </div>
+                    <h3 class="mt-15">III. The Panopticon</h3>
+                    <p class="mt-5">Live tectonic, aviation, and border telemetry.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-chronos" role="button" tabindex="0">
                     <div class="card-bg-glow blue-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-                    <h3 class="mt-15 text-lg">IV. Chronos</h3>
-                    <p class="mt-10 text-sm text-muted">Biological sine-wave plotting engine.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h3 class="mt-15">IV. Chronos</h3>
+                    <p class="mt-5">Biological sine-wave plotting engine.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-ramanujan" role="button" tabindex="0">
                     <div class="card-bg-glow gold-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
-                    <h3 class="mt-15 text-lg text-gold">V. Ramanujan's Gamble</h3>
-                    <p class="mt-10 text-sm text-muted">Mock Theta exponential compounding.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <h3 class="mt-15 text-gold">V. Ramanujan's Gamble</h3>
+                    <p class="mt-5">Exponential compounding via Mock Theta variants.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-dirac" role="button" tabindex="0">
                     <div class="card-bg-glow orange-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path></svg></div>
-                    <h3 class="mt-15 text-lg">VI. Dirac Entanglement</h3>
-                    <p class="mt-10 text-sm text-muted">Deterministic quantum probability.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VI. Dirac Entanglement</h3>
+                    <p class="mt-5">Deterministic quantum probability routing.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-halflife" role="button" tabindex="0">
                     <div class="card-bg-glow danger-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-danger)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></div>
-                    <h3 class="mt-15 text-lg">VII. Half-Life</h3>
-                    <p class="mt-10 text-sm text-muted">Radioactive thought decay simulation.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-danger)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VII. Half-Life</h3>
+                    <p class="mt-5">Radioactive thought decay simulation.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-gematria" role="button" tabindex="0">
                     <div class="card-bg-glow purple-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg></div>
-                    <h3 class="mt-15 text-lg">VIII. Gematria Cipher</h3>
-                    <p class="mt-10 text-sm text-muted">Mathematical alphanumeric reduction.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VIII. Gematria Cipher</h3>
+                    <p class="mt-5">Mathematical alphanumeric reduction.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-aura" role="button" tabindex="0">
                     <div class="card-bg-glow cyan-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
-                    <h3 class="mt-15 text-lg">IX. Aura Scry</h3>
-                    <p class="mt-10 text-sm text-muted">WebGL camera pixel frequency scanning.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <h3 class="mt-15">IX. Aura Scry</h3>
+                    <p class="mt-5">WebGL camera pixel frequency scanning.</p>
                 </div>
 
                 <div class="oracle-card" data-target="module-sync" role="button" tabindex="0">
                     <div class="card-bg-glow white-glow"></div>
-                    <div class="card-icon mt-10"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
-                    <h3 class="mt-15 text-lg">X. Synchronicity</h3>
-                    <p class="mt-10 text-sm text-muted">Time-locked alignment vault.</p>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h3 class="mt-15">X. Synchronicity</h3>
+                    <p class="mt-5">Time-locked alignment vault.</p>
                 </div>
             </div>
         </div>
@@ -152,216 +169,550 @@
     <section id="layer-modules" class="oracle-layer hidden" data-layer-id="modules">
         <div class="module-container-wrapper max-w-1000 mx-auto">
             
-            <header class="sub-module-header flex-between align-center mb-40 border-bottom-glass pb-20">
-                <button class="btn-icon-text btn-close-module text-gold font-terminal touch-target">
-                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    TERMINATE PROCESS
+            <header class="sub-module-header flex-between align-center mb-30 border-bottom-glass pb-15">
+                <button class="btn-icon-text btn-close-module text-gold font-terminal">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Terminate Process
                 </button>
-                <h2 id="active-module-title" class="font-terminal text-gold m-0 uppercase letter-spacing-2 text-xl">Loading...</h2>
+                <h2 id="active-module-title" class="font-terminal text-gold m-0 uppercase letter-spacing-2">Loading...</h2>
             </header>
 
             <div id="module-astral" class="sub-module-view hidden">
-                <div class="glass-panel text-center max-w-600 mx-auto">
-                    <p class="text-muted font-terminal text-sm mb-30">Select your planetary anchor.</p>
-                    <div class="zodiac-wheel mx-auto mb-40" id="zodiac-wheel-container"></div>
-                    
-                    <div id="zodiac-output" class="hidden border-glass p-30 bg-void-dark text-left border-radius-12">
-                        <h3 id="zodiac-sign-title" class="text-purple font-terminal text-2xl mb-20 text-center uppercase letter-spacing-2">SIGN</h3>
-                        <div class="flex-between border-bottom-glass pb-15 mb-15">
-                            <span class="text-muted font-terminal">VIBE (Kinetic Energy)</span>
-                            <span id="zodiac-vibe" class="text-cyan font-bold text-lg uppercase"></span>
+                <div class="glass-panel text-center">
+                    <div class="zodiac-wheel mb-30" id="zodiac-wheel-container">
                         </div>
-                        <div class="flex-between border-bottom-glass pb-15 mb-15">
-                            <span class="text-muted font-terminal">STATIC (Friction)</span>
-                            <span id="zodiac-static" class="text-danger font-bold text-lg uppercase"></span>
-                        </div>
-                        <div class="flex-between">
-                            <span class="text-muted font-terminal">AXIS (Trajectory)</span>
-                            <span id="zodiac-axis" class="text-gold font-bold text-lg uppercase"></span>
-                        </div>
+                    <div id="zodiac-output" class="hidden border-glass p-20 bg-void-dark text-left">
+                        <h3 id="zodiac-sign-title" class="text-purple font-terminal text-xl mb-10">SIGN</h3>
+                        <div class="flex-between border-bottom-glass pb-10 mb-10"><span class="text-muted">VIBE (Energy)</span><span id="zodiac-vibe" class="text-cyan font-bold"></span></div>
+                        <div class="flex-between border-bottom-glass pb-10 mb-10"><span class="text-muted">STATIC (Friction)</span><span id="zodiac-static" class="text-danger font-bold"></span></div>
+                        <div class="flex-between"><span class="text-muted">AXIS (Direction)</span><span id="zodiac-axis" class="text-gold font-bold"></span></div>
                     </div>
                 </div>
             </div>
 
             <div id="module-familiar" class="sub-module-view hidden">
-                <div class="familiar-tabs flex-row gap-15 mb-30 border-bottom-glass pb-20 justify-center">
-                    <button class="btn-text font-terminal text-cyan active familiar-tab touch-target text-lg" data-target="fam-console">Console</button>
-                    <button class="btn-text font-terminal text-muted familiar-tab touch-target text-lg" data-target="fam-portal">Portal</button>
-                    <button class="btn-text font-terminal text-muted familiar-tab touch-target text-lg" data-target="fam-manifest">Manifest</button>
+                <div class="familiar-tabs flex-row gap-15 mb-20 border-bottom-glass pb-15">
+                    <button class="btn-text font-terminal text-cyan active familiar-tab" data-target="fam-console">Console</button>
+                    <button class="btn-text font-terminal text-muted familiar-tab" data-target="fam-portal">Portal</button>
+                    <button class="btn-text font-terminal text-muted familiar-tab" data-target="fam-manifest">Manifest</button>
                 </div>
                 
-                <div id="fam-console" class="fam-view text-center">
-                    <div class="emulator-container border-glass bg-black p-10 mx-auto max-w-600 border-radius-8">
-                        <canvas id="gba-canvas" class="w-full bg-void-dark border-radius-4 aspect-ratio-gba"></canvas>
-                        <div class="mt-20 flex-center gap-15">
-                            <button id="btn-load-rom" class="btn-secondary text-sm flex-1 touch-target">Load Local ROM (.gba)</button>
+                <div id="fam-console" class="fam-view">
+                    <div class="emulator-container border-glass bg-black p-10 mx-auto" style="max-width: 480px; aspect-ratio: 3/2;">
+                        <canvas id="gba-canvas" class="w-full h-full bg-void-dark"></canvas>
+                        <div class="text-center mt-10">
+                            <button id="btn-load-rom" class="btn-secondary text-sm">Load Local ROM File</button>
                             <input type="file" id="rom-input" class="hidden" accept=".gba,.gbc,.gb">
                         </div>
                     </div>
                 </div>
                 
                 <div id="fam-portal" class="fam-view hidden text-center">
-                    <div class="glass-panel max-w-600 mx-auto">
-                        <input type="text" id="anime-search-input" class="glass-input full-width mb-20 text-center text-lg" placeholder="Entity ID (e.g., Gengar, Naruto)">
-                        <button id="btn-scry-entity" class="btn-primary full-width mb-30 touch-target">EXTRACT LORE</button>
-                        <div id="anime-data-output" class="text-left"></div>
-                    </div>
+                    <input type="text" id="anime-search-input" class="glass-input max-w-500 mx-auto mb-15" placeholder="Entity ID / Name (e.g., Gengar, Doraemon)">
+                    <button id="btn-scry-entity" class="btn-primary max-w-300 mx-auto mb-30">Extract Lore</button>
+                    <div id="anime-data-output" class="text-left max-w-600 mx-auto"></div>
                 </div>
 
                 <div id="fam-manifest" class="fam-view hidden text-center">
-                    <div class="glass-panel max-w-500 mx-auto">
-                        <div class="card-draw-container bg-void-dark border-glass h-400 w-full max-w-300 mx-auto mb-30 flex-center relative overflow-hidden border-radius-12">
-                            <img id="drawn-card-img" src="" class="hidden w-full h-full object-cover z-10" alt="Drawn Artifact">
-                            <div class="glitch-overlay absolute-fill bg-glass z-20 flex-center pointer-events-none hidden">
-                                <span class="text-cyan font-terminal text-xl blink">MANIFESTING...</span>
-                            </div>
+                    <div class="card-draw-container bg-void-dark border-glass h-400 w-300 mx-auto mb-20 flex-center relative overflow-hidden">
+                        <img id="drawn-card-img" src="" class="hidden w-full h-full object-cover z-10" alt="Drawn Card">
+                        <div class="glitch-overlay absolute-fill bg-glass z-20 flex-center pointer-events-none hidden">
+                            <span class="text-cyan font-terminal">MANIFESTING...</span>
                         </div>
-                        <button id="btn-draw-card" class="btn-primary full-width mb-15 touch-target">DRAW DAILY ARTIFACT</button>
-                        <button id="btn-share-card" class="btn-secondary full-width hidden touch-target">SHARE FREQUENCY</button>
                     </div>
+                    <button id="btn-draw-card" class="btn-primary">Draw Daily Artifact</button>
+                    <button id="btn-share-card" class="btn-secondary hidden mt-15">Share Frequency</button>
                 </div>
             </div>
 
             <div id="module-panopticon" class="sub-module-view hidden">
-                <div class="panopticon-grid grid-2-col gap-25">
-                    <div class="glass-panel text-center hover-lift">
-                        <h4 class="text-matrix font-terminal text-xl mb-10">Vector Drift</h4>
-                        <p class="text-xs text-muted mb-20">Local Aviation Telemetry</p>
-                        <button id="btn-ping-sky" class="btn-secondary w-full touch-target">Ping OpenSky Grid</button>
-                        <div id="sky-output" class="mt-20 font-terminal text-sm text-left border-top-glass pt-15"></div>
+                <div class="panopticon-grid grid-2-col gap-20">
+                    <div class="glass-panel text-center">
+                        <h4 class="text-matrix font-terminal mb-15">Vector Drift</h4>
+                        <p class="text-sm text-muted mb-15">Local Aviation Telemetry</p>
+                        <button id="btn-ping-sky" class="btn-secondary w-full">Ping OpenSky Grid</button>
+                        <div id="sky-output" class="mt-15 font-terminal text-sm text-left"></div>
                     </div>
-                    <div class="glass-panel text-center hover-lift">
-                        <h4 class="text-danger font-terminal text-xl mb-10">Seismic Pulse</h4>
-                        <p class="text-xs text-muted mb-20">Global Tectonic Frictions</p>
-                        <button id="btn-ping-earth" class="btn-secondary w-full touch-target">Ping USGS Grid</button>
-                        <div id="earth-output" class="mt-20 font-terminal text-sm text-left border-top-glass pt-15"></div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-danger font-terminal mb-15">Seismic Pulse</h4>
+                        <p class="text-sm text-muted mb-15">Global Tectonic Frictions</p>
+                        <button id="btn-ping-earth" class="btn-secondary w-full">Ping USGS Grid</button>
+                        <div id="earth-output" class="mt-15 font-terminal text-sm text-left"></div>
                     </div>
-                    <div class="glass-panel text-center hover-lift">
-                        <h4 class="text-cyan font-terminal text-xl mb-10">Ice Decay</h4>
-                        <p class="text-xs text-muted mb-20">Polar Mass Trajectory</p>
-                        <button id="btn-ping-ice" class="btn-secondary w-full touch-target">Ping NSIDC Grid</button>
-                        <div id="ice-output" class="mt-20 font-terminal text-sm text-left border-top-glass pt-15"></div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-cyan font-terminal mb-15">Ice Decay</h4>
+                        <p class="text-sm text-muted mb-15">Polar Mass Trajectory</p>
+                        <button id="btn-ping-ice" class="btn-secondary w-full">Ping NSIDC Grid</button>
+                        <div id="ice-output" class="mt-15 font-terminal text-sm text-left"></div>
                     </div>
-                    <div class="glass-panel text-center hover-lift">
-                        <h4 class="text-gold font-terminal text-xl mb-10">Border Scry</h4>
-                        <p class="text-xs text-muted mb-20">Geopolitical Decryption</p>
-                        <button id="btn-ping-border" class="btn-secondary w-full touch-target">Extract Random Nation</button>
-                        <div id="border-output" class="mt-20 font-terminal text-sm text-left border-top-glass pt-15"></div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-gold font-terminal mb-15">Border Scry</h4>
+                        <p class="text-sm text-muted mb-15">Geopolitical Decryption</p>
+                        <button id="btn-ping-border" class="btn-secondary w-full">Extract Random Nation</button>
+                        <div id="border-output" class="mt-15 font-terminal text-sm text-left"></div>
                     </div>
                 </div>
             </div>
 
             <div id="module-chronos" class="sub-module-view hidden text-center">
                 <div class="glass-panel max-w-800 mx-auto">
-                    <p class="text-muted font-terminal text-sm mb-20">Input origination date to plot biological sine waves.</p>
-                    <input type="date" id="chronos-dob" class="glass-input full-width max-w-400 mx-auto mb-20 text-center font-terminal text-lg">
-                    <button id="btn-plot-chronos" class="btn-primary max-w-400 mx-auto w-full mb-40 touch-target">MAP BIOLOGICAL WAVE</button>
+                    <input type="date" id="chronos-dob" class="glass-input max-w-300 mx-auto mb-20 text-center font-terminal">
+                    <button id="btn-plot-chronos" class="btn-primary mb-30">Map Biological Wave</button>
                     
-                    <div class="canvas-wrapper bg-void-dark border-glass p-15 mb-20 relative border-radius-12 overflow-hidden">
+                    <div class="canvas-wrapper bg-void-dark border-glass p-10 mb-20 relative">
                         <canvas id="chronos-canvas" width="800" height="300" class="w-full"></canvas>
-                        <div class="absolute top-0 right-0 p-15 text-right font-terminal bg-void-trans border-radius-8 m-10">
-                            <div class="text-danger mb-5 text-sm">Physical: 23d</div>
-                            <div class="text-cyan mb-5 text-sm">Emotional: 28d</div>
-                            <div class="text-gold text-sm">Intellectual: 33d</div>
+                        <div class="absolute top-0 right-0 p-10 text-right text-xs font-terminal">
+                            <div class="text-danger">P: 23d</div>
+                            <div class="text-cyan">E: 28d</div>
+                            <div class="text-gold">I: 33d</div>
                         </div>
                     </div>
-                    <p id="chronos-warning" class="text-danger font-terminal text-lg hidden blink">CRITICAL WAVE INTERSECTION DETECTED</p>
+                    <p id="chronos-warning" class="text-danger font-terminal text-sm hidden">CRITICAL INTERSECTION DETECTED.</p>
                 </div>
             </div>
 
             <div id="module-ramanujan" class="sub-module-view hidden text-center">
                 <div class="glass-panel max-w-600 mx-auto">
-                    <h3 class="text-gold font-terminal text-3xl mb-15">f(q) Expansion</h3>
-                    <p class="text-muted text-sm mb-30 font-terminal line-height-1-6">Stake Entropy Credits. Survival of the Mock Theta sequence dictates exponential compounding. Collapse equals total void donation.</p>
+                    <h3 class="text-gold font-terminal text-2xl mb-10">f(q) Expansion</h3>
+                    <p class="text-muted text-sm mb-30">Stake your Entropy Credits. Survival of the Mock Theta sequence dictates exponential compounding. Collapse equals total void donation.</p>
                     
-                    <div class="w-full bg-void border-glass p-30 mb-40 text-left border-radius-12">
-                        <div class="flex-between mb-15 border-bottom-glass pb-15">
-                            <span class="text-muted font-terminal text-lg">Current Stake:</span>
-                            <span class="text-cyan font-terminal text-2xl font-bold"><span id="ramanujan-stake">0</span> EC</span>
-                        </div>
-                        <div class="flex-between">
-                            <span class="text-muted font-terminal text-lg">Sequence Depth:</span>
-                            <span class="text-gold font-terminal text-xl font-bold"><span id="ramanujan-depth">0</span></span>
-                        </div>
+                    <div class="w-full bg-void border-glass p-20 mb-30 text-left">
+                        <div class="text-cyan font-terminal text-sm mb-5">Current Stake: <span id="ramanujan-stake">0</span> EC</div>
+                        <div class="text-gold font-terminal text-sm">Sequence Depth: <span id="ramanujan-depth">0</span> iterations</div>
                     </div>
 
-                    <div class="flex-col gap-15">
-                        <button id="btn-ram-stake" class="btn-primary w-full p-20 text-lg touch-target">INITIATE SEQUENCE (-10 EC)</button>
-                        <button id="btn-ram-pull" class="btn-secondary w-full p-20 text-lg disabled touch-target">EXTRACT CREDITS</button>
+                    <div class="flex-row gap-15">
+                        <button id="btn-ram-stake" class="btn-primary flex-1">Initiate Sequence</button>
+                        <button id="btn-ram-pull" class="btn-secondary flex-1 disabled">Extract Credits</button>
                     </div>
                 </div>
             </div>
 
             <div id="module-dirac" class="sub-module-view hidden text-center">
                 <div class="glass-panel max-w-600 mx-auto">
-                    <p class="text-muted text-sm font-terminal mb-40 line-height-1-6">Input two concepts to calculate deterministic quantum entanglement probability via localized hash algorithms.</p>
-                    <div class="flex-col gap-20 mb-30">
-                        <input type="text" id="dirac-val-a" class="glass-input w-full text-center font-terminal text-xl" placeholder="Variable Psi (ψ)">
-                        <input type="text" id="dirac-val-b" class="glass-input w-full text-center font-terminal text-xl" placeholder="Variable Phi (φ)">
+                    <p class="text-muted text-sm font-terminal mb-30">Input two concepts to calculate deterministic quantum entanglement probability.</p>
+                    <div class="flex-row gap-15 mb-20">
+                        <input type="text" id="dirac-val-a" class="glass-input flex-1 text-center font-terminal" placeholder="Variable Psi">
+                        <input type="text" id="dirac-val-b" class="glass-input flex-1 text-center font-terminal" placeholder="Variable Phi">
                     </div>
-                    <button id="btn-dirac-calc" class="btn-primary w-full mb-40 p-20 text-lg touch-target">CALCULATE (iγ^μ∂_μ - m)ψ = 0</button>
+                    <button id="btn-dirac-calc" class="btn-primary w-full mb-30">Calculate (iγ^μ∂_μ - m)ψ = 0</button>
                     
-                    <div id="dirac-result" class="hidden text-center bg-void-dark border-glass p-30 border-radius-12">
-                        <span class="text-6xl font-terminal text-cyan font-bold" id="dirac-prob">00.00%</span>
-                        <p class="text-muted text-sm mt-15 uppercase letter-spacing-2">Entanglement Probability</p>
+                    <div id="dirac-result" class="hidden text-center">
+                        <span class="text-4xl font-terminal text-cyan" id="dirac-prob">00.00%</span>
+                        <p class="text-muted text-sm mt-10">Entanglement Probability</p>
                     </div>
                 </div>
             </div>
 
             <div id="module-halflife" class="sub-module-view hidden text-center">
-                <div class="glass-panel max-w-700 mx-auto">
-                    <textarea id="halflife-input" class="glass-input w-full min-h-200 font-terminal text-xl mb-30 p-20" placeholder="Inject thought for radioactive decay..."></textarea>
-                    <button id="btn-trigger-decay" class="btn-danger w-full mb-40 p-20 text-lg touch-target">TRIGGER ISOTOPE DECAY</button>
+                <div class="glass-panel max-w-600 mx-auto">
+                    <textarea id="halflife-input" class="glass-input w-full min-h-150 font-terminal text-lg mb-20" placeholder="Inject thought for radioactive decay..."></textarea>
+                    <button id="btn-trigger-decay" class="btn-danger w-full mb-30">Trigger Isotope Decay</button>
                     
-                    <div id="decay-output-zone" class="bg-void-dark border-danger p-40 text-left min-h-200 font-terminal text-primary text-xl hidden border-radius-12"></div>
+                    <div id="decay-output-zone" class="bg-void-dark border-danger p-30 text-left min-h-150 font-terminal text-primary hidden"></div>
                 </div>
             </div>
 
             <div id="module-gematria" class="sub-module-view hidden text-center">
                 <div class="glass-panel max-w-600 mx-auto">
-                    <p class="text-muted font-terminal text-sm mb-30">Deterministic alphanumeric reduction to core integer.</p>
-                    <input type="text" id="gematria-input" class="glass-input w-full text-center font-terminal text-2xl mb-30 p-20" placeholder="Enter Entity Name">
-                    <button id="btn-gematria-solve" class="btn-primary w-full mb-40 p-20 text-lg touch-target">REDUCE TO CORE INDEX</button>
+                    <input type="text" id="gematria-input" class="glass-input w-full text-center font-terminal text-xl mb-20" placeholder="Enter Entity Name">
+                    <button id="btn-gematria-solve" class="btn-primary w-full mb-30">Reduce to Core Index</button>
                     
                     <div id="gematria-result" class="hidden text-center">
-                        <div class="flex-center mb-20">
-                            <span class="text-7xl font-terminal text-purple font-bold pulse-glow" id="gematria-number">0</span>
+                        <div class="flex-center mb-15">
+                            <span class="text-5xl font-terminal text-purple" id="gematria-number">0</span>
                         </div>
-                        <p id="gematria-desc" class="text-primary font-terminal text-lg bg-void-dark p-30 border-glass border-radius-12 line-height-1-6"></p>
+                        <p id="gematria-desc" class="text-muted font-terminal text-sm bg-void-dark p-15 border-glass"></p>
                     </div>
                 </div>
             </div>
 
             <div id="module-aura" class="sub-module-view hidden text-center">
                 <div class="glass-panel max-w-600 mx-auto relative overflow-hidden">
-                    <p class="text-muted font-terminal text-sm mb-20">Initialize camera for environmental frequency sampling.</p>
-                    <div class="video-wrapper border-glass bg-black relative mb-30 border-radius-12 overflow-hidden aspect-ratio-4-3">
+                    <div class="video-wrapper border-glass bg-black relative mb-20" style="aspect-ratio: 4/3;">
                         <video id="aura-video" class="w-full h-full object-cover hidden" autoplay playsinline></video>
-                        <div id="aura-overlay" class="absolute-fill pointer-events-none aura-shift-anim"></div>
+                        <div id="aura-overlay" class="absolute-fill pointer-events-none" style="mix-blend-mode: difference; background: rgba(0,255,102,0.1);"></div>
                         <canvas id="aura-canvas-hidden" class="hidden"></canvas>
                     </div>
                     
-                    <div class="flex-col gap-20">
-                        <button id="btn-start-aura" class="btn-secondary w-full p-20 text-lg touch-target">INITIALIZE WEBRTC</button>
-                        <div id="aura-hex-output" class="text-4xl font-terminal font-bold py-10">#000000</div>
-                        <button id="btn-capture-aura" class="btn-primary w-full p-20 text-lg disabled touch-target">CAPTURE HEX FREQUENCY</button>
+                    <div class="flex-between align-center">
+                        <button id="btn-start-aura" class="btn-secondary">Initialize WebRTC</button>
+                        <div id="aura-hex-output" class="text-2xl font-terminal font-bold px-20">#000000</div>
+                        <button id="btn-capture-aura" class="btn-primary disabled">Capture Hex</button>
                     </div>
                 </div>
             </div>
 
             <div id="module-sync" class="sub-module-view hidden text-center">
-                <div class="glass-panel max-w-600 mx-auto">
-                    <div class="time-display border-glass p-40 mb-40 bg-void-dark border-radius-12">
-                        <span id="sync-current-time" class="text-6xl font-terminal text-muted">00:00:00</span>
+                <div class="glass-panel max-w-500 mx-auto">
+                    <div class="time-display border-glass p-30 mb-30 bg-void-dark">
+                        <span id="sync-current-time" class="text-5xl font-terminal text-muted">00:00:00</span>
                     </div>
-                    <p class="text-lg text-muted font-terminal mb-40 line-height-1-6">The cryptographic gate remains sealed. It opens only during strict numerical alignments (e.g., 11:11, 22:22).</p>
-                    <button id="btn-sync-breach" class="btn-secondary w-full p-30 text-2xl disabled touch-target transition-all">GATE LOCKED</button>
+                    <p class="text-sm text-muted font-terminal mb-30">The cryptographic gate only opens during strict numerical alignments (e.g., 11:11, 22:22).</p>
+                    <button id="btn-sync-breach" class="btn-secondary w-full p-20 text-lg disabled">GATE LOCKED</button>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <script src="oracle.js" defer></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#030305">
+    <meta name="description" content="Oracle Protocol - Deterministic Scrying Engine">
+    <title>Oracle | HOX Hub</title>
+    <link rel="stylesheet" href="oracle.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="oracle-body">
+
+    <div id="global-toast-container" class="toast-container" aria-live="polite"></div>
+
+    <section id="layer-boot" class="oracle-layer active" data-layer-id="boot">
+        <canvas id="sacred-geometry-canvas" aria-label="Sacred Geometry Boot Sequence"></canvas>
+        <div class="boot-ui-wrapper text-center">
+            <h1 class="oracle-title-text pulse-glow">THE ORACLE</h1>
+            <p class="matrix-subtext">Deterministic paths loading...</p>
+            <div class="boot-action-group mt-40">
+                <button id="btn-enter-oracle" class="btn-primary massive-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                    BREACH THE VEIL
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="layer-auth" class="oracle-layer hidden" data-layer-id="auth">
+        <div class="glass-panel text-center auth-panel mx-auto max-w-500">
+            <div class="auth-icon-wrapper">
+                <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </div>
+            <h2 class="mystic-title text-gold">Align Frequency</h2>
+            <p class="text-muted mb-20">The Oracle requires a bound identity to generate accurate deterministic vectors.</p>
+            
+            <div class="auth-form-container">
+                <form id="auth-form" class="auth-form">
+                    <div class="input-group">
+                        <input type="email" id="auth-email" class="glass-input full-width" placeholder="Email / Frequency ID" required autocomplete="email">
+                        <span class="input-focus-border"></span>
+                    </div>
+                    <div class="input-group mt-15">
+                        <input type="password" id="auth-password" class="glass-input full-width" placeholder="Cipher Key" required autocomplete="current-password">
+                        <span class="input-focus-border"></span>
+                    </div>
+                    
+                    <div id="god-mode-indicator" class="hidden mt-15 border-gold p-10 bg-void-dark">
+                        <p class="text-gold font-terminal text-sm">>> Root Access Detected: rmsm369@gmail.com</p>
+                        <p class="text-gold font-terminal text-sm">>> Infinite Entropy Credits Granted.</p>
+                        <p class="text-gold font-terminal text-sm">>> All Mathematical Limits Disengaged.</p>
+                    </div>
+
+                    <button type="submit" id="btn-login" class="btn-primary auth-btn full-width mt-20">Synchronize</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section id="layer-dashboard" class="oracle-layer hidden" data-layer-id="dashboard">
+        <div class="dashboard-container">
+            <header class="dashboard-header flex-between align-center">
+                <div class="header-titles">
+                    <h2 class="mystic-title text-gold m-0">Oracle Protocol</h2>
+                    <p class="text-muted font-terminal text-sm">State: <span id="user-sync-status" class="text-gold">Bound</span> | Balance: <span id="entropy-balance" class="text-cyan">0</span> EC</p>
+                </div>
+                <button id="btn-return-hub" class="btn-icon-text">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Exit to Hub
+                </button>
+            </header>
+
+            <div class="oracle-grid">
+                <div class="oracle-card" data-target="module-astral" role="button" tabindex="0">
+                    <div class="card-bg-glow purple-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-purple)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                    </div>
+                    <h3 class="mt-15">I. Astral Sync</h3>
+                    <p class="mt-5">Database-driven daily alignments.</p>
+                </div>
+                
+                <div class="oracle-card" data-target="module-familiar" role="button" tabindex="0">
+                    <div class="card-bg-glow cyan-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <h3 class="mt-15">II. The Familiar</h3>
+                    <p class="mt-5">Emulator nexus and anime lore extraction.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-panopticon" role="button" tabindex="0">
+                    <div class="card-bg-glow matrix-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-matrix)" stroke-width="1.5" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </div>
+                    <h3 class="mt-15">III. The Panopticon</h3>
+                    <p class="mt-5">Live tectonic, aviation, and border telemetry.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-chronos" role="button" tabindex="0">
+                    <div class="card-bg-glow blue-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h3 class="mt-15">IV. Chronos</h3>
+                    <p class="mt-5">Biological sine-wave plotting engine.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-ramanujan" role="button" tabindex="0">
+                    <div class="card-bg-glow gold-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-gold)" stroke-width="1.5" fill="none"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <h3 class="mt-15 text-gold">V. Ramanujan's Gamble</h3>
+                    <p class="mt-5">Exponential compounding via Mock Theta variants.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-dirac" role="button" tabindex="0">
+                    <div class="card-bg-glow orange-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VI. Dirac Entanglement</h3>
+                    <p class="mt-5">Deterministic quantum probability routing.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-halflife" role="button" tabindex="0">
+                    <div class="card-bg-glow danger-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--accent-danger)" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VII. Half-Life</h3>
+                    <p class="mt-5">Radioactive thought decay simulation.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-gematria" role="button" tabindex="0">
+                    <div class="card-bg-glow purple-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                    </div>
+                    <h3 class="mt-15">VIII. Gematria Cipher</h3>
+                    <p class="mt-5">Mathematical alphanumeric reduction.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-aura" role="button" tabindex="0">
+                    <div class="card-bg-glow cyan-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <h3 class="mt-15">IX. Aura Scry</h3>
+                    <p class="mt-5">WebGL camera pixel frequency scanning.</p>
+                </div>
+
+                <div class="oracle-card" data-target="module-sync" role="button" tabindex="0">
+                    <div class="card-bg-glow white-glow"></div>
+                    <div class="card-icon mt-10">
+                        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h3 class="mt-15">X. Synchronicity</h3>
+                    <p class="mt-5">Time-locked alignment vault.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="layer-modules" class="oracle-layer hidden" data-layer-id="modules">
+        <div class="module-container-wrapper max-w-1000 mx-auto">
+            
+            <header class="sub-module-header flex-between align-center mb-30 border-bottom-glass pb-15">
+                <button class="btn-icon-text btn-close-module text-gold font-terminal">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" class="mr-5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Terminate Process
+                </button>
+                <h2 id="active-module-title" class="font-terminal text-gold m-0 uppercase letter-spacing-2">Loading...</h2>
+            </header>
+
+            <div id="module-astral" class="sub-module-view hidden">
+                <div class="glass-panel text-center">
+                    <div class="zodiac-wheel mb-30" id="zodiac-wheel-container">
+                        </div>
+                    <div id="zodiac-output" class="hidden border-glass p-20 bg-void-dark text-left">
+                        <h3 id="zodiac-sign-title" class="text-purple font-terminal text-xl mb-10">SIGN</h3>
+                        <div class="flex-between border-bottom-glass pb-10 mb-10"><span class="text-muted">VIBE (Energy)</span><span id="zodiac-vibe" class="text-cyan font-bold"></span></div>
+                        <div class="flex-between border-bottom-glass pb-10 mb-10"><span class="text-muted">STATIC (Friction)</span><span id="zodiac-static" class="text-danger font-bold"></span></div>
+                        <div class="flex-between"><span class="text-muted">AXIS (Direction)</span><span id="zodiac-axis" class="text-gold font-bold"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-familiar" class="sub-module-view hidden">
+                <div class="familiar-tabs flex-row gap-15 mb-20 border-bottom-glass pb-15">
+                    <button class="btn-text font-terminal text-cyan active familiar-tab" data-target="fam-console">Console</button>
+                    <button class="btn-text font-terminal text-muted familiar-tab" data-target="fam-portal">Portal</button>
+                    <button class="btn-text font-terminal text-muted familiar-tab" data-target="fam-manifest">Manifest</button>
+                </div>
+                
+                <div id="fam-console" class="fam-view">
+                    <div class="emulator-container border-glass bg-black p-10 mx-auto" style="max-width: 480px; aspect-ratio: 3/2;">
+                        <canvas id="gba-canvas" class="w-full h-full bg-void-dark"></canvas>
+                        <div class="text-center mt-10">
+                            <button id="btn-load-rom" class="btn-secondary text-sm">Load Local ROM File</button>
+                            <input type="file" id="rom-input" class="hidden" accept=".gba,.gbc,.gb">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="fam-portal" class="fam-view hidden text-center">
+                    <input type="text" id="anime-search-input" class="glass-input max-w-500 mx-auto mb-15" placeholder="Entity ID / Name (e.g., Gengar, Doraemon)">
+                    <button id="btn-scry-entity" class="btn-primary max-w-300 mx-auto mb-30">Extract Lore</button>
+                    <div id="anime-data-output" class="text-left max-w-600 mx-auto"></div>
+                </div>
+
+                <div id="fam-manifest" class="fam-view hidden text-center">
+                    <div class="card-draw-container bg-void-dark border-glass h-400 w-300 mx-auto mb-20 flex-center relative overflow-hidden">
+                        <img id="drawn-card-img" src="" class="hidden w-full h-full object-cover z-10" alt="Drawn Card">
+                        <div class="glitch-overlay absolute-fill bg-glass z-20 flex-center pointer-events-none hidden">
+                            <span class="text-cyan font-terminal">MANIFESTING...</span>
+                        </div>
+                    </div>
+                    <button id="btn-draw-card" class="btn-primary">Draw Daily Artifact</button>
+                    <button id="btn-share-card" class="btn-secondary hidden mt-15">Share Frequency</button>
+                </div>
+            </div>
+
+            <div id="module-panopticon" class="sub-module-view hidden">
+                <div class="panopticon-grid grid-2-col gap-20">
+                    <div class="glass-panel text-center">
+                        <h4 class="text-matrix font-terminal mb-15">Vector Drift</h4>
+                        <p class="text-sm text-muted mb-15">Local Aviation Telemetry</p>
+                        <button id="btn-ping-sky" class="btn-secondary w-full">Ping OpenSky Grid</button>
+                        <div id="sky-output" class="mt-15 font-terminal text-sm text-left"></div>
+                    </div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-danger font-terminal mb-15">Seismic Pulse</h4>
+                        <p class="text-sm text-muted mb-15">Global Tectonic Frictions</p>
+                        <button id="btn-ping-earth" class="btn-secondary w-full">Ping USGS Grid</button>
+                        <div id="earth-output" class="mt-15 font-terminal text-sm text-left"></div>
+                    </div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-cyan font-terminal mb-15">Ice Decay</h4>
+                        <p class="text-sm text-muted mb-15">Polar Mass Trajectory</p>
+                        <button id="btn-ping-ice" class="btn-secondary w-full">Ping NSIDC Grid</button>
+                        <div id="ice-output" class="mt-15 font-terminal text-sm text-left"></div>
+                    </div>
+                    <div class="glass-panel text-center">
+                        <h4 class="text-gold font-terminal mb-15">Border Scry</h4>
+                        <p class="text-sm text-muted mb-15">Geopolitical Decryption</p>
+                        <button id="btn-ping-border" class="btn-secondary w-full">Extract Random Nation</button>
+                        <div id="border-output" class="mt-15 font-terminal text-sm text-left"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-chronos" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-800 mx-auto">
+                    <input type="date" id="chronos-dob" class="glass-input max-w-300 mx-auto mb-20 text-center font-terminal">
+                    <button id="btn-plot-chronos" class="btn-primary mb-30">Map Biological Wave</button>
+                    
+                    <div class="canvas-wrapper bg-void-dark border-glass p-10 mb-20 relative">
+                        <canvas id="chronos-canvas" width="800" height="300" class="w-full"></canvas>
+                        <div class="absolute top-0 right-0 p-10 text-right text-xs font-terminal">
+                            <div class="text-danger">P: 23d</div>
+                            <div class="text-cyan">E: 28d</div>
+                            <div class="text-gold">I: 33d</div>
+                        </div>
+                    </div>
+                    <p id="chronos-warning" class="text-danger font-terminal text-sm hidden">CRITICAL INTERSECTION DETECTED.</p>
+                </div>
+            </div>
+
+            <div id="module-ramanujan" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-600 mx-auto">
+                    <h3 class="text-gold font-terminal text-2xl mb-10">f(q) Expansion</h3>
+                    <p class="text-muted text-sm mb-30">Stake your Entropy Credits. Survival of the Mock Theta sequence dictates exponential compounding. Collapse equals total void donation.</p>
+                    
+                    <div class="w-full bg-void border-glass p-20 mb-30 text-left">
+                        <div class="text-cyan font-terminal text-sm mb-5">Current Stake: <span id="ramanujan-stake">0</span> EC</div>
+                        <div class="text-gold font-terminal text-sm">Sequence Depth: <span id="ramanujan-depth">0</span> iterations</div>
+                    </div>
+
+                    <div class="flex-row gap-15">
+                        <button id="btn-ram-stake" class="btn-primary flex-1">Initiate Sequence</button>
+                        <button id="btn-ram-pull" class="btn-secondary flex-1 disabled">Extract Credits</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-dirac" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-600 mx-auto">
+                    <p class="text-muted text-sm font-terminal mb-30">Input two concepts to calculate deterministic quantum entanglement probability.</p>
+                    <div class="flex-row gap-15 mb-20">
+                        <input type="text" id="dirac-val-a" class="glass-input flex-1 text-center font-terminal" placeholder="Variable Psi">
+                        <input type="text" id="dirac-val-b" class="glass-input flex-1 text-center font-terminal" placeholder="Variable Phi">
+                    </div>
+                    <button id="btn-dirac-calc" class="btn-primary w-full mb-30">Calculate (iγ^μ∂_μ - m)ψ = 0</button>
+                    
+                    <div id="dirac-result" class="hidden text-center">
+                        <span class="text-4xl font-terminal text-cyan" id="dirac-prob">00.00%</span>
+                        <p class="text-muted text-sm mt-10">Entanglement Probability</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-halflife" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-600 mx-auto">
+                    <textarea id="halflife-input" class="glass-input w-full min-h-150 font-terminal text-lg mb-20" placeholder="Inject thought for radioactive decay..."></textarea>
+                    <button id="btn-trigger-decay" class="btn-danger w-full mb-30">Trigger Isotope Decay</button>
+                    
+                    <div id="decay-output-zone" class="bg-void-dark border-danger p-30 text-left min-h-150 font-terminal text-primary hidden"></div>
+                </div>
+            </div>
+
+            <div id="module-gematria" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-600 mx-auto">
+                    <input type="text" id="gematria-input" class="glass-input w-full text-center font-terminal text-xl mb-20" placeholder="Enter Entity Name">
+                    <button id="btn-gematria-solve" class="btn-primary w-full mb-30">Reduce to Core Index</button>
+                    
+                    <div id="gematria-result" class="hidden text-center">
+                        <div class="flex-center mb-15">
+                            <span class="text-5xl font-terminal text-purple" id="gematria-number">0</span>
+                        </div>
+                        <p id="gematria-desc" class="text-muted font-terminal text-sm bg-void-dark p-15 border-glass"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-aura" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-600 mx-auto relative overflow-hidden">
+                    <div class="video-wrapper border-glass bg-black relative mb-20" style="aspect-ratio: 4/3;">
+                        <video id="aura-video" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+                        <div id="aura-overlay" class="absolute-fill pointer-events-none" style="mix-blend-mode: difference; background: rgba(0,255,102,0.1);"></div>
+                        <canvas id="aura-canvas-hidden" class="hidden"></canvas>
+                    </div>
+                    
+                    <div class="flex-between align-center">
+                        <button id="btn-start-aura" class="btn-secondary">Initialize WebRTC</button>
+                        <div id="aura-hex-output" class="text-2xl font-terminal font-bold px-20">#000000</div>
+                        <button id="btn-capture-aura" class="btn-primary disabled">Capture Hex</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-sync" class="sub-module-view hidden text-center">
+                <div class="glass-panel max-w-500 mx-auto">
+                    <div class="time-display border-glass p-30 mb-30 bg-void-dark">
+                        <span id="sync-current-time" class="text-5xl font-terminal text-muted">00:00:00</span>
+                    </div>
+                    <p class="text-sm text-muted font-terminal mb-30">The cryptographic gate only opens during strict numerical alignments (e.g., 11:11, 22:22).</p>
+                    <button id="btn-sync-breach" class="btn-secondary w-full p-20 text-lg disabled">GATE LOCKED</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
 </body>
 </html>
