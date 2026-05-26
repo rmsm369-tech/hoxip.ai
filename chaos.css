@@ -1,0 +1,764 @@
+/* ==========================================================================
+   CHAOS PROTOCOL: GLOBAL STYLESHEET
+   AUTHOR: NYX TESLA (SARANSH)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS VARIABLES & TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+    /* Color Palette - The Void */
+    --bg-void: #050507;
+    --bg-void-dark: #020203;
+    --bg-void-trans: rgba(5, 5, 7, 0.85);
+    
+    /* Color Palette - Accents */
+    --accent-matrix: #00ff66;
+    --accent-matrix-glow: rgba(0, 255, 102, 0.4);
+    --accent-cyan: #00e5ff;
+    --accent-cyan-glow: rgba(0, 229, 255, 0.4);
+    --accent-danger: #ff0055;
+    --accent-danger-glow: rgba(255, 0, 85, 0.4);
+    --accent-purple: #b026ff;
+    --accent-purple-glow: rgba(176, 38, 255, 0.4);
+    --accent-orange: #ff6600;
+    --accent-gold: #ffd700;
+    --accent-white: #ffffff;
+    
+    /* Glassmorphism */
+    --glass-bg: rgba(15, 15, 20, 0.4);
+    --glass-bg-hover: rgba(25, 25, 35, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-highlight: rgba(255, 255, 255, 0.25);
+    --glass-blur: 16px;
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    
+    /* Typography */
+    --text-primary: #f0f0f0;
+    --text-muted: #888899;
+    --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-terminal: 'Courier New', Courier, SFMono-Regular, Consolas, monospace;
+    
+    /* Z-Index Hierarchy */
+    --z-background: -1;
+    --z-base: 1;
+    --z-layer: 10;
+    --z-modal: 50;
+    --z-toast: 100;
+    --z-glitch: 999;
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-med: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & BASE
+   -------------------------------------------------------------------------- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    overflow: hidden; /* Strict layer management handles scrolling */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-void-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   3. UTILITY CLASSES (The DOM Engine)
+   -------------------------------------------------------------------------- */
+.hidden { opacity: 0; pointer-events: none; transform: scale(0.98); z-index: -1 !important; position: absolute; }
+.active { opacity: 1; pointer-events: all; transform: scale(1); z-index: var(--z-layer); position: relative; }
+
+/* Layout & Flex */
+.flex-row { display: flex; flex-direction: row; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-1 { flex: 1; }
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+.full-width { width: 100%; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.max-w-600 { max-width: 600px; }
+.max-w-800 { max-width: 800px; }
+.max-w-1000 { max-width: 1000px; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.min-h-150 { min-height: 150px; }
+.min-h-300 { min-height: 300px; }
+
+/* Margins & Padding */
+.m-0 { margin: 0; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+.mt-30 { margin-top: 30px; }
+.mt-40 { margin-top: 40px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-30 { margin-bottom: 30px; }
+.mb-40 { margin-bottom: 40px; }
+.mr-5 { margin-right: 5px; }
+.mr-10 { margin-right: 10px; }
+.p-20 { padding: 20px; }
+.p-30 { padding: 30px; }
+.p-50 { padding: 50px; }
+.py-20 { padding-top: 20px; padding-bottom: 20px; }
+.py-50 { padding-top: 50px; padding-bottom: 50px; }
+
+/* Typography Helpers */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.font-terminal { font-family: var(--font-terminal); }
+.font-bold { font-weight: bold; }
+.uppercase { text-transform: uppercase; }
+.letter-spacing-2 { letter-spacing: 2px; }
+.line-height-1-5 { line-height: 1.5; }
+.line-height-1-6 { line-height: 1.6; }
+
+/* Color Helpers */
+.text-primary { color: var(--text-primary); }
+.text-muted { color: var(--text-muted); }
+.text-matrix { color: var(--accent-matrix); }
+.text-cyan { color: var(--accent-cyan); }
+.text-danger { color: var(--accent-danger); }
+.text-purple { color: var(--accent-purple); }
+.bg-void { background-color: var(--bg-void); }
+.bg-void-dark { background-color: var(--bg-void-dark); }
+.bg-void-trans { background-color: var(--bg-void-trans); }
+.bg-glass { background-color: var(--glass-bg); }
+
+/* Borders & Visuals */
+.border-glass { border: 1px solid var(--glass-border); }
+.border-cyan { border: 1px solid var(--accent-cyan); }
+.border-matrix { border: 1px solid var(--accent-matrix); }
+.border-muted { border: 1px solid var(--text-muted); }
+.border-bottom-glass { border-bottom: 1px solid var(--glass-border); }
+.border-radius-8 { border-radius: 8px; }
+.border-radius-12 { border-radius: 12px; }
+.circle { border-radius: 50%; }
+.object-cover { object-fit: cover; }
+.cursor-pointer { cursor: pointer; }
+.user-select-none { user-select: none; }
+.relative { position: relative; }
+.absolute-fill { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.absolute-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.overflow-hidden { overflow: hidden; }
+
+/* --------------------------------------------------------------------------
+   4. STRUCTURAL LAYERS
+   -------------------------------------------------------------------------- */
+.chaos-layer {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 30px;
+    transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+#layer-auth, #layer-glitch {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   5. GLASSMORPHISM COMPONENTS
+   -------------------------------------------------------------------------- */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.mystic-title {
+    font-family: var(--font-terminal);
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 2rem;
+    text-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
+/* Forms & Inputs */
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    padding: 16px;
+    border-radius: 8px;
+    font-family: var(--font-ui);
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background: rgba(0, 229, 255, 0.05);
+}
+
+.glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Base Buttons */
+button {
+    font-family: var(--font-terminal);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 24px;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button:disabled, .disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-primary {
+    background: var(--accent-cyan);
+    color: #000;
+}
+.btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 25px var(--accent-cyan-glow);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+}
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--text-primary);
+}
+.btn-secondary.active {
+    background: var(--accent-cyan-glow);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
+}
+.btn-danger:hover:not(:disabled) {
+    background: rgba(255, 0, 85, 0.15);
+    box-shadow: 0 0 20px var(--accent-danger-glow);
+}
+
+.btn-icon-text {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 12px;
+}
+.btn-icon-text:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.05);
+}
+
+.massive-btn {
+    font-size: 1.2rem;
+    padding: 20px 40px;
+    letter-spacing: 3px;
+    border-width: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   6. PHASE 1: GLITCH ENTRY
+   -------------------------------------------------------------------------- */
+#quantum-matrix-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.8;
+}
+
+.glitch-ui-wrapper {
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 0, 85, 0.3);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+}
+
+.system-error-text {
+    font-family: var(--font-terminal);
+    color: var(--accent-danger);
+    font-size: 3rem;
+    letter-spacing: 5px;
+    position: relative;
+}
+
+/* Pure CSS Glitch Effect */
+.glitch {
+    position: relative;
+}
+.glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+.glitch::before {
+    left: 3px;
+    text-shadow: -2px 0 var(--accent-cyan);
+    animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+.glitch::after {
+    left: -3px;
+    text-shadow: 2px 0 var(--accent-matrix);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+.matrix-subtext {
+    font-family: var(--font-terminal);
+    color: var(--accent-matrix);
+    margin-top: 10px;
+    animation: pulse 2s infinite;
+}
+
+/* --------------------------------------------------------------------------
+   7. PHASE 2: AUTH & LIMIT GATEWAY
+   -------------------------------------------------------------------------- */
+.auth-panel {
+    max-width: 500px;
+    padding: 50px 40px;
+}
+.auth-icon-wrapper {
+    margin-bottom: 20px;
+    animation: float 4s ease-in-out infinite;
+}
+.divider {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    margin: 30px 0;
+    font-family: var(--font-terminal);
+    font-size: 0.8rem;
+}
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--glass-border);
+}
+.divider span { padding: 0 15px; }
+
+/* God Mode Styles */
+#god-mode-indicator {
+    background: rgba(0, 255, 102, 0.05);
+    border-left: 3px solid var(--accent-matrix);
+    padding: 10px;
+    text-align: left;
+}
+
+.limit-box {
+    background: rgba(255, 0, 85, 0.05);
+    border: 1px solid rgba(255, 0, 85, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   8. PHASE 3: DASHBOARD GRID (The 10 Blocks)
+   -------------------------------------------------------------------------- */
+.dashboard-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+.dashboard-header {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+.chaos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.chaos-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 30px 25px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-med);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+/* Dynamic Hover Glows for Cards */
+.card-bg-glow {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    pointer-events: none;
+    z-index: 0;
+}
+.cyan-glow { background: radial-gradient(circle at top right, var(--accent-cyan-glow), transparent 60%); }
+.matrix-glow { background: radial-gradient(circle at top right, var(--accent-matrix-glow), transparent 60%); }
+.danger-glow { background: radial-gradient(circle at top right, var(--accent-danger-glow), transparent 60%); }
+.purple-glow { background: radial-gradient(circle at top right, var(--accent-purple-glow), transparent 60%); }
+.white-glow { background: radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 60%); }
+.blue-glow { background: radial-gradient(circle at top right, rgba(0, 100, 255, 0.3), transparent 60%); }
+.orange-glow { background: radial-gradient(circle at top right, rgba(255, 102, 0, 0.3), transparent 60%); }
+.gold-glow { background: radial-gradient(circle at top right, rgba(255, 215, 0, 0.2), transparent 60%); }
+
+.chaos-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--glass-border-highlight);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+}
+.chaos-card:hover .card-bg-glow { opacity: 1; }
+
+.chaos-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.chaos-card h3 {
+    font-family: var(--font-terminal);
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 3;
+}
+.ai-badge {
+    background: rgba(0, 229, 255, 0.1);
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+}
+
+.danger-card h3 { color: var(--accent-danger); }
+
+/* --------------------------------------------------------------------------
+   9. PHASE 4: SUB-MODULE CONTAINERS
+   -------------------------------------------------------------------------- */
+.module-container-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.sub-module-header {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 20px;
+}
+
+.module-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--accent-matrix);
+}
+
+/* Module I: Assessment */
+.progress-bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--accent-cyan);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px var(--accent-cyan);
+}
+
+.qna-flex-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* AI Terminals */
+.split-terminal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+@media (max-width: 768px) {
+    .split-terminal-grid { grid-template-columns: 1fr; }
+}
+
+.terminal-box {
+    background: var(--bg-void-dark);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+.terminal-box-header {
+    background: rgba(255,255,255,0.03);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.terminal-box-content {
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+    text-align: left;
+}
+.gemini-box { border-color: rgba(0, 229, 255, 0.3); }
+.mistral-box { border-color: rgba(0, 255, 102, 0.3); }
+
+/* Module II: The Forge */
+.canvas-wrapper {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--bg-void-dark);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    position: relative;
+    overflow: hidden;
+}
+.skeleton-loader {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background: linear-gradient(90deg, var(--bg-void-dark) 25%, #1a1a24 50%, var(--bg-void-dark) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    font-family: var(--font-terminal);
+    color: var(--text-muted);
+}
+.forge-output-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Module III: Entropy */
+.api-data-card {
+    transition: transform 0.3s ease;
+}
+.api-data-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--glass-border-highlight);
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-cyan);
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* Module IV: Zugzwang */
+.zugzwang-container { padding: 40px 0; }
+.zug-btn {
+    transition: all 0.1s; /* Ultra fast for instinct */
+}
+.zug-btn:active:not(.disabled) { transform: scale(0.95); }
+
+/* Module V: Absolute Zero */
+.gyro-visualizer { width: 200px; height: 200px; }
+.outer-ring { width: 100%; height: 100%; position: absolute; top:0; left:0; border-width: 2px; border-style: dashed; animation: spin 20s linear infinite; }
+.inner-ring { width: 40px; height: 40px; box-shadow: 0 0 20px var(--accent-cyan); }
+.transition-transform { transition: transform 0.1s ease-out; }
+
+/* Module VI: Frequency (Custom Range Slider) */
+.custom-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.1);
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+}
+.custom-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--accent-cyan-glow);
+    transition: transform 0.1s;
+}
+.custom-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* Module VII: Collider */
+.collider-node {
+    padding: 40px 20px;
+    border: 1px dashed var(--glass-border);
+    transition: all 0.3s ease;
+}
+.hover-glow-cyan:hover { border-color: var(--accent-cyan); box-shadow: 0 0 20px var(--accent-cyan-glow); }
+.hover-glow-purple:hover { border-color: var(--accent-purple); box-shadow: 0 0 20px var(--accent-purple-glow); }
+.hover-glow-matrix:hover { border-color: var(--accent-matrix); box-shadow: 0 0 20px var(--accent-matrix-glow); }
+
+/* Module IX: Vault */
+.vault-tab {
+    padding-bottom: 10px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+}
+.vault-tab.active {
+    border-bottom-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+.vault-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   10. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes glitch-anim-1 {
+    0% { clip: rect(20px, 9999px, 85px, 0); transform: translate(0); }
+    20% { clip: rect(65px, 9999px, 20px, 0); transform: translate(-2px, 2px); }
+    40% { clip: rect(10px, 9999px, 50px, 0); transform: translate(2px, -2px); }
+    60% { clip: rect(80px, 9999px, 15px, 0); transform: translate(-2px, 0); }
+    80% { clip: rect(30px, 9999px, 75px, 0); transform: translate(2px, 2px); }
+    100% { clip: rect(55px, 9999px, 45px, 0); transform: translate(0); }
+}
+
+@keyframes glitch-anim-2 {
+    0% { clip: rect(45px, 9999px, 15px, 0); transform: translate(0); }
+    20% { clip: rect(80px, 9999px, 35px, 0); transform: translate(2px, -2px); }
+    40% { clip: rect(25px, 9999px, 90px, 0); transform: translate(-2px, 2px); }
+    60% { clip: rect(65px, 9999px, 5px, 0); transform: translate(2px, 0); }
+    80% { clip: rect(15px, 9999px, 65px, 0); transform: translate(-2px, -2px); }
+    100% { clip: rect(95px, 9999px, 25px, 0); transform: translate(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); }
+}
+.pulse-green { animation: pulse-green 2s infinite; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+    100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fade-in-up 0.5s ease forwards; }
+
+/* --------------------------------------------------------------------------
+   11. MEDIA QUERIES
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .chaos-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .chaos-layer { padding: 15px; }
+    .glass-panel { padding: 25px 20px; }
+    .mystic-title { font-size: 1.5rem; letter-spacing: 2px; }
+    .system-error-text { font-size: 2rem; }
+    .zugzwang-split-buttons { flex-direction: column; }
+    .paradox-split { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+    .chaos-grid { grid-template-columns: 1fr; }
+    .btn-primary, .btn-secondary, .btn-danger { padding: 12px 16px; font-size: 0.9rem; }
+}
