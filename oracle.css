@@ -1,0 +1,1227 @@
+/* ==========================================================================
+   ORACLE PROTOCOL: STYLESHEET
+   ARCHITECT: NYX TESLA
+   AESTHETIC: SCIENTIFIC MYSTIC / DETERMINISTIC GLASSMORPHISM
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ROOT VARIABLES & TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+    /* Base Environment */
+    --bg-void: #030305;
+    --bg-void-dark: #010102;
+    --bg-void-trans: rgba(3, 3, 5, 0.85);
+    
+    /* Frequency Accents */
+    --accent-matrix: #00ff66;
+    --accent-matrix-glow: rgba(0, 255, 102, 0.4);
+    --accent-cyan: #00e5ff;
+    --accent-cyan-glow: rgba(0, 229, 255, 0.4);
+    --accent-danger: #ff0055;
+    --accent-danger-glow: rgba(255, 0, 85, 0.4);
+    --accent-purple: #b026ff;
+    --accent-purple-glow: rgba(176, 38, 255, 0.4);
+    --accent-orange: #ff6600;
+    --accent-orange-glow: rgba(255, 102, 0, 0.4);
+    --accent-gold: #ffd700;
+    --accent-gold-glow: rgba(255, 215, 0, 0.4);
+    --accent-white: #ffffff;
+    
+    /* Glassmorphism Structural Tokens */
+    --glass-bg: rgba(15, 15, 22, 0.35);
+    --glass-bg-hover: rgba(25, 25, 35, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-highlight: rgba(255, 255, 255, 0.2);
+    --glass-blur: 18px;
+    --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+    
+    /* Typography */
+    --text-primary: #e8e8e8;
+    --text-muted: #7a7a8c;
+    --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-terminal: 'Courier New', Courier, SFMono-Regular, Consolas, monospace;
+    
+    /* Z-Index Hierarchy */
+    --z-background: -1;
+    --z-base: 1;
+    --z-layer: 10;
+    --z-modal: 50;
+    --z-toast: 100;
+    
+    /* Fluid Transitions */
+    --transition-fast: 0.15s ease-out;
+    --transition-med: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & NATIVE DEFAULTS
+   -------------------------------------------------------------------------- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    overflow: hidden; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+}
+
+/* Oracle Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-void-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
+/* --------------------------------------------------------------------------
+   3. UTILITY CLASSES (The DOM Injectors)
+   -------------------------------------------------------------------------- */
+.hidden { opacity: 0; pointer-events: none; transform: scale(0.97); z-index: -1 !important; position: absolute; }
+.active { opacity: 1; pointer-events: all; transform: scale(1); z-index: var(--z-layer); position: relative; }
+
+/* Structural Flex */
+.flex-row { display: flex; flex-direction: row; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-1 { flex: 1; }
+
+/* Spacing Engine */
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+.gap-30 { gap: 30px; }
+
+.m-0 { margin: 0; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+.mt-30 { margin-top: 30px; }
+.mt-40 { margin-top: 40px; }
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-30 { margin-bottom: 30px; }
+.mb-40 { margin-bottom: 40px; }
+.mr-5 { margin-right: 5px; }
+.mr-10 { margin-right: 10px; }
+.ml-5 { margin-left: 5px; }
+
+.p-10 { padding: 10px; }
+.p-15 { padding: 15px; }
+.p-20 { padding: 20px; }
+.p-30 { padding: 30px; }
+.px-20 { padding-left: 20px; padding-right: 20px; }
+.py-20 { padding-top: 20px; padding-bottom: 20px; }
+.pb-10 { padding-bottom: 10px; }
+.pb-15 { padding-bottom: 15px; }
+
+/* Sizing Constraints */
+.full-width, .w-full { width: 100%; }
+.h-full { height: 100%; }
+.max-w-300 { max-width: 300px; }
+.max-w-500 { max-width: 500px; }
+.max-w-600 { max-width: 600px; }
+.max-w-800 { max-width: 800px; }
+.max-w-1000 { max-width: 1000px; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.min-h-150 { min-height: 150px; }
+.h-400 { height: 400px; }
+.w-300 { width: 300px; }
+
+/* Typography Constraints */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.font-terminal { font-family: var(--font-terminal); }
+.font-bold { font-weight: bold; }
+.uppercase { text-transform: uppercase; }
+.letter-spacing-2 { letter-spacing: 2px; }
+
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.85rem; }
+.text-lg { font-size: 1.1rem; }
+.text-xl { font-size: 1.3rem; }
+.text-2xl { font-size: 1.6rem; }
+.text-4xl { font-size: 2.5rem; }
+.text-5xl { font-size: 3.5rem; }
+
+/* Aesthetic Color Mapping */
+.text-primary { color: var(--text-primary); }
+.text-muted { color: var(--text-muted); }
+.text-matrix { color: var(--accent-matrix); }
+.text-cyan { color: var(--accent-cyan); }
+.text-danger { color: var(--accent-danger); }
+.text-purple { color: var(--accent-purple); }
+.text-gold { color: var(--accent-gold); }
+.text-orange { color: var(--accent-orange); }
+
+.bg-void { background-color: var(--bg-void); }
+.bg-void-dark { background-color: var(--bg-void-dark); }
+.bg-void-trans { background-color: var(--bg-void-trans); }
+.bg-glass { background-color: var(--glass-bg); }
+.bg-black { background-color: #000; }
+
+/* Borders & Geometric Rules */
+.border-glass { border: 1px solid var(--glass-border); }
+.border-bottom-glass { border-bottom: 1px solid var(--glass-border); }
+.border-cyan { border: 1px solid var(--accent-cyan); }
+.border-matrix { border: 1px solid var(--accent-matrix); }
+.border-gold { border: 1px solid var(--accent-gold); }
+.border-danger { border: 1px solid var(--accent-danger); }
+
+.border-radius-8 { border-radius: 8px; }
+.border-radius-12 { border-radius: 12px; }
+.object-cover { object-fit: cover; }
+.pointer-events-none { pointer-events: none; }
+.overflow-hidden { overflow: hidden; }
+
+.relative { position: relative; }
+.absolute { position: absolute; }
+.absolute-fill { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.absolute-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.top-0 { top: 0; }
+.right-0 { right: 0; }
+
+/* --------------------------------------------------------------------------
+   4. LAYER ROUTING
+   -------------------------------------------------------------------------- */
+.oracle-layer {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 30px;
+    transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+#layer-boot, #layer-auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   5. GLASSMORPHISM & COMPONENTS
+   -------------------------------------------------------------------------- */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    padding: 40px;
+    position: relative;
+}
+
+.mystic-title {
+    font-family: var(--font-terminal);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 2rem;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Inputs */
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    padding: 16px;
+    border-radius: 8px;
+    font-family: var(--font-terminal);
+    transition: all var(--transition-med);
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    background: rgba(255, 215, 0, 0.05);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+}
+
+.glass-input::placeholder { color: rgba(255, 255, 255, 0.25); }
+
+/* Buttons */
+button {
+    font-family: var(--font-terminal);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 24px;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button:disabled, .disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+.btn-primary {
+    background: var(--accent-gold);
+    color: #000;
+}
+.btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 25px var(--accent-gold-glow);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+}
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
+}
+.btn-danger:hover:not(:disabled) {
+    background: rgba(255, 0, 85, 0.15);
+    box-shadow: 0 0 20px var(--accent-danger-glow);
+}
+
+.btn-icon-text {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+.btn-icon-text:hover { color: var(--accent-gold); }
+
+.massive-btn {
+    font-size: 1.2rem;
+    padding: 20px 40px;
+    letter-spacing: 4px;
+    border-width: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   6. PHASE 1: BOOT SEQUENCE & AUTH
+   -------------------------------------------------------------------------- */
+#sacred-geometry-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    opacity: 0.6;
+}
+
+.boot-ui-wrapper {
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 50px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+}
+
+.oracle-title-text {
+    font-family: var(--font-terminal);
+    color: var(--accent-gold);
+    font-size: 3.5rem;
+    letter-spacing: 10px;
+    margin-bottom: 10px;
+}
+
+.auth-panel { max-width: 500px; padding: 50px 40px; }
+.auth-icon-wrapper { margin-bottom: 25px; animation: float 4s ease-in-out infinite; }
+
+/* --------------------------------------------------------------------------
+   7. PHASE 3: ORACLE DASHBOARD GRID
+   -------------------------------------------------------------------------- */
+.dashboard-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+.dashboard-header {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+.oracle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.oracle-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 30px 25px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-med);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+/* Base Hover Glow System */
+.card-bg-glow {
+    position: absolute;
+    top: -50%; right: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity var(--transition-med);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cyan-glow { background: radial-gradient(circle at top right, var(--accent-cyan-glow), transparent 60%); }
+.matrix-glow { background: radial-gradient(circle at top right, var(--accent-matrix-glow), transparent 60%); }
+.danger-glow { background: radial-gradient(circle at top right, var(--accent-danger-glow), transparent 60%); }
+.purple-glow { background: radial-gradient(circle at top right, var(--accent-purple-glow), transparent 60%); }
+.white-glow { background: radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 60%); }
+.blue-glow { background: radial-gradient(circle at top right, rgba(0, 100, 255, 0.3), transparent 60%); }
+.orange-glow { background: radial-gradient(circle at top right, rgba(255, 102, 0, 0.3), transparent 60%); }
+.gold-glow { background: radial-gradient(circle at top right, rgba(255, 215, 0, 0.25), transparent 60%); }
+
+.oracle-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--glass-border-highlight);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+}
+.oracle-card:hover .card-bg-glow { opacity: 1; }
+.oracle-card > * { position: relative; z-index: 2; }
+.oracle-card h3 { font-family: var(--font-terminal); font-size: 1.3rem; color: var(--text-primary); }
+
+/* --------------------------------------------------------------------------
+   8. MODULE SPECIFIC STYLING
+   -------------------------------------------------------------------------- */
+
+/* MODULE I: Astral Sync */
+.zodiac-wheel {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 2px dashed rgba(176, 38, 255, 0.3);
+    animation: slow-spin 60s linear infinite;
+}
+.zodiac-sign-node {
+    position: absolute;
+    width: 40px; height: 40px;
+    background: var(--bg-void-dark);
+    border: 1px solid var(--accent-purple);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-family: var(--font-terminal); font-size: 0.8rem; color: var(--accent-purple);
+    cursor: pointer;
+    transition: all 0.2s;
+    transform-origin: center;
+}
+.zodiac-sign-node:hover {
+    background: var(--accent-purple); color: #000;
+    box-shadow: 0 0 15px var(--accent-purple-glow);
+    transform: scale(1.2);
+}
+
+/* MODULE II: The Familiar (Emulator Nexus) */
+.familiar-tab {
+    padding-bottom: 10px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+}
+.familiar-tab.active {
+    border-bottom-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+.emulator-container {
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 20px rgba(0, 229, 255, 0.2);
+}
+.emulator-container::after {
+    /* CRT Scanline Effect Overlay */
+    content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+}
+
+/* MODULE III: Panopticon (Data Terminal) */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) { .grid-2-col { grid-template-columns: 1fr; } }
+.panopticon-grid .glass-panel { padding: 25px 20px; }
+.panopticon-grid button { padding: 12px; font-size: 0.85rem; }
+
+/* MODULE IV: Chronos */
+#chronos-canvas {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* MODULE VII: Half-Life */
+#decay-output-zone {
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+.isotope-char {
+    display: inline-block;
+    transition: opacity 0.5s ease, transform 0.5s ease, color 0.5s;
+}
+.decayed {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+    color: var(--accent-danger);
+}
+
+/* MODULE VIII: Gematria */
+#gematria-number {
+    text-shadow: 0 0 30px var(--accent-purple-glow);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* MODULE IX: Aura Scry (WebGL Mimicry) */
+.video-wrapper {
+    box-shadow: inset 0 0 50px rgba(0,0,0,1);
+}
+/* The actual video is rendered under a mix-blend difference layer to create extreme auras */
+#aura-overlay {
+    animation: aura-shift 8s infinite alternate;
+}
+
+/* MODULE X: Synchronicity */
+.time-display {
+    border-radius: 12px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+}
+#sync-current-time {
+    letter-spacing: 5px;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+.sync-unlocked {
+    color: var(--accent-white) !important;
+    text-shadow: 0 0 20px rgba(255,255,255,0.8) !important;
+    animation: pulse-glow 1s infinite;
+}
+
+/* Toast System */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); opacity: 1; }
+    50% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.8); opacity: 0.8; }
+}
+.pulse-glow { animation: pulse-glow 3s infinite; }
+
+@keyframes slow-spin {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes aura-shift {
+    0% { background: rgba(0, 255, 102, 0.15); backdrop-filter: hue-rotate(0deg) contrast(1.5); }
+    50% { background: rgba(0, 229, 255, 0.15); backdrop-filter: hue-rotate(90deg) contrast(2); }
+    100% { background: rgba(176, 38, 255, 0.15); backdrop-filter: hue-rotate(180deg) contrast(1.5); }
+}
+
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fade-in-up 0.4s ease forwards; }
+
+/* --------------------------------------------------------------------------
+   10. MEDIA QUERIES & RESPONSIVE GEOMETRY
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .oracle-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .glass-panel { padding: 30px; }
+}
+
+@media (max-width: 768px) {
+    .oracle-layer { padding: 15px; }
+    .oracle-title-text { font-size: 2.5rem; letter-spacing: 5px; }
+    .glass-panel { padding: 25px 15px; }
+    .zodiac-wheel { width: 250px; height: 250px; }
+    .zodiac-sign-node { width: 35px; height: 35px; font-size: 0.7rem; }
+    .h-400 { height: 300px; }
+    .w-300 { width: 220px; }
+}
+
+@media (max-width: 480px) {
+    .oracle-grid { grid-template-columns: 1fr; }
+    .btn-primary, .btn-secondary, .btn-danger { padding: 12px 16px; font-size: 0.85rem; }
+    .text-5xl { font-size: 2.5rem; }
+    .time-display { padding: 15px; }
+}/* ==========================================================================
+   ORACLE PROTOCOL: STYLESHEET
+   ARCHITECT: NYX TESLA
+   AESTHETIC: SCIENTIFIC MYSTIC / DETERMINISTIC GLASSMORPHISM
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ROOT VARIABLES & TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+    /* Base Environment */
+    --bg-void: #030305;
+    --bg-void-dark: #010102;
+    --bg-void-trans: rgba(3, 3, 5, 0.85);
+    
+    /* Frequency Accents */
+    --accent-matrix: #00ff66;
+    --accent-matrix-glow: rgba(0, 255, 102, 0.4);
+    --accent-cyan: #00e5ff;
+    --accent-cyan-glow: rgba(0, 229, 255, 0.4);
+    --accent-danger: #ff0055;
+    --accent-danger-glow: rgba(255, 0, 85, 0.4);
+    --accent-purple: #b026ff;
+    --accent-purple-glow: rgba(176, 38, 255, 0.4);
+    --accent-orange: #ff6600;
+    --accent-orange-glow: rgba(255, 102, 0, 0.4);
+    --accent-gold: #ffd700;
+    --accent-gold-glow: rgba(255, 215, 0, 0.4);
+    --accent-white: #ffffff;
+    
+    /* Glassmorphism Structural Tokens */
+    --glass-bg: rgba(15, 15, 22, 0.35);
+    --glass-bg-hover: rgba(25, 25, 35, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-highlight: rgba(255, 255, 255, 0.2);
+    --glass-blur: 18px;
+    --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+    
+    /* Typography */
+    --text-primary: #e8e8e8;
+    --text-muted: #7a7a8c;
+    --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-terminal: 'Courier New', Courier, SFMono-Regular, Consolas, monospace;
+    
+    /* Z-Index Hierarchy */
+    --z-background: -1;
+    --z-base: 1;
+    --z-layer: 10;
+    --z-modal: 50;
+    --z-toast: 100;
+    
+    /* Fluid Transitions */
+    --transition-fast: 0.15s ease-out;
+    --transition-med: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & NATIVE DEFAULTS
+   -------------------------------------------------------------------------- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    overflow: hidden; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+}
+
+/* Oracle Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-void-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
+/* --------------------------------------------------------------------------
+   3. UTILITY CLASSES (The DOM Injectors)
+   -------------------------------------------------------------------------- */
+.hidden { opacity: 0; pointer-events: none; transform: scale(0.97); z-index: -1 !important; position: absolute; }
+.active { opacity: 1; pointer-events: all; transform: scale(1); z-index: var(--z-layer); position: relative; }
+
+/* Structural Flex */
+.flex-row { display: flex; flex-direction: row; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-1 { flex: 1; }
+
+/* Spacing Engine */
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+.gap-30 { gap: 30px; }
+
+.m-0 { margin: 0; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+.mt-30 { margin-top: 30px; }
+.mt-40 { margin-top: 40px; }
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-30 { margin-bottom: 30px; }
+.mb-40 { margin-bottom: 40px; }
+.mr-5 { margin-right: 5px; }
+.mr-10 { margin-right: 10px; }
+.ml-5 { margin-left: 5px; }
+
+.p-10 { padding: 10px; }
+.p-15 { padding: 15px; }
+.p-20 { padding: 20px; }
+.p-30 { padding: 30px; }
+.px-20 { padding-left: 20px; padding-right: 20px; }
+.py-20 { padding-top: 20px; padding-bottom: 20px; }
+.pb-10 { padding-bottom: 10px; }
+.pb-15 { padding-bottom: 15px; }
+
+/* Sizing Constraints */
+.full-width, .w-full { width: 100%; }
+.h-full { height: 100%; }
+.max-w-300 { max-width: 300px; }
+.max-w-500 { max-width: 500px; }
+.max-w-600 { max-width: 600px; }
+.max-w-800 { max-width: 800px; }
+.max-w-1000 { max-width: 1000px; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.min-h-150 { min-height: 150px; }
+.h-400 { height: 400px; }
+.w-300 { width: 300px; }
+
+/* Typography Constraints */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.font-terminal { font-family: var(--font-terminal); }
+.font-bold { font-weight: bold; }
+.uppercase { text-transform: uppercase; }
+.letter-spacing-2 { letter-spacing: 2px; }
+
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.85rem; }
+.text-lg { font-size: 1.1rem; }
+.text-xl { font-size: 1.3rem; }
+.text-2xl { font-size: 1.6rem; }
+.text-4xl { font-size: 2.5rem; }
+.text-5xl { font-size: 3.5rem; }
+
+/* Aesthetic Color Mapping */
+.text-primary { color: var(--text-primary); }
+.text-muted { color: var(--text-muted); }
+.text-matrix { color: var(--accent-matrix); }
+.text-cyan { color: var(--accent-cyan); }
+.text-danger { color: var(--accent-danger); }
+.text-purple { color: var(--accent-purple); }
+.text-gold { color: var(--accent-gold); }
+.text-orange { color: var(--accent-orange); }
+
+.bg-void { background-color: var(--bg-void); }
+.bg-void-dark { background-color: var(--bg-void-dark); }
+.bg-void-trans { background-color: var(--bg-void-trans); }
+.bg-glass { background-color: var(--glass-bg); }
+.bg-black { background-color: #000; }
+
+/* Borders & Geometric Rules */
+.border-glass { border: 1px solid var(--glass-border); }
+.border-bottom-glass { border-bottom: 1px solid var(--glass-border); }
+.border-cyan { border: 1px solid var(--accent-cyan); }
+.border-matrix { border: 1px solid var(--accent-matrix); }
+.border-gold { border: 1px solid var(--accent-gold); }
+.border-danger { border: 1px solid var(--accent-danger); }
+
+.border-radius-8 { border-radius: 8px; }
+.border-radius-12 { border-radius: 12px; }
+.object-cover { object-fit: cover; }
+.pointer-events-none { pointer-events: none; }
+.overflow-hidden { overflow: hidden; }
+
+.relative { position: relative; }
+.absolute { position: absolute; }
+.absolute-fill { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.absolute-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.top-0 { top: 0; }
+.right-0 { right: 0; }
+
+/* --------------------------------------------------------------------------
+   4. LAYER ROUTING
+   -------------------------------------------------------------------------- */
+.oracle-layer {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 30px;
+    transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+#layer-boot, #layer-auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   5. GLASSMORPHISM & COMPONENTS
+   -------------------------------------------------------------------------- */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    padding: 40px;
+    position: relative;
+}
+
+.mystic-title {
+    font-family: var(--font-terminal);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 2rem;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Inputs */
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    padding: 16px;
+    border-radius: 8px;
+    font-family: var(--font-terminal);
+    transition: all var(--transition-med);
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    background: rgba(255, 215, 0, 0.05);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+}
+
+.glass-input::placeholder { color: rgba(255, 255, 255, 0.25); }
+
+/* Buttons */
+button {
+    font-family: var(--font-terminal);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 24px;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button:disabled, .disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+.btn-primary {
+    background: var(--accent-gold);
+    color: #000;
+}
+.btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 25px var(--accent-gold-glow);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+}
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
+}
+.btn-danger:hover:not(:disabled) {
+    background: rgba(255, 0, 85, 0.15);
+    box-shadow: 0 0 20px var(--accent-danger-glow);
+}
+
+.btn-icon-text {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+.btn-icon-text:hover { color: var(--accent-gold); }
+
+.massive-btn {
+    font-size: 1.2rem;
+    padding: 20px 40px;
+    letter-spacing: 4px;
+    border-width: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   6. PHASE 1: BOOT SEQUENCE & AUTH
+   -------------------------------------------------------------------------- */
+#sacred-geometry-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    opacity: 0.6;
+}
+
+.boot-ui-wrapper {
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 50px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+}
+
+.oracle-title-text {
+    font-family: var(--font-terminal);
+    color: var(--accent-gold);
+    font-size: 3.5rem;
+    letter-spacing: 10px;
+    margin-bottom: 10px;
+}
+
+.auth-panel { max-width: 500px; padding: 50px 40px; }
+.auth-icon-wrapper { margin-bottom: 25px; animation: float 4s ease-in-out infinite; }
+
+/* --------------------------------------------------------------------------
+   7. PHASE 3: ORACLE DASHBOARD GRID
+   -------------------------------------------------------------------------- */
+.dashboard-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+.dashboard-header {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+.oracle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.oracle-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 30px 25px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-med);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+/* Base Hover Glow System */
+.card-bg-glow {
+    position: absolute;
+    top: -50%; right: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity var(--transition-med);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cyan-glow { background: radial-gradient(circle at top right, var(--accent-cyan-glow), transparent 60%); }
+.matrix-glow { background: radial-gradient(circle at top right, var(--accent-matrix-glow), transparent 60%); }
+.danger-glow { background: radial-gradient(circle at top right, var(--accent-danger-glow), transparent 60%); }
+.purple-glow { background: radial-gradient(circle at top right, var(--accent-purple-glow), transparent 60%); }
+.white-glow { background: radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 60%); }
+.blue-glow { background: radial-gradient(circle at top right, rgba(0, 100, 255, 0.3), transparent 60%); }
+.orange-glow { background: radial-gradient(circle at top right, rgba(255, 102, 0, 0.3), transparent 60%); }
+.gold-glow { background: radial-gradient(circle at top right, rgba(255, 215, 0, 0.25), transparent 60%); }
+
+.oracle-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--glass-border-highlight);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+}
+.oracle-card:hover .card-bg-glow { opacity: 1; }
+.oracle-card > * { position: relative; z-index: 2; }
+.oracle-card h3 { font-family: var(--font-terminal); font-size: 1.3rem; color: var(--text-primary); }
+
+/* --------------------------------------------------------------------------
+   8. MODULE SPECIFIC STYLING
+   -------------------------------------------------------------------------- */
+
+/* MODULE I: Astral Sync */
+.zodiac-wheel {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 2px dashed rgba(176, 38, 255, 0.3);
+    animation: slow-spin 60s linear infinite;
+}
+.zodiac-sign-node {
+    position: absolute;
+    width: 40px; height: 40px;
+    background: var(--bg-void-dark);
+    border: 1px solid var(--accent-purple);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-family: var(--font-terminal); font-size: 0.8rem; color: var(--accent-purple);
+    cursor: pointer;
+    transition: all 0.2s;
+    transform-origin: center;
+}
+.zodiac-sign-node:hover {
+    background: var(--accent-purple); color: #000;
+    box-shadow: 0 0 15px var(--accent-purple-glow);
+    transform: scale(1.2);
+}
+
+/* MODULE II: The Familiar (Emulator Nexus) */
+.familiar-tab {
+    padding-bottom: 10px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+}
+.familiar-tab.active {
+    border-bottom-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+.emulator-container {
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 20px rgba(0, 229, 255, 0.2);
+}
+.emulator-container::after {
+    /* CRT Scanline Effect Overlay */
+    content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+}
+
+/* MODULE III: Panopticon (Data Terminal) */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) { .grid-2-col { grid-template-columns: 1fr; } }
+.panopticon-grid .glass-panel { padding: 25px 20px; }
+.panopticon-grid button { padding: 12px; font-size: 0.85rem; }
+
+/* MODULE IV: Chronos */
+#chronos-canvas {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* MODULE VII: Half-Life */
+#decay-output-zone {
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+.isotope-char {
+    display: inline-block;
+    transition: opacity 0.5s ease, transform 0.5s ease, color 0.5s;
+}
+.decayed {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+    color: var(--accent-danger);
+}
+
+/* MODULE VIII: Gematria */
+#gematria-number {
+    text-shadow: 0 0 30px var(--accent-purple-glow);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* MODULE IX: Aura Scry (WebGL Mimicry) */
+.video-wrapper {
+    box-shadow: inset 0 0 50px rgba(0,0,0,1);
+}
+/* The actual video is rendered under a mix-blend difference layer to create extreme auras */
+#aura-overlay {
+    animation: aura-shift 8s infinite alternate;
+}
+
+/* MODULE X: Synchronicity */
+.time-display {
+    border-radius: 12px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+}
+#sync-current-time {
+    letter-spacing: 5px;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+.sync-unlocked {
+    color: var(--accent-white) !important;
+    text-shadow: 0 0 20px rgba(255,255,255,0.8) !important;
+    animation: pulse-glow 1s infinite;
+}
+
+/* Toast System */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); opacity: 1; }
+    50% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.8); opacity: 0.8; }
+}
+.pulse-glow { animation: pulse-glow 3s infinite; }
+
+@keyframes slow-spin {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes aura-shift {
+    0% { background: rgba(0, 255, 102, 0.15); backdrop-filter: hue-rotate(0deg) contrast(1.5); }
+    50% { background: rgba(0, 229, 255, 0.15); backdrop-filter: hue-rotate(90deg) contrast(2); }
+    100% { background: rgba(176, 38, 255, 0.15); backdrop-filter: hue-rotate(180deg) contrast(1.5); }
+}
+
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fade-in-up 0.4s ease forwards; }
+
+/* --------------------------------------------------------------------------
+   10. MEDIA QUERIES & RESPONSIVE GEOMETRY
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .oracle-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .glass-panel { padding: 30px; }
+}
+
+@media (max-width: 768px) {
+    .oracle-layer { padding: 15px; }
+    .oracle-title-text { font-size: 2.5rem; letter-spacing: 5px; }
+    .glass-panel { padding: 25px 15px; }
+    .zodiac-wheel { width: 250px; height: 250px; }
+    .zodiac-sign-node { width: 35px; height: 35px; font-size: 0.7rem; }
+    .h-400 { height: 300px; }
+    .w-300 { width: 220px; }
+}
+
+@media (max-width: 480px) {
+    .oracle-grid { grid-template-columns: 1fr; }
+    .btn-primary, .btn-secondary, .btn-danger { padding: 12px 16px; font-size: 0.85rem; }
+    .text-5xl { font-size: 2.5rem; }
+    .time-display { padding: 15px; }
+}
